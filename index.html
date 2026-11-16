@@ -9,6 +9,7 @@
   <title>Catálogo Online - Recanto Petshop</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -97,11 +98,11 @@
     </div>
 
     <!-- FILTRO DE MARCAS -->
-    <div class="mb-5">
-      <div class="flex items-center justify-between mb-1.5 px-1">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Marcas</h2>
+    <div class="mb-5 bg-[#FDF2F8]/90 border border-[#E84D9A]/35 p-3 rounded-2xl shadow-sm">
+      <div class="flex items-center justify-center mb-2">
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-[#9D174D]">Marcas</h2>
       </div>
-      <div id="brand-pills" class="flex flex-wrap justify-center gap-2 pb-1"></div>
+      <div id="brand-pills" class="flex flex-wrap justify-center gap-2"></div>
     </div>
 
     <!-- CABEÇALHO DA LISTAGEM DE PRODUTOS -->
@@ -473,16 +474,51 @@
     </div>
   </div>
 
-  <!-- MODAL DE IMPORTAÇÃO EM MASSA -->
+  <!-- MODAL DE IMPORTAÇÃO EM MASSA INTELIGENTE -->
   <div id="bulk-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-black text-sm text-slate-800">📥 Importação em Massa</h3>
-        <button onclick="closeBulkModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+    <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-slate-800 text-white p-4 flex items-center justify-between">
+        <div>
+          <h3 class="font-black text-sm sm:text-base">📥 Importação em Massa (Excel, CSV ou Lista)</h3>
+          <p class="text-[11px] text-slate-300">Suba um arquivo Excel/CSV ou cole da planilha — identificamos itens e preços automaticamente</p>
+        </div>
+        <button onclick="closeBulkModal()" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white text-xs font-bold">✕</button>
       </div>
-      <p class="text-xs text-slate-500 mb-2">Cole sua lista de produtos (um por linha no formato: <em>Nome | Preço | Categoria</em>):</p>
-      <textarea id="bulk-textarea" rows="6" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-[#2EB4C7] mb-3" placeholder="Ração Golden 15kg | 119,90 | Cães&#10;Areia Pipicat 4kg | 24,90 | Gatos"></textarea>
-      <button onclick="processBulkImport()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Importar Produtos para Nuvem</button>
+      <div class="p-4 overflow-y-auto flex-grow space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="bg-brand-primary hover:opacity-90 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-sm cursor-pointer flex items-center gap-1.5 transition">
+            <span>📊 Escolher Excel / CSV</span>
+            <input type="file" accept=".xlsx,.xls,.csv,.txt" onchange="handleBulkFileUpload(event)" class="hidden">
+          </label>
+          <span class="text-[11px] text-slate-500">ou cole abaixo direto do Excel / WhatsApp:</span>
+        </div>
+        <textarea id="bulk-textarea" rows="4" oninput="parseBulkPreview()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-[#2EB4C7]" placeholder="Cole linhas do Excel ou digite:&#10;Ração Golden 15kg&#9;119,90&#10;Areia Dinkos 4kg | 9,99 | Gatos"></textarea>
+        <div class="bg-[#E8F8FA] border border-[#B5E8EF] p-3 rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div>
+            <label class="block text-[10px] font-extrabold text-[#176E7B] mb-1">Categoria padrão do lote</label>
+            <select id="bulk-default-cat" onchange="applyBulkDefaults('cat', this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700"></select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold text-[#176E7B] mb-1">Subcategoria padrão</label>
+            <select id="bulk-default-sub" onchange="applyBulkDefaults('sub', this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700"></select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold text-[#176E7B] mb-1">Marca / Fornecedor padrão</label>
+            <select id="bulk-default-brand" onchange="applyBulkDefaults('brand', this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700"></select>
+          </div>
+        </div>
+        <div id="bulk-preview-wrap" class="hidden space-y-2">
+          <div class="flex items-center justify-between">
+            <span id="bulk-preview-count" class="text-xs font-extrabold text-slate-700">0 itens identificados</span>
+            <span class="text-[11px] text-slate-400">Edite marca, categoria ou preço antes de salvar</span>
+          </div>
+          <div id="bulk-preview-list" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex gap-2">
+        <button onclick="closeBulkModal()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
+        <button onclick="processBulkImport()" class="w-2/3 bg-slate-800 hover:bg-slate-900 text-white font-extrabold py-2.5 rounded-xl text-xs shadow transition">Importar Produtos para Nuvem</button>
+      </div>
     </div>
   </div>
 
@@ -2341,39 +2377,187 @@
       }
     }
 
-    function openBulkModal() { document.getElementById('bulk-modal').classList.remove('hidden'); }
+    let bulkRows = [];
+
+    function openBulkModal() {
+      const validCats = categories.filter(c => c !== "Todos");
+      const dCat = document.getElementById('bulk-default-cat');
+      const dSub = document.getElementById('bulk-default-sub');
+      const dBrand = document.getElementById('bulk-default-brand');
+      if (dCat) dCat.innerHTML = validCats.map(c => `<option value="${c}">${c}</option>`).join('');
+      if (dCat && dSub) updateSubcatDropdown('bulk-default-cat', 'bulk-default-sub');
+      if (dBrand) dBrand.innerHTML = brands.map(b => `<option value="${b}">${b}</option>`).join('');
+      document.getElementById('bulk-modal').classList.remove('hidden');
+      parseBulkPreview();
+    }
+
     function closeBulkModal() { document.getElementById('bulk-modal').classList.add('hidden'); }
+
+    function handleBulkFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
+      if ((ext === 'xlsx' || ext === 'xls') && window.XLSX) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const wb = XLSX.read(e.target.result, { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            const lines = rows
+              .filter(r => r.some(cell => String(cell).trim() !== ''))
+              .map(r => r.map(c => String(c).trim()).join(' | '));
+            document.getElementById('bulk-textarea').value = lines.join('\n');
+            parseBulkPreview();
+            showToast(`📊 ${lines.length} linhas lidas do Excel!`);
+          } catch (err) {
+            showToast("⚠️ Não foi possível ler essa planilha.");
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('bulk-textarea').value = e.target.result || '';
+          parseBulkPreview();
+          showToast("📄 Arquivo carregado!");
+        };
+        reader.readAsText(file, 'UTF-8');
+      }
+      event.target.value = '';
+    }
+
+    function extractPriceFromText(str) {
+      if (!str) return null;
+      const m = String(str).match(/(?:R\$\s*)?(\d{1,5}[.,]\d{2})|\b(\d{1,5})\b/);
+      if (!m) return null;
+      const raw = (m[1] || m[2] || '').replace(',', '.');
+      const n = parseFloat(raw);
+      return isNaN(n) ? null : n;
+    }
+
+    function parseBulkPreview() {
+      const text = (document.getElementById('bulk-textarea')?.value || '').trim();
+      const wrap = document.getElementById('bulk-preview-wrap');
+      if (!text) {
+        bulkRows = [];
+        if (wrap) wrap.classList.add('hidden');
+        return;
+      }
+      const defCat = document.getElementById('bulk-default-cat')?.value || categories.find(c => c !== "Todos") || "Cães";
+      const defSub = document.getElementById('bulk-default-sub')?.value || "Geral";
+      const defBrand = document.getElementById('bulk-default-brand')?.value || "Sem Marca";
+
+      bulkRows = [];
+      text.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        let parts = trimmed.includes('|') ? trimmed.split('|')
+          : trimmed.includes('\t') ? trimmed.split('\t')
+          : trimmed.includes(';') ? trimmed.split(';')
+          : [trimmed];
+        parts = parts.map(p => p.trim()).filter(Boolean);
+        if (parts.length === 0) return;
+
+        let name = '';
+        let price = null;
+        let cat = defCat;
+        let brand = defBrand;
+        let weight = "Sem peso/medida";
+
+        if (parts.length === 1) {
+          const pMatch = trimmed.match(/(?:R\$\s*)?(\d{1,5}[.,]\d{2})\s*$/);
+          if (pMatch) {
+            price = parseFloat(pMatch[1].replace(',', '.'));
+            name = trimmed.slice(0, pMatch.index).replace(/[-–]+$/, '').trim();
+          } else {
+            name = parts[0];
+          }
+        } else {
+          parts.forEach(part => {
+            const maybePrice = /^\s*(?:R\$\s*)?\d{1,5}([.,]\d{1,2})?\s*$/.test(part) ? extractPriceFromText(part) : null;
+            if (price === null && maybePrice !== null) {
+              price = maybePrice;
+            } else if (categories.includes(part) && part !== "Todos") {
+              cat = part;
+            } else if (brands.includes(part)) {
+              brand = part;
+            } else if (!name && !/^(produto|descrição|item|nome)$/i.test(part)) {
+              name = part;
+            }
+          });
+        }
+        if (!name || (/^(produto|descrição|item|nome)$/i.test(name) && price === null)) return;
+        const foundBrand = brands.find(b => b !== "Sem Marca" && name.toLowerCase().includes(b.toLowerCase()));
+        if (foundBrand && brand === defBrand) brand = foundBrand;
+        const foundWeight = weights.find(w => w !== "Sem peso/medida" && name.toLowerCase().includes(w.toLowerCase()));
+        if (foundWeight) weight = foundWeight;
+
+        bulkRows.push({ checked: true, name, price: price || 0, category: cat, subcategory: defSub, brand, weight });
+      });
+      renderBulkPreview();
+    }
+
+    function applyBulkDefaults(field, val) {
+      if (field === 'cat') {
+        updateSubcatDropdown('bulk-default-cat', 'bulk-default-sub');
+        const subVal = document.getElementById('bulk-default-sub')?.value || 'Geral';
+        bulkRows.forEach(r => { r.category = val; r.subcategory = subVal; });
+      } else if (field === 'sub') {
+        bulkRows.forEach(r => { r.subcategory = val; });
+      } else if (field === 'brand') {
+        bulkRows.forEach(r => { r.brand = val; });
+      }
+      renderBulkPreview();
+    }
+
+    function renderBulkPreview() {
+      const wrap = document.getElementById('bulk-preview-wrap');
+      const list = document.getElementById('bulk-preview-list');
+      const count = document.getElementById('bulk-preview-count');
+      if (!wrap || !list || !count) return;
+      if (bulkRows.length === 0) {
+        wrap.classList.add('hidden');
+        return;
+      }
+      wrap.classList.remove('hidden');
+      const activeCount = bulkRows.filter(r => r.checked).length;
+      count.textContent = `${activeCount} de ${bulkRows.length} itens selecionados`;
+      const validCats = categories.filter(c => c !== "Todos");
+      list.innerHTML = bulkRows.map((r, i) => `
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 grid grid-cols-12 gap-1.5 items-center text-[11px]">
+          <input type="checkbox" ${r.checked ? 'checked' : ''} onchange="bulkRows[${i}].checked = this.checked; renderBulkPreview();" class="col-span-1 w-4 h-4 accent-[#2EB4C7]">
+          <input type="text" value="${r.name.replace(/"/g, '&quot;')}" oninput="bulkRows[${i}].name = this.value" class="col-span-4 bg-white border border-slate-300 rounded-lg px-2 py-1 font-bold text-slate-800">
+          <input type="text" inputmode="numeric" value="${formatPriceBR(r.price)}" oninput="formatPriceInput(this); bulkRows[${i}].price = parsePriceBR(this.value) || 0;" class="col-span-2 bg-white border border-slate-300 rounded-lg px-2 py-1 font-bold text-brand-primary">
+          <select onchange="bulkRows[${i}].category = this.value" class="col-span-2 bg-white border border-slate-300 rounded-lg px-1.5 py-1 font-semibold text-slate-700">
+            ${validCats.map(c => `<option value="${c}" ${c === r.category ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
+          <select onchange="bulkRows[${i}].brand = this.value" class="col-span-3 bg-white border border-slate-300 rounded-lg px-1.5 py-1 font-semibold text-slate-700">
+            ${brands.map(b => `<option value="${b}" ${b === r.brand ? 'selected' : ''}>${b}</option>`).join('')}
+          </select>
+        </div>
+      `).join('');
+    }
 
     async function processBulkImport() {
       if (!sb || !currentStoreId) return;
-      const text = document.getElementById('bulk-textarea').value.trim();
-      if (!text) return;
-      const lines = text.split('\n');
-      const toInsert = [];
+      const selected = bulkRows.filter(r => r.checked && r.name.trim());
+      if (selected.length === 0) {
+        showToast("⚠️ Adicione ou selecione ao menos 1 produto.");
+        return;
+      }
+      const toInsert = selected.map(r => ({
+        store_id: currentStoreId,
+        name: r.name.trim(),
+        category: r.category,
+        subcategory: r.subcategory || "Geral",
+        price: r.price || 0,
+        brand: r.brand || "Sem Marca",
+        weight: r.weight || "Sem peso/medida",
+        image_url: "",
+        promo: false
+      }));
 
-      lines.forEach(line => {
-        const parts = line.split('|').map(p => p.trim());
-        if (parts.length >= 2) {
-          const name = parts[0];
-          const price = parsePriceBR(parts[1]) || 0;
-          const cat = parts[2] || "Cães";
-          if (name && !isNaN(price)) {
-            toInsert.push({
-              store_id: currentStoreId,
-              name,
-              category: categories.includes(cat) ? cat : (categories.find(c => c !== "Todos") || "Cães"),
-              subcategory: "Geral",
-              price,
-              brand: "Sem Marca",
-              weight: "Sem peso/medida",
-              image_url: "",
-              promo: false
-            });
-          }
-        }
-      });
-
-      if (toInsert.length === 0) return;
       const { data, error } = await sb.from('products').insert(toInsert).select('*');
       if (error) { showToast("⚠️ Erro ao importar produtos."); return; }
 
@@ -2386,6 +2570,8 @@
       filterProducts();
       renderManagerProducts();
       closeBulkModal();
+      document.getElementById('bulk-textarea').value = '';
+      bulkRows = [];
       showToast(`✅ ${toInsert.length} produtos importados para a nuvem!`);
     }
 
