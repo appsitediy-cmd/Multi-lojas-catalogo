@@ -383,10 +383,22 @@
             <img id="new-image-preview" src="" alt="Prévia da foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
           </div>
         </div>
-        <label class="flex items-center gap-2 mb-3 bg-white px-3 py-2.5 rounded-xl border border-[#F7D046] cursor-pointer select-none">
-          <input type="checkbox" id="new-promo" class="w-4 h-4 accent-[#E84D9A] rounded">
-          <span class="text-xs font-bold text-slate-800">🔥 Marcar produto como Promoção</span>
-        </label>
+        <div class="mb-3 bg-white p-2.5 rounded-xl border border-[#F7D046] space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="new-promo" class="w-4 h-4 accent-[#E84D9A] rounded">
+            <span class="text-xs font-bold text-slate-800">🔥 Marcar produto como Promoção</span>
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Início agendado (opcional)</label>
+              <input type="datetime-local" id="new-promo-start" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#E84D9A]">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Término agendado (opcional)</label>
+              <input type="datetime-local" id="new-promo-end" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#E84D9A]">
+            </div>
+          </div>
+        </div>
         <button onclick="addProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-extrabold py-3 rounded-2xl text-xs shadow transition">Cadastrar Produto na Nuvem</button>
         <button onclick="openBulkModal()" class="w-full mt-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-2xl text-xs shadow transition flex items-center justify-center gap-1.5">
           <span>📥</span> Colar Lista em Massa (Vários Produtos)
@@ -517,10 +529,25 @@
             <img id="edit-product-preview" src="" alt="Prévia do produto" class="w-8 h-8 rounded-lg object-cover border border-slate-200">
           </div>
         </div>
-        <label class="flex items-center gap-2 bg-[#FDF2F8] px-3 py-2.5 rounded-xl border border-[#E84D9A]/30 cursor-pointer select-none">
-          <input type="checkbox" id="edit-product-promo" class="w-4 h-4 accent-[#E84D9A] rounded">
-          <span class="text-xs font-bold text-[#9D174D]">🔥 Produto em Promoção</span>
-        </label>
+        <div class="bg-[#FDF2F8] p-2.5 rounded-xl border border-[#E84D9A]/30 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="edit-product-promo" class="w-4 h-4 accent-[#E84D9A] rounded">
+              <span class="text-xs font-bold text-[#9D174D]">🔥 Produto em Promoção</span>
+            </label>
+            <button type="button" onclick="clearEditPromoDates()" class="text-[10px] font-bold text-[#9D174D] underline hover:opacity-80">Limpar datas</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-[#E84D9A]/20">
+            <div>
+              <label class="block text-[10px] font-bold text-[#9D174D]/80 mb-0.5">Início (Data e Hora)</label>
+              <input type="datetime-local" id="edit-promo-start" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#E84D9A]">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-[#9D174D]/80 mb-0.5">Término (Data e Hora)</label>
+              <input type="datetime-local" id="edit-promo-end" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#E84D9A]">
+            </div>
+          </div>
+        </div>
         <button onclick="saveEditedProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Salvar Alterações do Produto</button>
       </div>
     </div>
@@ -1038,7 +1065,10 @@
             brand: p.brand,
             weight: p.weight,
             image: p.image_url || '',
-            promo: !!p.promo
+            promo: !!p.promo,
+            promoStart: p.promo_start || '',
+            promoEnd: p.promo_end || '',
+            active: p.active !== false
           }));
         }
 
@@ -1467,13 +1497,59 @@
       `).join('');
     }
 
+    function isProductPromoActive(p) {
+      if (!p) return false;
+      const hasSchedule = !!(p.promoStart || p.promoEnd);
+      if (hasSchedule) {
+        const now = Date.now();
+        const startMs = p.promoStart ? new Date(p.promoStart).getTime() : null;
+        const endMs = p.promoEnd ? new Date(p.promoEnd).getTime() : null;
+        if (startMs && !isNaN(startMs) && now < startMs) return false;
+        if (endMs && !isNaN(endMs) && now > endMs) return false;
+        return true;
+      }
+      return !!p.promo;
+    }
+
+    function getPromoScheduleStatus(p) {
+      if (!p || (!p.promoStart && !p.promoEnd)) return '';
+      const now = Date.now();
+      const startMs = p.promoStart ? new Date(p.promoStart).getTime() : null;
+      const endMs = p.promoEnd ? new Date(p.promoEnd).getTime() : null;
+      if (startMs && !isNaN(startMs) && now < startMs) {
+        const d = new Date(startMs);
+        const fmt = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return '⏳ Agendada ' + fmt;
+      }
+      if (endMs && !isNaN(endMs) && now > endMs) return '⌛ Encerrada';
+      if (endMs && !isNaN(endMs)) {
+        const d = new Date(endMs);
+        const fmt = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return '🔥 Até ' + fmt;
+      }
+      return '🔥 Agendada ativa';
+    }
+
+    function toLocalDateTimeInput(val) {
+      if (!val) return '';
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return '';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function clearEditPromoDates() {
+      document.getElementById('edit-promo-start').value = '';
+      document.getElementById('edit-promo-end').value = '';
+    }
+
     function renderBrandPills() {
       const brandSelect = document.getElementById('client-brand-select');
       if (!brandSelect) return;
       const matching = products.filter(p => {
         const matchCat = currentCategory === "Todos" || p.category === currentCategory;
         const matchSub = currentSubcategory === "Todos" || p.subcategory === currentSubcategory;
-        const matchPromo = !onlyPromo || !!p.promo;
+        const matchPromo = !onlyPromo || isProductPromoActive(p);
         return matchCat && matchSub && matchPromo;
       });
       const presentBrands = new Set(matching.map(p => p.brand).filter(Boolean));
@@ -1579,11 +1655,12 @@
       const query = document.getElementById('search-input').value.trim();
 
       const filtered = products.filter(p => {
+        if (p.active === false) return false;
         const matchQuery = smartMatchProduct(p, query);
         const matchCat = currentCategory === "Todos" || p.category === currentCategory;
         const matchSub = currentSubcategory === "Todos" || p.subcategory === currentSubcategory;
         const matchBrand = currentBrand === "Todos" || p.brand === currentBrand;
-        const matchPromo = !onlyPromo || !!p.promo;
+        const matchPromo = !onlyPromo || isProductPromoActive(p);
         return matchQuery && matchCat && matchSub && matchBrand && matchPromo;
       });
 
@@ -1593,7 +1670,7 @@
       } else if (sortBy === 'price-desc') {
         filtered.sort((a, b) => b.price - a.price);
       } else if (sortBy === 'promo-first') {
-        filtered.sort((a, b) => (b.promo ? 1 : 0) - (a.promo ? 1 : 0));
+        filtered.sort((a, b) => (isProductPromoActive(b) ? 1 : 0) - (isProductPromoActive(a) ? 1 : 0));
       } else if (sortBy === 'name-asc') {
         filtered.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
       }
@@ -1645,7 +1722,7 @@
           <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 flex flex-col justify-between transition hover:shadow-md hover:border-[#2EB4C7]/40">
             <div>
               <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square bg-slate-50 rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border border-slate-100 group cursor-zoom-in">
-                ${p.promo ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMOÇÃO</span></span>` : ''}
+                ${isProductPromoActive(p) ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMOÇÃO</span></span>` : ''}
                 <img src="${imgSrc}" alt="${p.name}" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
               </div>
               <div class="flex items-center gap-1 mb-1 flex-wrap">
@@ -2378,7 +2455,7 @@
       document.getElementById('zoom-modal-img').src = p.image || DEFAULT_PRODUCT_IMG;
       document.getElementById('zoom-modal-title').textContent = p.name;
       const badge = document.getElementById('zoom-modal-promo-badge');
-      if (badge) badge.classList.toggle('hidden', !p.promo);
+      if (badge) badge.classList.toggle('hidden', !isProductPromoActive(p));
       document.getElementById('image-zoom-modal').classList.remove('hidden');
     }
 
@@ -2395,6 +2472,10 @@
       const brand = document.getElementById('new-brand').value;
       const weight = document.getElementById('new-weight').value;
       const image = document.getElementById('new-image').value.trim();
+      const promoStartRaw = document.getElementById('new-promo-start').value;
+      const promoEndRaw = document.getElementById('new-promo-end').value;
+      const promoStart = promoStartRaw ? new Date(promoStartRaw).toISOString() : null;
+      const promoEnd = promoEndRaw ? new Date(promoEndRaw).toISOString() : null;
       const promo = document.getElementById('new-promo').checked;
 
       if (!name || isNaN(price)) {
@@ -2413,7 +2494,9 @@
           brand,
           weight,
           image_url: image,
-          promo
+          promo,
+          promo_start: promoStart,
+          promo_end: promoEnd
         })
         .select('*')
         .single();
@@ -2432,7 +2515,10 @@
         brand: data.brand,
         weight: data.weight,
         image: data.image_url || '',
-        promo: !!data.promo
+        promo: !!data.promo,
+        promoStart: data.promo_start || '',
+        promoEnd: data.promo_end || '',
+        active: data.active !== false
       });
 
       filterProducts();
@@ -2441,6 +2527,8 @@
       document.getElementById('new-price').value = "";
       document.getElementById('new-image').value = "";
       document.getElementById('new-promo').checked = false;
+      document.getElementById('new-promo-start').value = '';
+      document.getElementById('new-promo-end').value = '';
       document.getElementById('new-image-preview-wrap').classList.add('hidden');
       showToast("✅ Produto salvo na nuvem!");
     }
@@ -2461,7 +2549,7 @@
         const matchC = fCat === 'Todos' || p.category === fCat;
         const matchS = fSub === 'Todos' || p.subcategory === fSub;
         const matchB = fBrand === 'Todos' || p.brand === fBrand;
-        const matchP = !fPromo || !!p.promo;
+        const matchP = !fPromo || isProductPromoActive(p);
         return matchQ && matchC && matchS && matchB && matchP;
       });
 
@@ -2474,31 +2562,59 @@
         return;
       }
 
-      list.innerHTML = filtered.map(p => `
-        <div class="flex items-center justify-between bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="flex items-center gap-2.5">
+      list.innerHTML = filtered.map(p => {
+        const isActive = p.active !== false;
+        const isPromoNow = isProductPromoActive(p);
+        const schedLabel = getPromoScheduleStatus(p);
+        return `
+        <div class="flex items-center justify-between gap-2 p-2.5 rounded-2xl border shadow-sm transition ${isActive ? 'bg-white border-slate-200' : 'bg-slate-100/90 border-slate-300 opacity-75'}">
+          <div class="flex items-center gap-2.5 min-w-0">
             <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-10 h-10 rounded-xl object-contain bg-slate-50 border border-slate-100 p-0.5 shrink-0 cursor-pointer" onclick="openEditProduct(${p.id})">
-            <div>
-              <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${p.name}</h4>
+            <div class="min-w-0">
+              <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${isActive ? '' : '[Pausado] '}${p.name}</h4>
               <p class="text-[11px] text-brand-primary font-black">R$ ${p.price.toFixed(2).replace('.', ',')} • <span class="text-slate-500 font-medium">${p.category} / ${p.subcategory}</span></p>
+              ${schedLabel ? `<span class="inline-block mt-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-pink-50 text-[#9D174D] border border-pink-200">${schedLabel}</span>` : ''}
             </div>
           </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="toggleProductPromo(${p.id})" class="px-2 py-2 rounded-xl text-xs font-bold transition ${p.promo ? 'bg-brand-accent text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}" title="Alternar Promoção">🔥</button>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="toggleProductActive(${p.id})" class="px-2 py-2 rounded-xl text-[11px] font-extrabold transition ${isActive ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-slate-300 hover:bg-slate-400 text-slate-700'}" title="${isActive ? 'Desativar produto (sem estoque)' : 'Reativar produto no catálogo'}">${isActive ? '✅ Ativo' : '⏸️ Pausado'}</button>
+            <button onclick="toggleProductPromo(${p.id})" class="px-2 py-2 rounded-xl text-xs font-bold transition ${isPromoNow ? 'bg-brand-accent text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}" title="Alternar Promoção">🔥</button>
             <button onclick="openEditProduct(${p.id})" class="bg-[#FEFCE8] hover:bg-[#FEF08A] text-[#855E00] p-2 rounded-xl text-xs font-bold transition" title="Editar Completo">📂</button>
             <button onclick="deleteProduct(${p.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 p-2 rounded-xl text-xs font-bold transition" title="Excluir">🗑️</button>
           </div>
         </div>
-      `).join('');
+      `; }).join('');
+    }
+
+    async function toggleProductActive(id) {
+      const p = products.find(prod => prod.id == id);
+      if (!p) return;
+      const nextActive = !(p.active !== false);
+      if (sb) {
+        const { error } = await sb.from('products').update({ active: nextActive }).eq('id', p.id);
+        if (error) {
+          showToast("⚠️ Adicione a coluna active na tabela products no Supabase!");
+          return;
+        }
+      }
+      p.active = nextActive;
+      filterProducts();
+      renderManagerProducts();
+      showToast(nextActive ? "✅ Produto ativado no catálogo!" : "⏸️ Produto pausado (oculto para clientes).");
     }
 
     async function toggleProductPromo(id) {
       const p = products.find(prod => prod.id == id);
       if (!p || !sb) return;
-      const nextPromo = !p.promo;
-      const { error } = await sb.from('products').update({ promo: nextPromo }).eq('id', p.id);
-      if (error) { showToast("⚠️ Erro ao atualizar promoção."); return; }
+      const nextPromo = !isProductPromoActive(p);
+      const { error } = await sb.from('products').update({ promo: nextPromo, promo_start: null, promo_end: null }).eq('id', p.id);
+      if (error) {
+        const { error: err2 } = await sb.from('products').update({ promo: nextPromo }).eq('id', p.id);
+        if (err2) { showToast("⚠️ Erro ao atualizar promoção."); return; }
+      }
       p.promo = nextPromo;
+      p.promoStart = '';
+      p.promoEnd = '';
       filterProducts();
       renderManagerProducts();
       showToast(p.promo ? "🔥 Produto colocado em promoção!" : "Produto removido das promoções.");
@@ -2529,6 +2645,8 @@
       document.getElementById('edit-product-price').value = formatPriceBR(p.price);
       document.getElementById('edit-product-image').value = p.image || '';
       document.getElementById('edit-product-promo').checked = !!p.promo;
+      document.getElementById('edit-promo-start').value = toLocalDateTimeInput(p.promoStart);
+      document.getElementById('edit-promo-end').value = toLocalDateTimeInput(p.promoEnd);
 
       const catSelect = document.getElementById('edit-product-cat');
       const brandSelect = document.getElementById('edit-product-brand');
@@ -2570,11 +2688,13 @@
         brand: document.getElementById('edit-product-brand').value,
         weight: document.getElementById('edit-product-weight').value,
         image_url: document.getElementById('edit-product-image').value.trim(),
-        promo: document.getElementById('edit-product-promo').checked
+        promo: document.getElementById('edit-product-promo').checked,
+        promo_start: document.getElementById('edit-promo-start').value ? new Date(document.getElementById('edit-promo-start').value).toISOString() : null,
+        promo_end: document.getElementById('edit-promo-end').value ? new Date(document.getElementById('edit-promo-end').value).toISOString() : null
       };
 
       const { error } = await sb.from('products').update(updated).eq('id', id);
-      if (error) { showToast("⚠️ Erro ao salvar produto."); return; }
+      if (error) { showToast("⚠️ Adicione promo_start e promo_end na tabela products no Supabase!"); return; }
 
       Object.assign(p, {
         name: updated.name,
@@ -2584,7 +2704,9 @@
         brand: updated.brand,
         weight: updated.weight,
         image: updated.image_url,
-        promo: updated.promo
+        promo: updated.promo,
+        promoStart: updated.promo_start || '',
+        promoEnd: updated.promo_end || ''
       });
 
       filterProducts();
@@ -3373,6 +3495,13 @@
       }
       secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1800);
     }
+
+    setInterval(() => {
+      if (products.some(p => p.promoStart || p.promoEnd)) {
+        filterProducts();
+        renderManagerProducts();
+      }
+    }, 30000);
 
     window.onload = async function() {
       updateCartBadge();
