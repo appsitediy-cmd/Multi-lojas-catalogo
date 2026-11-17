@@ -110,11 +110,11 @@
   <main id="client-view" class="max-w-3xl w-full mx-auto p-4 flex-grow pb-24">
 
     <!-- FILTRO DE CATEGORIAS -->
-    <div class="mb-3">
-      <div class="flex items-center justify-between mb-1.5 px-1">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Categorias</h2>
+    <div class="mb-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Categorias</h2>
       </div>
-      <div id="category-pills" class="flex flex-wrap justify-center gap-2 pb-1"></div>
+      <div id="category-pills" class="flex flex-wrap justify-center gap-2"></div>
     </div>
 
     <!-- CAIXAS SELETORAS DE SUBCATEGORIA, MARCA E ORDENACAO -->
@@ -130,7 +130,7 @@
       <div class="min-w-0">
         <label for="client-sort-select" class="block text-[11px] font-extrabold uppercase tracking-wider text-[#176E7B] mb-1">Ordenar por</label>
         <select id="client-sort-select" onchange="filterProducts()" class="w-full bg-[#E8F8FA] border border-[#2EB4C7]/50 rounded-xl px-2.5 py-2 text-xs font-bold text-[#176E7B] focus:outline-none focus:border-[#2EB4C7]">
-          <option value="promo-first">🔥 Promoções primeiro</option>
+          <option value="promo-first">🔥 Promoção</option>
           <option value="price-asc">💰 Menor preço</option>
           <option value="price-desc">💎 Maior preço</option>
           <option value="name-asc">🔤 Nome (A → Z)</option>
@@ -428,15 +428,12 @@
     <span>Topo</span>
   </button>
 
-  <!-- RODAPÉ FIXO -->
+  <!-- RODAPÉ FIXO (ACESSO SECRETO DO GESTOR POR 5 TOQUES OU ?gestor=1) -->
   <footer class="bg-white border-t border-slate-200 py-3 px-4 shadow-lg sticky bottom-0 z-20">
-    <div class="max-w-3xl mx-auto flex items-center justify-between gap-2">
-      <div class="text-[11px] text-slate-500 font-medium leading-tight break-words">
-        <span id="footer-store-label" class="font-bold text-slate-800">Recanto Petshop</span> • Nuvem Segura
+    <div class="max-w-3xl mx-auto flex items-center justify-center text-center">
+      <div onclick="handleSecretManagerTap()" class="text-[11px] text-slate-500 font-medium leading-tight break-words select-none cursor-default">
+        <span id="footer-store-label" class="font-bold text-slate-800">Recanto Petshop</span> • Catálogo Oficial 🐾
       </div>
-      <button onclick="openManagerLoginModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm shrink-0">
-        ⚙️ Painel Gestor
-      </button>
     </div>
   </footer>
 
@@ -1310,16 +1307,14 @@
     }
 
     async function openManagerLoginModal() {
-      if (sb) {
-        const { data } = await sb.auth.getSession();
-        if (data?.session?.user) {
-          currentUser = data.session.user;
-          await enterManagerAfterAuth();
-          return;
-        }
-      }
+      const passEl = document.getElementById('login-password');
+      if (passEl) passEl.value = '';
       document.getElementById('login-modal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('login-email').focus(), 100);
+      setTimeout(() => {
+        const emailEl = document.getElementById('login-email');
+        if (emailEl && emailEl.value) passEl?.focus();
+        else emailEl?.focus();
+      }, 100);
     }
 
     function closeLoginModal() {
@@ -1539,11 +1534,52 @@
       filterProducts();
     }
 
+    function normalizeSearchText(str) {
+      return String(str || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+    }
+
+    function editDistance(a, b) {
+      if (Math.abs(a.length - b.length) > 2) return 99;
+      const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+      for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+      for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+        }
+      }
+      return dp[a.length][b.length];
+    }
+
+    function smartMatchProduct(product, query) {
+      const qNorm = normalizeSearchText(query);
+      if (!qNorm) return true;
+      const fullText = normalizeSearchText([product.name, product.brand, product.category, product.subcategory].join(' '));
+      if (fullText.includes(qNorm)) return true;
+      const tokens = qNorm.split(/\s+/).filter(Boolean);
+      const words = fullText.split(/[^a-z0-9]+/).filter(Boolean);
+      return tokens.every(tok => {
+        if (fullText.includes(tok)) return true;
+        if (tok.length < 4) return false;
+        const maxDist = tok.length >= 7 ? 2 : 1;
+        return words.some(w => {
+          if (editDistance(tok, w) <= maxDist) return true;
+          if (w.length > tok.length && editDistance(tok, w.slice(0, tok.length)) <= 1) return true;
+          return false;
+        });
+      });
+    }
+
     function filterProducts() {
-      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      const query = document.getElementById('search-input').value.trim();
 
       const filtered = products.filter(p => {
-        const matchQuery = p.name.toLowerCase().includes(query) || (p.brand && p.brand.toLowerCase().includes(query));
+        const matchQuery = smartMatchProduct(p, query);
         const matchCat = currentCategory === "Todos" || p.category === currentCategory;
         const matchSub = currentSubcategory === "Todos" || p.subcategory === currentSubcategory;
         const matchBrand = currentBrand === "Todos" || p.brand === currentBrand;
@@ -3325,9 +3361,25 @@
       showToast("💾 Backup de clientes baixado!");
     }
 
-    window.onload = function() {
+    let secretTapCount = 0;
+    let secretTapTimer = null;
+    function handleSecretManagerTap() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
+        openManagerLoginModal();
+        return;
+      }
+      secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1800);
+    }
+
+    window.onload = async function() {
       updateCartBadge();
-      loadStoreFromCloud();
+      await loadStoreFromCloud();
+      if (urlParams.get('gestor') === '1') {
+        openManagerLoginModal();
+      }
     };
   </script>
 </body>
