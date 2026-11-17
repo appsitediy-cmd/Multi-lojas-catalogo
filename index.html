@@ -564,42 +564,78 @@
     </div>
   </div>
 
-  <!-- MODAL DE CLIENTES E REAQUECIMENTO -->
+  <!-- MODAL DE CLIENTES, HISTÓRICO E REAQUECIMENTO -->
   <div id="customers-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="bg-brand-accent text-white p-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-xl">👥</span>
           <div>
-            <h3 class="font-black text-sm sm:text-base">Clientes e Pedidos (Reaquecer)</h3>
-            <p class="text-[11px] text-pink-100">Pedidos salvos na nuvem com filtro de Sumidos</p>
+            <h3 class="font-black text-sm sm:text-base">Clientes e Histórico de Compras</h3>
+            <p class="text-[11px] text-pink-100">Toque em qualquer cliente para ver todas as compras</p>
           </div>
         </div>
         <button onclick="closeCustomersModal()" class="w-8 h-8 rounded-full bg-black/20 hover:bg-black/30 flex items-center justify-center text-white text-sm font-bold">✕</button>
       </div>
-      <div class="p-4 border-b border-slate-200 bg-slate-50 space-y-2.5">
+      <div class="p-3.5 border-b border-slate-200 bg-slate-50 space-y-2.5">
         <div class="flex flex-wrap gap-2">
-          <input type="text" id="customers-search" oninput="renderCustomersList()" placeholder="Buscar cliente por nome, telefone, endereço ou compra..." class="flex-1 min-w-[180px] bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#E84D9A]">
-          <div class="flex items-center gap-1.5">
-            <input type="date" id="customers-date-filter" onchange="renderCustomersList()" title="Filtrar por data da compra" class="bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#E84D9A]">
-            <button onclick="clearCustomersDateFilter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-2.5 py-2 rounded-xl text-[11px] transition">Todas datas</button>
-          </div>
-          <button onclick="openEditCustomerModal()" class="bg-brand-primary hover:opacity-90 text-white font-bold px-3 py-2 rounded-xl text-xs shadow-sm transition">+ Novo Cliente</button>
+          <input type="text" id="customers-search" oninput="renderCustomersList()" placeholder="Buscar por nome, telefone, endereço ou produto..." class="flex-1 min-w-[180px] bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#E84D9A]">
+          <button onclick="openEditCustomerModal()" class="bg-brand-primary hover:opacity-90 text-white font-bold px-3 py-2 rounded-xl text-xs shadow-sm transition">+ Novo Cliente / Venda</button>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-sumidos" onclick="toggleSumidosFilter()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-extrabold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition">😴 Sumidos</button>
-          <select id="sumidos-days-select" onchange="if(onlyMissingClients) renderCustomersList();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-[#E84D9A]">
-            <option value="15">+15 dias</option>
-            <option value="30" selected>+30 dias</option>
-            <option value="45">+45 dias</option>
-            <option value="60">+60 dias</option>
-            <option value="90">+90 dias</option>
-          </select>
-          <button onclick="exportCustomersCSV()" class="bg-[#7CB342] hover:bg-[#689F38] text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition">📥 Baixar Planilha (CSV/Excel)</button>
-          <button onclick="exportCustomersJSON()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition">💾 Baixar Backup (JSON)</button>
+        <div class="bg-white border border-slate-200 rounded-2xl p-2.5 space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">De (data inicial)</label>
+              <input type="date" id="customers-date-start" onchange="renderCustomersList()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#E84D9A]">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Até (data final)</label>
+              <input type="date" id="customers-date-end" onchange="renderCustomersList()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#E84D9A]">
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="setCustomersDatePreset('today')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] transition">Hoje</button>
+            <button type="button" onclick="setCustomersDatePreset('7d')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] transition">Últimos 7 dias</button>
+            <button type="button" onclick="setCustomersDatePreset('month')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] transition">Este mês</button>
+            <button type="button" onclick="clearCustomersDateFilter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] transition">Todas as datas</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button id="btn-sumidos" onclick="toggleSumidosFilter()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-extrabold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition">😴 Sumidos</button>
+            <select id="sumidos-days-select" onchange="if(onlyMissingClients) renderCustomersList();" class="bg-white border border-slate-300 rounded-xl px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-[#E84D9A]">
+              <option value="15">+15 dias</option>
+              <option value="30" selected>+30 dias</option>
+              <option value="45">+45 dias</option>
+              <option value="60">+60 dias</option>
+              <option value="90">+90 dias</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="exportCustomersCSV()" class="bg-[#7CB342] hover:bg-[#689F38] text-white font-bold px-2.5 py-1.5 rounded-xl text-[11px] shadow-sm transition">📥 CSV/Excel</button>
+            <button onclick="exportCustomersJSON()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-2.5 py-1.5 rounded-xl text-[11px] shadow-sm transition">💾 Backup</button>
+          </div>
+        </div>
+        <div id="customers-summary-bar" class="text-[11px] font-extrabold text-slate-600 bg-[#FDF2F8] border border-[#E84D9A]/25 rounded-xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
+          <span>0 clientes</span>
+          <span>Total: R$ 0,00</span>
         </div>
       </div>
-      <div id="customers-list-body" class="p-4 overflow-y-auto flex-grow space-y-3"></div>
+      <div id="customers-list-body" class="p-4 overflow-y-auto flex-grow space-y-2.5"></div>
+    </div>
+  </div>
+
+  <!-- MODAL FICHA COMPLETA E HISTÓRICO DO CLIENTE -->
+  <div id="customer-history-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[54] flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-slate-800 text-white p-4 flex items-center justify-between">
+        <div>
+          <h3 id="hist-client-name" class="font-black text-sm sm:text-base">Ficha do Cliente</h3>
+          <p id="hist-client-contact" class="text-[11px] text-slate-300"></p>
+        </div>
+        <button onclick="closeCustomerHistoryModal()" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white text-xs font-bold">✕</button>
+      </div>
+      <div id="customer-history-body" class="p-4 overflow-y-auto flex-grow space-y-3"></div>
     </div>
   </div>
 
@@ -2763,9 +2799,20 @@
       }
     });
 
+    function normalizePhoneKey(phone, fallbackId) {
+      const digits = String(phone || '').replace(/\D/g, '');
+      if (digits.length >= 8) return digits.slice(-9);
+      return String(fallbackId || 'unknown');
+    }
+
+    function getUniqueCustomersCount() {
+      const keys = new Set(customerOrders.map(o => normalizePhoneKey(o.phone, o.id)));
+      return keys.size;
+    }
+
     function updateCustomersCountBadge() {
       const el = document.getElementById('manager-customers-count');
-      if (el) el.textContent = customerOrders.length;
+      if (el) el.textContent = getUniqueCustomersCount();
     }
 
     function openCustomersModal() {
@@ -2777,6 +2824,14 @@
       document.getElementById('customers-modal').classList.add('hidden');
     }
 
+    function getOrderDateObj(o) {
+      if (o && o.orderDateIso) {
+        const d = new Date(o.orderDateIso);
+        if (!isNaN(d.getTime())) return d;
+      }
+      return parseOrderDateBR(o ? o.date : '');
+    }
+
     function parseOrderDateBR(dateStr) {
       if (!dateStr) return null;
       const m = String(dateStr).match(/(\d{2})\/(\d{2})\/(\d{4})/);
@@ -2785,12 +2840,13 @@
       return isNaN(d.getTime()) ? null : d;
     }
 
-    function getDaysSinceOrder(dateStr) {
-      const d = parseOrderDateBR(dateStr);
-      if (!d) return null;
+    function getDaysSinceOrder(dateStr, isoStr) {
+      const d = isoStr ? new Date(isoStr) : parseOrderDateBR(dateStr);
+      if (!d || isNaN(d.getTime())) return null;
+      const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      return Math.max(0, Math.floor((today - d) / 86400000));
+      return Math.max(0, Math.floor((today - dDay) / 86400000));
     }
 
     function toggleSumidosFilter() {
@@ -2804,84 +2860,214 @@
       renderCustomersList();
     }
 
-    function clearCustomersDateFilter() {
-      const df = document.getElementById('customers-date-filter');
-      if (df) df.value = '';
+    function setCustomersDatePreset(preset) {
+      const startEl = document.getElementById('customers-date-start');
+      const endEl = document.getElementById('customers-date-end');
+      if (!startEl || !endEl) return;
+      const now = new Date();
+      const fmt = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      endEl.value = fmt(now);
+      if (preset === 'today') {
+        startEl.value = fmt(now);
+      } else if (preset === '7d') {
+        const d7 = new Date(now);
+        d7.setDate(d7.getDate() - 6);
+        startEl.value = fmt(d7);
+      } else if (preset === 'month') {
+        const m1 = new Date(now.getFullYear(), now.getMonth(), 1);
+        startEl.value = fmt(m1);
+      }
       renderCustomersList();
+    }
+
+    function clearCustomersDateFilter() {
+      const sEl = document.getElementById('customers-date-start');
+      const eEl = document.getElementById('customers-date-end');
+      if (sEl) sEl.value = '';
+      if (eEl) eEl.value = '';
+      renderCustomersList();
+    }
+
+    function buildGroupedCustomers(ordersList) {
+      const groups = {};
+      ordersList.forEach(o => {
+        const key = normalizePhoneKey(o.phone, o.id);
+        const dt = getOrderDateObj(o);
+        const ts = dt ? dt.getTime() : 0;
+        if (!groups[key]) {
+          groups[key] = {
+            key,
+            name: o.name || 'Cliente',
+            phone: o.phone || '',
+            address: o.address || '',
+            notes: o.notes || '',
+            totalSpent: 0,
+            orders: [],
+            latestTs: ts,
+            latestOrder: o
+          };
+        }
+        groups[key].orders.push(o);
+        groups[key].totalSpent += (parseFloat(o.total) || 0);
+        if (ts >= groups[key].latestTs) {
+          groups[key].latestTs = ts;
+          groups[key].latestOrder = o;
+          if (o.name && o.name !== 'Cliente') groups[key].name = o.name;
+          if (o.address && o.address !== '-') groups[key].address = o.address;
+          if (o.notes) groups[key].notes = o.notes;
+        }
+      });
+      return Object.values(groups).sort((a, b) => b.latestTs - a.latestTs);
     }
 
     function renderCustomersList() {
       const body = document.getElementById('customers-list-body');
+      const summary = document.getElementById('customers-summary-bar');
       if (!body) return;
       const q = (document.getElementById('customers-search')?.value || '').toLowerCase().trim();
-      const dateRaw = document.getElementById('customers-date-filter')?.value || '';
+      const startRaw = document.getElementById('customers-date-start')?.value || '';
+      const endRaw = document.getElementById('customers-date-end')?.value || '';
       const minMissingDays = parseInt(document.getElementById('sumidos-days-select')?.value || '30', 10);
-      let dateBr = '';
-      if (dateRaw && dateRaw.includes('-')) {
-        const [y, m, d] = dateRaw.split('-');
-        dateBr = `${d}/${m}/${y}`;
-      }
 
-      const latestByPhone = {};
-      customerOrders.forEach(c => {
-        const key = (c.phone || String(c.id)).replace(/\D/g, '') || String(c.id);
-        const d = parseOrderDateBR(c.date);
-        const ts = d ? d.getTime() : 0;
-        if (!latestByPhone[key] || ts > latestByPhone[key].ts) {
-          latestByPhone[key] = { ts, orderId: c.id };
-        }
+      const startDt = startRaw ? new Date(startRaw + 'T00:00:00') : null;
+      const endDt = endRaw ? new Date(endRaw + 'T23:59:59') : null;
+
+      const filteredOrders = customerOrders.filter(o => {
+        const dt = getOrderDateObj(o);
+        if (startDt && (!dt || dt < startDt)) return false;
+        if (endDt && (!dt || dt > endDt)) return false;
+        return true;
       });
 
-      const filtered = customerOrders.filter(c => {
-        const matchQ = !q || [c.name, c.phone, c.address, c.items, c.date, c.notes].some(v => (v || '').toLowerCase().includes(q));
-        const matchD = !dateBr || (c.date || '').includes(dateBr);
-        if (!matchQ || !matchD) return false;
+      let clients = buildGroupedCustomers(filteredOrders).filter(c => {
+        const matchQ = !q || [c.name, c.phone, c.address, c.notes, ...c.orders.map(o => o.items)].some(v => (v || '').toLowerCase().includes(q));
+        if (!matchQ) return false;
         if (onlyMissingClients) {
-          const key = (c.phone || String(c.id)).replace(/\D/g, '') || String(c.id);
-          if (latestByPhone[key] && latestByPhone[key].orderId !== c.id) return false;
-          const days = getDaysSinceOrder(c.date);
+          const days = getDaysSinceOrder(c.latestOrder.date, c.latestOrder.orderDateIso);
           return days !== null && days >= minMissingDays;
         }
         return true;
       });
 
-      if (filtered.length === 0) {
+      const totalOrdersCount = clients.reduce((acc, c) => acc + c.orders.length, 0);
+      const totalRevenue = clients.reduce((acc, c) => acc + c.totalSpent, 0);
+      if (summary) {
+        summary.innerHTML = `<span>👥 ${clients.length} ${clients.length === 1 ? 'cliente' : 'clientes'} • 🛒 ${totalOrdersCount} ${totalOrdersCount === 1 ? 'compra' : 'compras'}</span><span class="text-emerald-700">💰 R$ ${formatPriceBR(totalRevenue)}</span>`;
+      }
+
+      if (clients.length === 0) {
         body.innerHTML = onlyMissingClients
-          ? `<div class="text-center py-10 text-xs text-slate-400 font-medium">Nenhum cliente sumido há mais de ${minMissingDays} dias encontrado.</div>`
-          : `<div class="text-center py-10 text-xs text-slate-400 font-medium">Nenhum cliente registrado ainda.</div>`;
+          ? `<div class="text-center py-10 text-xs text-slate-400 font-medium">Nenhum cliente sumido há mais de ${minMissingDays} dias encontrado nesse período.</div>`
+          : `<div class="text-center py-10 text-xs text-slate-400 font-medium">Nenhum cliente encontrado para esse filtro.</div>`;
         return;
       }
 
-      body.innerHTML = filtered.map(c => {
-        const days = getDaysSinceOrder(c.date);
+      body.innerHTML = clients.map(c => {
+        const days = getDaysSinceOrder(c.latestOrder.date, c.latestOrder.orderDateIso);
         const missingBadge = (days !== null && days >= minMissingDays)
           ? `<span class="text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg">😴 Há ${days} dias</span>`
           : '';
+        const freqBadge = c.orders.length > 1
+          ? `<span class="text-[10px] font-extrabold bg-[#E8F8FA] text-[#176E7B] border border-[#B5E8EF] px-2 py-0.5 rounded-lg">⭐ ${c.orders.length} compras</span>`
+          : `<span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-lg">1 compra</span>`;
+
         return `
-        <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200 space-y-2">
+        <div onclick="openCustomerHistoryModal('${escAttr(c.key)}')" class="bg-slate-50 hover:bg-white rounded-2xl p-3.5 border border-slate-200 hover:border-[#2EB4C7] space-y-2 cursor-pointer transition shadow-sm">
           <div class="flex items-start justify-between gap-2">
-            <div>
+            <div class="min-w-0">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <h4 class="text-xs font-extrabold text-slate-800">👤 ${c.name || 'Cliente'}</h4>
+                <h4 class="text-xs font-extrabold text-slate-800">👤 ${c.name}</h4>
+                ${freqBadge}
                 ${missingBadge}
               </div>
-              <p class="text-[11px] font-bold text-brand-primary">📞 ${c.phone} • 🕒 ${c.date}</p>
+              <p class="text-[11px] font-bold text-brand-primary mt-0.5">📞 ${c.phone} • Última: ${c.latestOrder.date}</p>
             </div>
-            <span class="text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg shrink-0">R$ ${formatPriceBR(c.total)}</span>
+            <span class="text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-xl shrink-0">R$ ${formatPriceBR(c.totalSpent)}</span>
           </div>
-          <p class="text-[11px] text-slate-600">📍 ${c.address}</p>
+          <p class="text-[11px] text-slate-600 truncate">📍 ${c.address || '-'}</p>
           <div class="bg-white p-2 rounded-xl border border-slate-200 text-[11px] text-slate-700">
-            <span class="font-bold">📦 Comprado:</span> ${c.items || '-'}
-            ${c.payment ? `<span class="text-slate-400"> (${c.payment})</span>` : ''}
+            <span class="font-bold">🛍️ Última compra:</span> ${c.latestOrder.items || '-'}
           </div>
-          ${c.notes ? `<p class="text-[11px] text-slate-500 italic">📝 ${c.notes}</p>` : ''}
-          <div class="flex flex-wrap gap-1.5 pt-1">
-            <button onclick="openReheatModal(${c.id})" class="flex-1 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition">💬 Reaquecer</button>
-            <button onclick="openEditCustomerModal(${c.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-3 py-1.5 rounded-xl text-[11px] transition">✏️ Editar</button>
-            <button onclick="deleteCustomerRecord(${c.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-2.5 py-1.5 rounded-xl text-[11px] transition">🗑️</button>
+          <div class="flex items-center justify-between pt-1 gap-2" onclick="event.stopPropagation()">
+            <button onclick="openCustomerHistoryModal('${escAttr(c.key)}')" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] transition">📋 Ver Histórico (${c.orders.length})</button>
+            <button onclick="openReheatModal(${c.latestOrder.id})" class="flex-1 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition">💬 Reaquecer</button>
           </div>
         </div>
       `; }).join('');
+    }
+
+    function openCustomerHistoryModal(clientKey) {
+      const allGroups = buildGroupedCustomers(customerOrders);
+      const client = allGroups.find(c => c.key === clientKey);
+      if (!client) return;
+
+      document.getElementById('hist-client-name').textContent = `👤 ${client.name}`;
+      document.getElementById('hist-client-contact').textContent = `📞 ${client.phone} • 📍 ${client.address || '-'}`;
+
+      const ordersSorted = [...client.orders].sort((a, b) => {
+        const da = getOrderDateObj(a);
+        const db = getOrderDateObj(b);
+        return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+      });
+      const avgTicket = client.orders.length ? client.totalSpent / client.orders.length : 0;
+
+      const body = document.getElementById('customer-history-body');
+      body.innerHTML = `
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-[#E8F8FA] border border-[#B5E8EF] rounded-2xl p-2.5 text-center">
+            <span class="block text-[10px] font-bold text-[#176E7B]">Compras</span>
+            <span class="text-sm font-black text-slate-800">${client.orders.length}</span>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5 text-center">
+            <span class="block text-[10px] font-bold text-emerald-700">Total Gasto</span>
+            <span class="text-sm font-black text-emerald-800">R$ ${formatPriceBR(client.totalSpent)}</span>
+          </div>
+          <div class="bg-[#FDF2F8] border border-[#E84D9A]/30 rounded-2xl p-2.5 text-center">
+            <span class="block text-[10px] font-bold text-[#9D174D]">Ticket Médio</span>
+            <span class="text-sm font-black text-slate-800">R$ ${formatPriceBR(avgTicket)}</span>
+          </div>
+        </div>
+        ${client.notes ? `<div class="bg-[#FEFCE8] border border-[#F7D046] rounded-xl px-3 py-2 text-xs text-[#855E00]"><strong>📝 Anotações / Pet:</strong> ${client.notes}</div>` : ''}
+        <div class="flex gap-2">
+          <button onclick="openReheatModal(${client.latestOrder.id})" class="flex-1 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition">💬 Reaquecer no WhatsApp</button>
+          <button onclick="openNewOrderForClient('${escAttr(client.name)}', '${escAttr(client.phone)}', '${escAttr(client.address)}', '${escAttr(client.notes)}')" class="flex-1 bg-brand-primary hover:opacity-90 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition">+ Nova Compra</button>
+        </div>
+        <div class="pt-1">
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-2">Histórico Completo (${ordersSorted.length})</h4>
+          <div class="space-y-2">
+            ${ordersSorted.map(o => `
+              <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-extrabold text-brand-primary">🗓️ ${o.date}</span>
+                  <span class="text-xs font-black text-emerald-700">R$ ${formatPriceBR(o.total)}</span>
+                </div>
+                <p class="text-xs font-semibold text-slate-800">📦 ${o.items || 'Sem itens detalhados'}</p>
+                <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                  <span>💳 ${o.payment || 'Não informado'}</span>
+                  <div class="flex gap-1.5">
+                    <button onclick="openEditCustomerModal(${o.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2.5 py-1 rounded-lg text-[10px]">✏️ Editar</button>
+                    <button onclick="deleteCustomerRecord(${o.id}, '${escAttr(client.key)}')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-2 py-1 rounded-lg text-[10px]">🗑️</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      document.getElementById('customer-history-modal').classList.remove('hidden');
+    }
+
+    function closeCustomerHistoryModal() {
+      document.getElementById('customer-history-modal').classList.add('hidden');
+    }
+
+    function openNewOrderForClient(name, phone, address, notes) {
+      openEditCustomerModal(null);
+      document.getElementById('edit-customer-modal-title').textContent = 'Registrar Nova Compra do Cliente';
+      document.getElementById('edit-cust-name').value = name || '';
+      document.getElementById('edit-cust-phone').value = phone || '';
+      document.getElementById('edit-cust-address').value = address || '';
+      document.getElementById('edit-cust-notes').value = notes || '';
     }
 
     function openEditCustomerModal(id = null) {
@@ -2936,18 +3122,27 @@
       await loadCustomerOrdersFromCloud();
       renderCustomersList();
       closeEditCustomerModal();
+      const histModal = document.getElementById('customer-history-modal');
+      if (histModal && !histModal.classList.contains('hidden')) {
+        openCustomerHistoryModal(normalizePhoneKey(payload.phone, idVal));
+      }
       showToast("✅ Cliente salvo na nuvem!");
     }
 
-    function deleteCustomerRecord(id) {
-      openConfirmModal("Deseja excluir este registro de cliente?", async () => {
+    function deleteCustomerRecord(id, clientKey = null) {
+      openConfirmModal("Deseja excluir este registro de compra?", async () => {
         if (sb) {
           const { error } = await sb.from('customer_orders').delete().eq('id', id);
-          if (error) { showToast("⚠️ Erro ao excluir cliente."); return; }
+          if (error) { showToast("⚠️ Erro ao excluir registro."); return; }
         }
         customerOrders = customerOrders.filter(c => c.id != id);
         updateCustomersCountBadge();
         renderCustomersList();
+        if (clientKey) {
+          const stillExists = customerOrders.some(o => normalizePhoneKey(o.phone, o.id) === clientKey);
+          if (stillExists) openCustomerHistoryModal(clientKey);
+          else closeCustomerHistoryModal();
+        }
         showToast("🗑️ Registro excluído.");
       });
     }
