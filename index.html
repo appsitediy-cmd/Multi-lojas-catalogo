@@ -144,7 +144,8 @@
         <span class="absolute left-2 flex items-center justify-center w-8 h-8 rounded-xl bg-brand-primary text-white shadow-sm pointer-events-none">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </span>
-        <input type="text" id="search-input" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, Brinquedo...)" class="w-full bg-white border-2 border-brand-primary rounded-2xl pl-12 pr-4 py-3 text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2EB4C7] shadow-sm">
+        <input type="text" id="search-input" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, Brinquedo...)" class="w-full bg-white border-2 border-brand-primary rounded-2xl pl-12 pr-11 py-3 text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2EB4C7] shadow-sm">
+        <button id="search-clear-btn" type="button" onclick="clearSearchInput()" class="hidden absolute right-2.5 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center transition" title="Limpar busca">✕</button>
       </div>
     </div>
 
@@ -162,7 +163,10 @@
       <div class="w-16 h-16 bg-[#E8F8FA] text-brand-primary rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">🐾</div>
       <h3 class="text-base font-bold text-slate-700">Nenhum produto encontrado</h3>
       <p class="text-xs text-slate-500 mt-1">Tente buscar por outro termo ou limpar os filtros.</p>
-      <button onclick="clearAllFilters()" class="mt-4 bg-brand-primary text-white text-xs font-bold px-4 py-2 rounded-xl shadow hover:opacity-90 transition">Ver Todos os Produtos</button>
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <button id="empty-whatsapp-btn" onclick="askEmptySearchOnWhatsApp()" class="hidden bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-extrabold px-4 py-2 rounded-xl shadow flex items-center gap-1.5 transition"><span>💬</span><span>Perguntar no WhatsApp</span></button>
+        <button onclick="clearAllFilters()" class="bg-brand-primary text-white text-xs font-bold px-4 py-2 rounded-xl shadow hover:opacity-90 transition">Ver Todos os Produtos</button>
+      </div>
     </div>
 
   </main>
@@ -1618,6 +1622,56 @@
         .trim();
     }
 
+    function phoneticSearchText(str) {
+      return normalizeSearchText(str)
+        .replace(/ph/g, 'f')
+        .replace(/ch|sh/g, 'x')
+        .replace(/y/g, 'i')
+        .replace(/k/g, 'c')
+        .replace(/w/g, 'u')
+        .replace(/(.)\1+/g, '$1');
+    }
+
+    function stemPortugueseWord(w) {
+      if (!w || w.length < 4) return w;
+      if (/(oes|aes|aos)$/.test(w)) return w.slice(0, -3) + 'ao';
+      if (w.endsWith('is') && w.length >= 4) return w.slice(0, -2) + 'l';
+      if (w.endsWith('ns') && w.length >= 4) return w.slice(0, -2) + 'm';
+      if (w.endsWith('s') && w.length >= 4) return w.slice(0, -1);
+      return w;
+    }
+
+    const PET_SYNONYM_GROUPS = [
+      ['racao', 'alimento', 'comida'],
+      ['cao', 'cachorro', 'dog'],
+      ['gato', 'felino', 'cat'],
+      ['passaro', 'ave', 'calopsita', 'periquito'],
+      ['shampoo', 'xampu', 'shampo', 'xampo', 'banho'],
+      ['sache', 'umido', 'pate', 'lata'],
+      ['remedio', 'medicamento', 'farmacia', 'medicina'],
+      ['antipulga', 'pulga', 'carrapato', 'sarna'],
+      ['petisco', 'bifinho', 'biscoito', 'snack', 'osso', 'ossinho'],
+      ['areia', 'granulado', 'sanitario', 'pipi'],
+      ['coleira', 'guia', 'peitoral'],
+      ['brinquedo', 'bolinha', 'mordedor', 'arranhador'],
+      ['vermifugo', 'verme'],
+      ['vitamina', 'suplemento']
+    ];
+
+    function getSearchVariants(tok) {
+      const stem = stemPortugueseWord(tok);
+      const variants = new Set([tok, stem, phoneticSearchText(tok), phoneticSearchText(stem)]);
+      PET_SYNONYM_GROUPS.forEach(grp => {
+        if (grp.includes(tok) || grp.includes(stem)) {
+          grp.forEach(syn => {
+            variants.add(syn);
+            variants.add(phoneticSearchText(syn));
+          });
+        }
+      });
+      return [...variants].filter(Boolean);
+    }
+
     function editDistance(a, b) {
       if (Math.abs(a.length - b.length) > 2) return 99;
       const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
@@ -1635,26 +1689,60 @@
     function smartMatchProduct(product, query) {
       const qNorm = normalizeSearchText(query);
       if (!qNorm) return true;
-      const fullText = normalizeSearchText([product.name, product.brand, product.category, product.subcategory].join(' '));
-      if (fullText.includes(qNorm)) return true;
-      const tokens = qNorm.split(/\s+/).filter(Boolean);
+      const rawWeight = product.weight && product.weight !== 'Sem peso/medida' ? product.weight : '';
+      const fullText = normalizeSearchText([product.name, product.brand, product.category, product.subcategory, rawWeight].join(' '));
+      const compactText = fullText.replace(/[^a-z0-9]/g, '');
+      const qCompact = qNorm.replace(/[^a-z0-9]/g, '');
+      if (fullText.includes(qNorm) || (qCompact.length >= 2 && compactText.includes(qCompact))) return true;
+      const phonFull = phoneticSearchText(fullText);
+      const phonCompact = phonFull.replace(/[^a-z0-9]/g, '');
+      const qPhonCompact = phoneticSearchText(qNorm).replace(/[^a-z0-9]/g, '');
+      if (qPhonCompact.length >= 3 && phonCompact.includes(qPhonCompact)) return true;
       const words = fullText.split(/[^a-z0-9]+/).filter(Boolean);
+      const stemmedWords = words.map(w => stemPortugueseWord(w));
+      const phonWords = words.map(w => phoneticSearchText(w));
+      const tokens = qNorm.split(/\s+/).filter(Boolean);
       return tokens.every(tok => {
-        if (fullText.includes(tok)) return true;
-        if (tok.length < 4) return false;
+        const variants = getSearchVariants(tok);
+        if (variants.some(v => fullText.includes(v) || phonFull.includes(v) || (v.length >= 3 && compactText.includes(v)))) return true;
+        if (variants.some(v => stemmedWords.includes(v))) return true;
+        if (tok.length < 3) return false;
         const maxDist = tok.length >= 7 ? 2 : 1;
-        return words.some(w => {
-          if (editDistance(tok, w) <= maxDist) return true;
-          if (w.length > tok.length && editDistance(tok, w.slice(0, tok.length)) <= 1) return true;
-          return false;
+        return variants.some(v => {
+          if (v.length < 4) return false;
+          return words.some((w, idx) => {
+            const sw = stemmedWords[idx];
+            const pw = phonWords[idx];
+            if (editDistance(v, w) <= maxDist || editDistance(v, sw) <= maxDist || editDistance(v, pw) <= maxDist) return true;
+            if (w.length > v.length && editDistance(v, w.slice(0, v.length)) <= 1) return true;
+            return false;
+          });
         });
       });
     }
 
+    function clearSearchInput() {
+      const inp = document.getElementById('search-input');
+      if (inp) { inp.value = ''; inp.focus(); }
+      filterProducts();
+    }
+
+    function askEmptySearchOnWhatsApp() {
+      const query = (document.getElementById('search-input')?.value || '').trim();
+      const num = normalizeWhatsAppBR(storeConfig.whatsapp || "5511999999999");
+      const msg = encodeURIComponent(`Olá! Procurei por "${query}" no catálogo da ${storeConfig.name} e não encontrei. Vocês têm na loja? 🐾`);
+      const url = `https://api.whatsapp.com/send?phone=${num}&text=${msg}`;
+      const win = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!win) window.location.href = url;
+    }
+
     function filterProducts() {
       const query = document.getElementById('search-input').value.trim();
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.classList.toggle('hidden', !query);
 
-      const filtered = products.filter(p => {
+      let usedGlobalFallback = false;
+      let filtered = products.filter(p => {
         if (p.active === false) return false;
         const matchQuery = smartMatchProduct(p, query);
         const matchCat = currentCategory === "Todos" || p.category === currentCategory;
@@ -1663,6 +1751,11 @@
         const matchPromo = !onlyPromo || isProductPromoActive(p);
         return matchQuery && matchCat && matchSub && matchBrand && matchPromo;
       });
+
+      if (query && filtered.length === 0 && (currentCategory !== "Todos" || currentSubcategory !== "Todos" || currentBrand !== "Todos" || onlyPromo)) {
+        filtered = products.filter(p => p.active !== false && smartMatchProduct(p, query));
+        if (filtered.length > 0) usedGlobalFallback = true;
+      }
 
       const sortBy = document.getElementById('client-sort-select')?.value || 'promo-first';
       if (sortBy === 'price-asc') {
@@ -1680,7 +1773,9 @@
       const countBadge = document.getElementById('product-count-badge');
       const listTitle = document.getElementById('product-list-title');
 
-      if (onlyPromo) {
+      if (usedGlobalFallback) {
+        listTitle.textContent = `🔎 Resultados em todo o catálogo`;
+      } else if (onlyPromo) {
         listTitle.textContent = "🔥 Produtos em Promoção";
       } else if (currentCategory !== "Todos") {
         listTitle.textContent = currentSubcategory !== "Todos" ? `${currentCategory} > ${currentSubcategory}` : currentCategory;
@@ -1689,6 +1784,8 @@
       }
 
       countBadge.textContent = `${filtered.length} ${filtered.length === 1 ? 'item' : 'itens'}`;
+      const emptyWaBtn = document.getElementById('empty-whatsapp-btn');
+      if (emptyWaBtn) emptyWaBtn.classList.toggle('hidden', !query);
 
       if (filtered.length === 0) {
         grid.innerHTML = "";
