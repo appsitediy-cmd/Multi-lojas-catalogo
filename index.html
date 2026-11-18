@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#2EB4C7">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link id="pwa-manifest-link" rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>Catálogo Online - Recanto Petshop</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
@@ -89,8 +91,14 @@
         <button onclick="closePwaHelpModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
       </div>
       <p class="text-xs text-slate-600">Para colocar o ícone redondo da loja na tela do seu celular:</p>
-      <div class="bg-[#E8F8FA] border border-[#B5E8EF] rounded-2xl p-3 text-left text-xs text-slate-700 space-y-1.5">
-        <p><strong>• Android (Chrome):</strong> toque nos <strong>3 pontinhos (⋮)</strong> no canto superior e escolha <strong>Adicionar à tela inicial</strong>.</p>
+      <div id="pwa-help-inapp" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-3 text-left text-xs text-amber-900 space-y-1.5">
+        <p class="font-extrabold">⚠️ Você abriu dentro do WhatsApp/Instagram!</p>
+        <p>Para instalar igual aplicativo, primeiro abra no navegador:</p>
+        <p><strong>• Android:</strong> toque nos <strong>3 pontinhos (⋮)</strong> no topo e escolha <strong>Abrir no Chrome</strong>.</p>
+        <p><strong>• iPhone:</strong> toque no ícone da <strong>bússola / Safari</strong> no canto inferior direito.</p>
+      </div>
+      <div id="pwa-help-browser" class="bg-[#E8F8FA] border border-[#B5E8EF] rounded-2xl p-3 text-left text-xs text-slate-700 space-y-1.5">
+        <p><strong>• Android (Chrome):</strong> toque nos <strong>3 pontinhos (⋮)</strong> no canto superior e escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</p>
         <p><strong>• iPhone (Safari):</strong> toque em <strong>Compartilhar (⬆️)</strong> na barra inferior e escolha <strong>Adicionar à Tela de Início</strong>.</p>
       </div>
       <button onclick="closePwaHelpModal()" class="w-full bg-brand-primary text-white font-bold py-2.5 rounded-xl text-xs shadow">Entendi</button>
@@ -926,6 +934,10 @@
       return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     }
 
+    function isInAppBrowser() {
+      return /WhatsApp|FBAN|FBAV|Instagram|Line|MicroMessenger|\bwv\b/i.test(navigator.userAgent || '');
+    }
+
     function showPwaInstallBanner() {
       if (isStandaloneMode()) return;
       try { if (sessionStorage.getItem('pwa_dismissed_' + storeSlug)) return; } catch (e) {}
@@ -944,12 +956,22 @@
     }
 
     async function triggerPwaInstall() {
-      if (deferredInstallPrompt) {
+      if (deferredInstallPrompt && !isInAppBrowser()) {
         deferredInstallPrompt.prompt();
         const res = await deferredInstallPrompt.userChoice;
         deferredInstallPrompt = null;
-        if (res && res.outcome === 'accepted') dismissPwaBanner();
+        if (res && res.outcome === 'accepted') {
+          dismissPwaBanner();
+          showToast("📲 Instalando app... Em segundos o ícone aparece no seu celular!");
+        }
       } else {
+        const inAppBox = document.getElementById('pwa-help-inapp');
+        const browserBox = document.getElementById('pwa-help-browser');
+        if (inAppBox && browserBox) {
+          const inApp = isInAppBrowser();
+          inAppBox.classList.toggle('hidden', !inApp);
+          browserBox.classList.toggle('hidden', inApp);
+        }
         document.getElementById('pwa-help-modal').classList.remove('hidden');
       }
     }
@@ -984,36 +1006,13 @@
 
     async function injectPWAManifest() {
       try {
-        const rawLogo = storeConfig.logo || DEFAULT_LOGO_IMG;
-        const icon192 = await makeRoundIconDataUrl(rawLogo, 192);
-        const icon512 = await makeRoundIconDataUrl(rawLogo, 512);
-        let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
-        if (!appleIcon) {
-          appleIcon = document.createElement('link');
-          appleIcon.rel = 'apple-touch-icon';
-          document.head.appendChild(appleIcon);
+        const manifestLink = document.getElementById('pwa-manifest-link');
+        if (manifestLink && storeSlug === 'suricata') {
+          manifestLink.setAttribute('href', 'manifest-suricata.json');
         }
-        appleIcon.href = icon192;
-        const manifest = {
-          name: storeConfig.name,
-          short_name: storeConfig.name.slice(0, 14),
-          start_url: window.location.href,
-          display: "standalone",
-          background_color: "#F4F9FA",
-          theme_color: storeConfig.primaryColor || "#2EB4C7",
-          icons: [
-            { src: icon192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-            { src: icon512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
-          ]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-        let link = document.querySelector('link[rel="manifest"]');
-        if (!link) {
-          link = document.createElement('link');
-          link.rel = 'manifest';
-          document.head.appendChild(link);
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
-        link.href = URL.createObjectURL(blob);
         showPwaInstallBanner();
       } catch (e) {}
     }
