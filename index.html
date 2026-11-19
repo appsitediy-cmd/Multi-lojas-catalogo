@@ -283,6 +283,71 @@
               <button type="button" onclick="setQuickColor('accent', '#2563EB')" class="w-5 h-5 rounded-full bg-[#2563EB] border border-white shadow" title="Azul"></button>
             </div>
           </div>
+          <div class="sm:col-span-2 bg-white border border-slate-200 rounded-2xl p-3 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-extrabold text-slate-700">🎨 Cores do Cabeçalho (Letras e Fundos)</span>
+              <button type="button" onclick="resetHeaderStyles()" class="text-[10px] font-bold text-brand-primary hover:underline">Restaurar padrão</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-700">Nome da Loja</span>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <span class="text-[10px] text-slate-500">Letra</span>
+                  <input type="color" id="hs-name-color" value="#FFFFFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                </label>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-700">Subtítulo</span>
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                  <span class="text-[10px] text-slate-500">Letra</span>
+                  <input type="color" id="hs-subtitle-color" value="#ECFEFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                </label>
+              </div>
+              <div class="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-wrap items-center justify-between gap-2">
+                <span class="font-bold text-slate-700">📍 Endereço</span>
+                <div class="flex items-center gap-3 flex-wrap">
+                  <label class="flex items-center gap-1 cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Letra</span>
+                    <input type="color" id="hs-address-text" value="#ECFEFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                  </label>
+                  <label class="flex items-center gap-1 cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Fundo</span>
+                    <input type="color" id="hs-address-bg" value="#176E7B" oninput="document.getElementById('hs-address-nobg').checked=false; previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                  </label>
+                  <label class="flex items-center gap-1 cursor-pointer select-none">
+                    <input type="checkbox" id="hs-address-nobg" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#2EB4C7]">
+                    <span class="text-[10px] font-semibold text-slate-600">Sem fundo</span>
+                  </label>
+                </div>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-wrap items-center justify-between gap-2">
+                <span class="font-bold text-slate-700">🕒 Horário</span>
+                <div class="flex items-center gap-2.5">
+                  <label class="flex items-center gap-1 cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Letra</span>
+                    <input type="color" id="hs-hours-text" value="#FFFFFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                  </label>
+                  <label class="flex items-center gap-1 cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Fundo</span>
+                    <input type="color" id="hs-hours-bg" value="#176E7B" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                  </label>
+                </div>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-wrap items-center justify-between gap-2">
+                <span class="font-bold text-slate-700">🛵 Entrega</span>
+                <div class="flex items-center gap-2.5">
+                  <label class="flex items-center gap-1 cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Letra</span>
+                    <input type="color" id="hs-delivery-text" value="#0F172A" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                  </label>
+                  <label class="flex items-center gap-1 cursor-pointer">
+                    <span class="text-[10px] text-slate-500">Fundo</span>
+                    <input type="color" id="hs-delivery-bg" value="#F7D046" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="mb-3">
           <label class="block text-[11px] font-bold text-slate-700 mb-1">Foto da Logo (Galeria envia para nuvem ou Link)</label>
@@ -939,6 +1004,16 @@
       address: "",
       openingHours: "",
       deliveryInfo: "",
+      headerStyles: {
+        nameColor: "#FFFFFF",
+        subtitleColor: "#ECFEFF",
+        addressBg: "",
+        addressText: "#ECFEFF",
+        hoursBg: "#176E7B",
+        hoursText: "#FFFFFF",
+        deliveryBg: "#F7D046",
+        deliveryText: "#0F172A"
+      },
       pixKey: "",
       logo: DEFAULT_LOGO_IMG,
       logoZoom: 100,
@@ -1200,6 +1275,16 @@
         address: store.address || "",
         openingHours: store.opening_hours || "",
         deliveryInfo: store.delivery_info || "",
+        headerStyles: Object.assign({
+          nameColor: "#FFFFFF",
+          subtitleColor: "#ECFEFF",
+          addressBg: "",
+          addressText: "#ECFEFF",
+          hoursBg: store.hours_bg_color || "#176E7B",
+          hoursText: "#FFFFFF",
+          deliveryBg: store.delivery_bg_color || "#F7D046",
+          deliveryText: "#0F172A"
+        }, store.header_styles || {}),
         pixKey: store.pix_key || "",
         logo: store.logo_url || DEFAULT_LOGO_IMG,
         logoZoom: store.logo_zoom || 100,
@@ -1253,6 +1338,7 @@
           address: storeConfig.address,
           opening_hours: storeConfig.openingHours,
           delivery_info: storeConfig.deliveryInfo,
+          header_styles: storeConfig.headerStyles,
           whatsapp: storeConfig.whatsapp,
           pix_key: storeConfig.pixKey,
           logo_url: storeConfig.logo === DEFAULT_LOGO_IMG ? '' : storeConfig.logo,
@@ -1354,6 +1440,84 @@
       document.getElementById('image-zoom-modal').classList.remove('hidden');
     }
 
+    function applyHeaderStylesObj(hs) {
+      const s = hs || {};
+      const nameEl = document.getElementById('header-store-name');
+      const subEl = document.getElementById('header-store-subtitle');
+      const addrEl = document.getElementById('header-store-address');
+      const hoursEl = document.getElementById('header-opening-hours');
+      const delivEl = document.getElementById('header-delivery-info');
+      if (nameEl) nameEl.style.color = s.nameColor || '#FFFFFF';
+      if (subEl) subEl.style.color = s.subtitleColor || '#ECFEFF';
+      if (addrEl) {
+        addrEl.style.color = s.addressText || '#ECFEFF';
+        if (s.addressBg) {
+          addrEl.style.backgroundColor = s.addressBg;
+          addrEl.style.display = addrEl.classList.contains('hidden') ? '' : 'inline-block';
+          addrEl.style.padding = '2px 8px';
+          addrEl.style.borderRadius = '8px';
+        } else {
+          addrEl.style.backgroundColor = 'transparent';
+          addrEl.style.display = '';
+          addrEl.style.padding = '';
+          addrEl.style.borderRadius = '';
+        }
+      }
+      if (hoursEl) {
+        hoursEl.style.backgroundColor = s.hoursBg || '#176E7B';
+        hoursEl.style.color = s.hoursText || '#FFFFFF';
+        hoursEl.style.borderColor = 'rgba(255,255,255,0.28)';
+      }
+      if (delivEl) {
+        delivEl.style.backgroundColor = s.deliveryBg || '#F7D046';
+        delivEl.style.color = s.deliveryText || '#0F172A';
+      }
+    }
+
+    function readHeaderStylesFromInputs() {
+      const noBg = !!document.getElementById('hs-address-nobg')?.checked;
+      return {
+        nameColor: document.getElementById('hs-name-color')?.value || '#FFFFFF',
+        subtitleColor: document.getElementById('hs-subtitle-color')?.value || '#ECFEFF',
+        addressText: document.getElementById('hs-address-text')?.value || '#ECFEFF',
+        addressBg: noBg ? '' : (document.getElementById('hs-address-bg')?.value || '#176E7B'),
+        hoursText: document.getElementById('hs-hours-text')?.value || '#FFFFFF',
+        hoursBg: document.getElementById('hs-hours-bg')?.value || '#176E7B',
+        deliveryText: document.getElementById('hs-delivery-text')?.value || '#0F172A',
+        deliveryBg: document.getElementById('hs-delivery-bg')?.value || '#F7D046'
+      };
+    }
+
+    function previewHeaderStyles() {
+      applyHeaderStylesObj(readHeaderStylesFromInputs());
+    }
+
+    function resetHeaderStyles() {
+      const def = {
+        nameColor: '#FFFFFF', subtitleColor: '#ECFEFF',
+        addressBg: '', addressText: '#ECFEFF',
+        hoursBg: '#176E7B', hoursText: '#FFFFFF',
+        deliveryBg: '#F7D046', deliveryText: '#0F172A'
+      };
+      populateHeaderStyleInputs(def);
+      applyHeaderStylesObj(def);
+    }
+
+    function populateHeaderStyleInputs(hs) {
+      const s = hs || {};
+      const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      setVal('hs-name-color', s.nameColor || '#FFFFFF');
+      setVal('hs-subtitle-color', s.subtitleColor || '#ECFEFF');
+      setVal('hs-address-text', s.addressText || '#ECFEFF');
+      setVal('hs-address-bg', s.addressBg || '#176E7B');
+      const nobg = document.getElementById('hs-address-nobg');
+      if (nobg) nobg.checked = !s.addressBg;
+      setVal('hs-hours-text', s.hoursText || '#FFFFFF');
+      setVal('hs-hours-bg', s.hoursBg || '#176E7B');
+      setVal('hs-delivery-text', s.deliveryText || '#0F172A');
+      setVal('hs-delivery-bg', s.deliveryBg || '#F7D046');
+    }
+
     function renderStoreConfig() {
       applyThemeColors();
       document.title = `Catálogo Online - ${storeConfig.name}`;
@@ -1379,6 +1543,7 @@
         delivEl.textContent = hasDeliv ? `🛵 ${storeConfig.deliveryInfo.trim()}` : '';
         delivEl.classList.toggle('hidden', !hasDeliv);
       }
+      applyHeaderStylesObj(storeConfig.headerStyles);
       if (badgesWrap) badgesWrap.classList.toggle('hidden', !(hasHours || hasDeliv));
       if (addrBar) addrBar.classList.toggle('hidden', !(hasAddr || hasHours || hasDeliv));
       document.getElementById('footer-store-label').textContent = storeConfig.address ? `${storeConfig.name} • 📍 ${storeConfig.address}` : storeConfig.name;
@@ -1409,6 +1574,7 @@
       document.getElementById('config-store-address-input').value = storeConfig.address || "";
       if (document.getElementById('config-opening-hours')) document.getElementById('config-opening-hours').value = storeConfig.openingHours || "";
       if (document.getElementById('config-delivery-info')) document.getElementById('config-delivery-info').value = storeConfig.deliveryInfo || "";
+      populateHeaderStyleInputs(storeConfig.headerStyles);
       document.getElementById('config-pix-key').value = storeConfig.pixKey || "";
       document.getElementById('config-primary-color').value = storeConfig.primaryColor || "#2EB4C7";
       document.getElementById('config-accent-color').value = storeConfig.accentColor || "#E84D9A";
@@ -1429,6 +1595,7 @@
       storeConfig.address = document.getElementById('config-store-address-input').value.trim();
       storeConfig.openingHours = document.getElementById('config-opening-hours')?.value.trim() || "";
       storeConfig.deliveryInfo = document.getElementById('config-delivery-info')?.value.trim() || "";
+      storeConfig.headerStyles = readHeaderStylesFromInputs();
       storeConfig.pixKey = document.getElementById('config-pix-key').value.trim();
       storeConfig.primaryColor = document.getElementById('config-primary-color').value || "#2EB4C7";
       storeConfig.accentColor = document.getElementById('config-accent-color').value || "#E84D9A";
