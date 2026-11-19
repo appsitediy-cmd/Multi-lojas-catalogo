@@ -1924,29 +1924,34 @@
         const qty = cart[p.id] || 0;
         const imgSrc = p.image || DEFAULT_PRODUCT_IMG;
 
+        const isPromoNow = isProductPromoActive(p);
+        const hasPromoPrice = isPromoNow && p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price;
+        const pctOff = hasPromoPrice ? Math.round(((p.price - p.promoPrice) / p.price) * 100) : 0;
+        const diffReais = hasPromoPrice ? Math.round(p.price - p.promoPrice) : 0;
+
         let actionArea = '';
         if (qty === 0) {
           actionArea = `
-            <button onclick="addToCart(${p.id})" class="w-full bg-brand-primary hover:opacity-90 active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow transition">
-              <span>🛒</span> <span>Adicionar</span>
+            <button onclick="addToCart(${p.id})" class="w-full ${isPromoNow ? 'bg-brand-accent shadow-md font-extrabold' : 'bg-brand-primary shadow font-bold'} hover:opacity-90 active:scale-95 text-white py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+              <span>${isPromoNow ? '🔥' : '🛒'}</span> <span>${isPromoNow ? 'Aproveitar' : 'Adicionar'}</span>
             </button>
           `;
         } else {
           actionArea = `
-            <div class="flex items-center justify-between bg-[#E8F8FA] border border-[#2EB4C7]/40 rounded-xl p-1">
-              <button onclick="decreaseCart(${p.id})" class="w-8 h-8 bg-white hover:bg-slate-100 text-brand-primary font-extrabold rounded-lg shadow-sm flex items-center justify-center text-sm active:scale-90 transition">-</button>
-              <span class="font-extrabold text-xs text-[#176E7B] px-2">${qty}</span>
-              <button onclick="increaseCart(${p.id})" class="w-8 h-8 bg-brand-primary hover:opacity-90 text-white font-extrabold rounded-lg shadow-sm flex items-center justify-center text-sm active:scale-90 transition">+</button>
+            <div class="flex items-center justify-between ${isPromoNow ? 'bg-pink-50 border-[#E84D9A]/40' : 'bg-[#E8F8FA] border-[#2EB4C7]/40'} border rounded-xl p-1">
+              <button onclick="decreaseCart(${p.id})" class="w-8 h-8 bg-white hover:bg-slate-100 ${isPromoNow ? 'text-brand-accent' : 'text-brand-primary'} font-extrabold rounded-lg shadow-sm flex items-center justify-center text-sm active:scale-90 transition">-</button>
+              <span class="font-extrabold text-xs ${isPromoNow ? 'text-[#9D174D]' : 'text-[#176E7B]'} px-2">${qty}</span>
+              <button onclick="increaseCart(${p.id})" class="w-8 h-8 ${isPromoNow ? 'bg-brand-accent' : 'bg-brand-primary'} hover:opacity-90 text-white font-extrabold rounded-lg shadow-sm flex items-center justify-center text-sm active:scale-90 transition">+</button>
             </div>
           `;
         }
 
         return `
-          <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 flex flex-col justify-between transition hover:shadow-md hover:border-[#2EB4C7]/40">
+          <div class="bg-white rounded-2xl p-3 flex flex-col justify-between transition ${isPromoNow ? 'shadow-md border-2 border-[#E84D9A]/50 ring-2 ring-[#E84D9A]/10 hover:shadow-lg' : 'shadow-sm border border-slate-200 hover:shadow-md hover:border-[#2EB4C7]/40'}">
             <div>
-              <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square bg-slate-50 rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border border-slate-100 group cursor-zoom-in">
-                ${isProductPromoActive(p) ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMOÇÃO</span></span>` : ''}
-                ${(isProductPromoActive(p) && p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price && Math.round(((p.price - p.promoPrice) / p.price) * 100) >= 1) ? `<span class="absolute bottom-1.5 right-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow">-${Math.round(((p.price - p.promoPrice) / p.price) * 100)}% OFF</span>` : ''}
+              <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square ${isPromoNow ? 'bg-pink-50/40 border-pink-100' : 'bg-slate-50 border-slate-100'} rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border group cursor-zoom-in">
+                ${isPromoNow ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMOÇÃO</span></span>` : ''}
+                ${pctOff >= 1 ? `<span class="absolute bottom-1.5 right-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow">-${pctOff}% OFF</span>` : ''}
                 <img src="${imgSrc}" alt="${p.name}" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
               </div>
               <div class="flex items-center gap-1 mb-1 flex-wrap">
@@ -1956,17 +1961,19 @@
               <h4 class="text-xs font-bold text-slate-800 mb-1.5 leading-snug break-words">${p.name}</h4>
             </div>
             <div>
-              ${(isProductPromoActive(p) && p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price) ? `
-                <div class="bg-[#F0FAFB] border border-brand-primary/40 rounded-xl px-2.5 py-1.5 mb-2">
+              ${hasPromoPrice ? `
+                <div class="bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
                   <div class="text-[10px] text-slate-400 line-through font-bold">De R$ ${p.price.toFixed(2).replace('.', ',')}</div>
                   <div class="flex items-center justify-between gap-1 flex-wrap">
-                    <span class="text-sm font-black text-brand-primary">Por R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>
-                    ${Math.round(p.price - p.promoPrice) >= 1 ? `<span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">-R$ ${Math.round(p.price - p.promoPrice)}</span>` : ''}
+                    <span class="text-base font-black text-[#BE185D] leading-tight">Por R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>
+                    ${diffReais >= 1 ? `<span class="text-[9px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded-md">-R$ ${diffReais}</span>` : ''}
                   </div>
                 </div>
+              ` : (isPromoNow ? `
+                <div class="inline-block bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1 text-base font-black text-[#BE185D] mb-2 shadow-sm">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
               ` : `
                 <div class="inline-block bg-[#F0FAFB] border border-brand-primary/40 rounded-xl px-2.5 py-1 text-sm font-black text-brand-primary mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
-              `}
+              `)}
               ${actionArea}
             </div>
           </div>
