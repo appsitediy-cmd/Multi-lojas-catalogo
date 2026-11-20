@@ -212,8 +212,16 @@
         <button onclick="copyStoreLink()" class="bg-brand-primary text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm hover:opacity-90 transition shrink-0">📋 Copiar Link</button>
       </div>
 
+      <!-- ATALHOS RÁPIDOS DAS SEÇÕES -->
+      <div class="flex flex-wrap gap-1.5 mb-4">
+        <a href="#mgr-sec-1" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">1. Loja</a>
+        <a href="#mgr-sec-2" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">2. Categorias</a>
+        <a href="#mgr-sec-3" class="bg-[#CFFAFE] hover:bg-[#A5F3FC] text-[#155E75] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">3. Novo Produto</a>
+        <a href="#mgr-sec-4" class="bg-pink-100 hover:bg-pink-200 text-[#9D174D] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">4. Produtos</a>
+      </div>
+
       <!-- SEÇÃO 1: CONFIGURAÇÕES DA LOJA -->
-      <div class="mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+      <div id="mgr-sec-1" class="mb-6 bg-slate-100/90 p-4 rounded-2xl border-2 border-slate-300">
         <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-3">1. Dados do WhatsApp, Cores e Loja</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
@@ -377,7 +385,7 @@
       </div>
 
       <!-- SEÇÃO 2: CATEGORIAS, SUBCATEGORIAS, MARCAS E PESOS -->
-      <div class="mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+      <div id="mgr-sec-2" class="mb-6 bg-amber-50/75 p-4 rounded-2xl border-2 border-amber-200">
         <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-3">2. Gerenciar Categorias, Marcas e Pesos/Medidas</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
@@ -413,7 +421,7 @@
       </div>
 
       <!-- SEÇÃO 3: ADICIONAR NOVO PRODUTO -->
-      <div class="mb-6 bg-[#E8F8FA]/70 p-4 rounded-2xl border border-[#B5E8EF]">
+      <div id="mgr-sec-3" class="mb-6 bg-[#E0F7FA]/85 p-4 rounded-2xl border-2 border-[#2EB4C7]/45">
         <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#176E7B] mb-3">3. Adicionar Novo Produto</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div class="sm:col-span-2">
@@ -523,7 +531,7 @@
       </div>
 
       <!-- SEÇÃO 4: PRODUTOS CADASTRADOS -->
-      <div>
+      <div id="mgr-sec-4" class="bg-[#FDF2F8]/75 p-4 rounded-2xl border-2 border-[#E84D9A]/30">
         <div class="flex items-center justify-between mb-3">
           <h3 id="manager-product-count" class="text-xs font-extrabold uppercase tracking-wider text-slate-600">4. Produtos Cadastrados (0)</h3>
           <button onclick="exportJSON()" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition">💾 Exportar Dados</button>
@@ -532,7 +540,8 @@
           <div class="flex items-center gap-2">
             <div class="relative flex-1 min-w-0">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">🔎</span>
-              <input type="text" id="manager-search" oninput="clearManagerSelection(); renderManagerProducts();" placeholder="Buscar por nome, EAN, NCM, marca, peso..." class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+              <input type="text" id="manager-search" oninput="clearManagerSelection(); toggleManagerSearchClear(); renderManagerProducts();" placeholder="Buscar por nome, EAN, NCM, marca, peso..." class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+              <button type="button" id="manager-search-clear" onclick="clearManagerSearchInput()" class="hidden absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-slate-700 font-black text-xs" title="Limpar busca">✕</button>
             </div>
             <button type="button" onclick="openBarcodeScanner('manager-search', true)" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1 shadow-sm" title="Ler código de barras pela câmera ou foto">
               <span>📷</span><span class="hidden sm:inline">Ler EAN</span>
@@ -2562,6 +2571,7 @@
       const b = document.getElementById('manager-filter-brand');
       const st = document.getElementById('manager-filter-status');
       if (s) s.value = '';
+      toggleManagerSearchClear();
       if (c) c.value = 'Todos';
       updateManagerFilterSubcats();
       if (b) b.value = 'Todos';
@@ -3063,15 +3073,31 @@
       managerSelectedIds.clear();
     }
 
+    function toggleManagerSearchClear() {
+      const inp = document.getElementById('manager-search');
+      const btn = document.getElementById('manager-search-clear');
+      if (btn) btn.classList.toggle('hidden', !(inp && inp.value.trim().length > 0));
+    }
+
+    function clearManagerSearchInput() {
+      const inp = document.getElementById('manager-search');
+      if (inp) inp.value = '';
+      toggleManagerSearchClear();
+      clearManagerSelection();
+      renderManagerProducts();
+      inp?.focus();
+    }
+
     function getFilteredManagerProducts() {
-      const q = (document.getElementById('manager-search')?.value || '').toLowerCase().trim();
+      const qRaw = (document.getElementById('manager-search')?.value || '').trim();
+      const q = qRaw.toLowerCase();
       const fCat = document.getElementById('manager-filter-cat')?.value || 'Todos';
       const fSub = document.getElementById('manager-filter-subcat')?.value || 'Todos';
       const fBrand = document.getElementById('manager-filter-brand')?.value || 'Todos';
       const fStatus = document.getElementById('manager-filter-status')?.value || 'all';
 
       return products.filter(p => {
-        const matchQ = !q || [p.name, p.brand, p.category, p.subcategory, p.weight, p.barcode, p.ncm].some(v => (v || '').toLowerCase().includes(q));
+        const matchQ = !q || smartMatchProduct(p, qRaw) || [p.barcode, p.ncm].some(v => (v || '').toLowerCase().includes(q));
         const matchC = fCat === 'Todos' || p.category === fCat;
         const matchS = fSub === 'Todos' || p.subcategory === fSub;
         const matchB = fBrand === 'Todos' || p.brand === fBrand;
