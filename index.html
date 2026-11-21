@@ -238,17 +238,27 @@
         <button onclick="copyStoreLink()" class="bg-brand-primary text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm hover:opacity-90 transition shrink-0">📋 Copiar Link</button>
       </div>
 
-      <!-- ATALHOS RÁPIDOS DAS SEÇÕES -->
-      <div class="flex flex-wrap gap-1.5 mb-4">
-        <a href="#mgr-sec-1" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">1. Loja</a>
-        <a href="#mgr-sec-2" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">2. Categorias</a>
-        <a href="#mgr-sec-3" class="bg-[#CFFAFE] hover:bg-[#A5F3FC] text-[#155E75] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">3. Novo Produto</a>
-        <a href="#mgr-sec-4" class="bg-pink-100 hover:bg-pink-200 text-[#9D174D] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">4. Produtos</a>
+      <!-- ATALHOS RÁPIDOS E RECOLHER/ABRIR TODAS -->
+      <div class="flex items-center justify-between gap-2 flex-wrap mb-4">
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="focusManagerSection(1)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">1. Loja</button>
+          <button type="button" onclick="focusManagerSection(2)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">2. Categorias</button>
+          <button type="button" onclick="focusManagerSection(3)" class="bg-[#CFFAFE] hover:bg-[#A5F3FC] text-[#155E75] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">3. Novo Produto</button>
+          <button type="button" onclick="focusManagerSection(4)" class="bg-pink-100 hover:bg-pink-200 text-[#9D174D] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">4. Produtos</button>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button type="button" onclick="setAllManagerSections(false)" class="text-[11px] font-bold text-slate-600 bg-white border border-slate-300 px-2.5 py-1 rounded-xl hover:bg-slate-100 transition">Recolher tudo</button>
+          <button type="button" onclick="setAllManagerSections(true)" class="text-[11px] font-bold text-[#155E75] bg-white border border-[#2EB4C7] px-2.5 py-1 rounded-xl hover:bg-cyan-50 transition">Abrir tudo</button>
+        </div>
       </div>
 
       <!-- SEÇÃO 1: CONFIGURAÇÕES DA LOJA -->
-      <div id="mgr-sec-1" class="mb-6 bg-slate-100/90 p-4 rounded-2xl border-2 border-slate-300">
-        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-3">1. Dados do WhatsApp, Cores e Loja</h3>
+      <div id="mgr-sec-1" class="mb-4 bg-slate-100/90 rounded-2xl border-2 border-slate-300 overflow-hidden">
+        <button type="button" onclick="toggleManagerSection(1)" class="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-200/60 transition">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700">1. Dados do WhatsApp, Cores e Loja</span>
+          <span id="mgr-sec-arrow-1" class="text-xs font-black text-slate-500 shrink-0 ml-2">▸ Abrir</span>
+        </button>
+        <div id="mgr-sec-body-1" class="hidden px-4 pb-4 pt-2 border-t border-slate-200">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">WhatsApp para Pedidos (com DDD)</label>
@@ -418,11 +428,16 @@
           </div>
         </div>
         <button onclick="saveStoreConfig()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs shadow transition">Salvar Dados da Loja</button>
+        </div>
       </div>
 
       <!-- SEÇÃO 2: CATEGORIAS, SUBCATEGORIAS, MARCAS E PESOS -->
-      <div id="mgr-sec-2" class="mb-6 bg-amber-50/75 p-4 rounded-2xl border-2 border-amber-200">
-        <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-3">2. Gerenciar Categorias, Marcas e Pesos/Medidas</h3>
+      <div id="mgr-sec-2" class="mb-4 bg-amber-50/75 rounded-2xl border-2 border-amber-200 overflow-hidden">
+        <button type="button" onclick="toggleManagerSection(2)" class="w-full p-3.5 flex items-center justify-between text-left hover:bg-amber-100/60 transition">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-amber-900">2. Gerenciar Categorias, Marcas e Pesos/Medidas</span>
+          <span id="mgr-sec-arrow-2" class="text-xs font-black text-amber-700 shrink-0 ml-2">▸ Abrir</span>
+        </button>
+        <div id="mgr-sec-body-2" class="hidden px-4 pb-4 pt-2 border-t border-amber-200">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
             <div class="flex items-center justify-between gap-2 mb-2">
@@ -454,11 +469,16 @@
             <div id="manager-weight-list" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1"></div>
           </div>
         </div>
+        </div>
       </div>
 
       <!-- SEÇÃO 3: ADICIONAR NOVO PRODUTO -->
-      <div id="mgr-sec-3" class="mb-6 bg-[#E0F7FA]/85 p-4 rounded-2xl border-2 border-[#2EB4C7]/45">
-        <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#176E7B] mb-3">3. Adicionar Novo Produto</h3>
+      <div id="mgr-sec-3" class="mb-4 bg-[#E0F7FA]/85 rounded-2xl border-2 border-[#2EB4C7]/45 overflow-hidden">
+        <button type="button" onclick="toggleManagerSection(3)" class="w-full p-3.5 flex items-center justify-between text-left hover:bg-cyan-100/60 transition">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-[#176E7B]">3. Adicionar Novo Produto</span>
+          <span id="mgr-sec-arrow-3" class="text-xs font-black text-[#176E7B] shrink-0 ml-2">▾ Recolher</span>
+        </button>
+        <div id="mgr-sec-body-3" class="px-4 pb-4 pt-2 border-t border-[#2EB4C7]/25">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div class="sm:col-span-2">
             <div class="flex items-center justify-between mb-1">
@@ -575,14 +595,19 @@
         <button onclick="openBulkModal()" class="w-full mt-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-2xl text-xs shadow transition flex items-center justify-center gap-1.5">
           <span>📥</span> Colar Lista em Massa (Vários Produtos)
         </button>
+        </div>
       </div>
 
       <!-- SEÇÃO 4: PRODUTOS CADASTRADOS -->
-      <div id="mgr-sec-4" class="bg-[#FDF2F8]/75 p-4 rounded-2xl border-2 border-[#E84D9A]/30">
-        <div class="flex items-center justify-between mb-3">
-          <h3 id="manager-product-count" class="text-xs font-extrabold uppercase tracking-wider text-slate-600">4. Produtos Cadastrados (0)</h3>
-          <button onclick="exportJSON()" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-1.5 rounded-xl transition">💾 Exportar Dados</button>
+      <div id="mgr-sec-4" class="bg-[#FDF2F8]/75 rounded-2xl border-2 border-[#E84D9A]/30 overflow-hidden">
+        <div class="p-3.5 flex items-center justify-between gap-2 hover:bg-pink-100/50 transition">
+          <button type="button" onclick="toggleManagerSection(4)" class="flex-1 flex items-center justify-between text-left">
+            <h3 id="manager-product-count" class="text-xs font-extrabold uppercase tracking-wider text-[#9D174D]">4. Produtos Cadastrados (0)</h3>
+            <span id="mgr-sec-arrow-4" class="text-xs font-black text-[#9D174D] shrink-0 ml-2">▾ Recolher</span>
+          </button>
+          <button type="button" onclick="exportJSON()" class="text-[11px] bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-xl transition shrink-0">💾 Exportar</button>
         </div>
+        <div id="mgr-sec-body-4" class="px-4 pb-4 pt-2 border-t border-[#E84D9A]/20">
         <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 mb-2.5 space-y-2">
           <div class="flex items-center gap-2">
             <div class="relative flex-1 min-w-0">
@@ -633,7 +658,8 @@
             </button>
           </div>
         </div>
-        <div id="manager-product-list" class="grid grid-cols-1 lg:grid-cols-2 gap-2.5 max-h-[500px] lg:max-h-[680px] overflow-y-auto pr-1 items-start"></div>
+        <div id="manager-product-list" class="grid grid-cols-1 lg:grid-cols-2 gap-2.5 max-h-[70vh] overflow-y-auto pr-1 items-start"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1498,7 +1524,7 @@
           showToast("⚠️ Adicione as colunas de cor no Supabase para salvar as cores!");
           return false;
         }
-        showToast("⚠️ Erro ao salvar na nuvem.");
+        showToast("⚠️ Erro ao salvar na nuvem: " + (error.message || "verifique as colunas no Supabase."));
         return false;
       }
       return true;
@@ -2387,6 +2413,18 @@
     function openCartModal() {
       const modal = document.getElementById('cart-modal');
       const body = document.getElementById('cart-modal-body');
+      const prevForm = {
+        name: document.getElementById('checkout-name')?.value ?? null,
+        phone: document.getElementById('checkout-phone')?.value ?? null,
+        address: document.getElementById('checkout-address')?.value ?? null,
+        reference: document.getElementById('checkout-reference')?.value ?? null,
+        gate: document.getElementById('checkout-gate')?.value ?? null,
+        bell: document.getElementById('checkout-bell')?.value ?? null,
+        receiver: document.getElementById('checkout-receiver')?.value ?? null,
+        payment: document.getElementById('checkout-payment')?.value ?? null,
+        change: document.getElementById('checkout-change')?.value ?? null,
+        obs: document.getElementById('checkout-obs')?.value ?? null
+      };
 
       const productIds = Object.keys(cart);
       if (productIds.length === 0) {
@@ -2530,6 +2568,18 @@
           </button>
         </div>
       `;
+
+      const restore = (id, val) => { const el = document.getElementById(id); if (el && val !== null) el.value = val; };
+      restore('checkout-name', prevForm.name);
+      restore('checkout-phone', prevForm.phone);
+      restore('checkout-address', prevForm.address);
+      restore('checkout-reference', prevForm.reference);
+      restore('checkout-gate', prevForm.gate);
+      restore('checkout-bell', prevForm.bell);
+      restore('checkout-receiver', prevForm.receiver);
+      restore('checkout-payment', prevForm.payment);
+      restore('checkout-change', prevForm.change);
+      restore('checkout-obs', prevForm.obs);
 
       modal.classList.remove('hidden');
       toggleChangeField();
@@ -4204,8 +4254,7 @@
         }
 
         if (!name || (/^(produto|descrição|item|nome)$/i.test(name) && price === null)) return;
-        const foundBrand = brands.find(b => b !== "Sem Marca" && name.toLowerCase().includes(b.toLowerCase()));
-        if (foundBrand && brand === defBrand) brand = foundBrand;
+        // Marca permanece no padrão selecionado ("Sem Marca") salvo coluna explícita de Marca
         const foundWeight = weights.find(w => w !== "Sem peso/medida" && name.toLowerCase().includes(w.toLowerCase()));
         if (foundWeight) weight = foundWeight;
 
@@ -4859,6 +4908,37 @@
       a.click();
       a.remove();
       showToast("💾 Backup de clientes baixado!");
+    }
+
+    const managerSectionState = { 1: false, 2: false, 3: true, 4: true };
+
+    function renderManagerSectionState(n) {
+      const body = document.getElementById('mgr-sec-body-' + n);
+      const arrow = document.getElementById('mgr-sec-arrow-' + n);
+      const isOpen = !!managerSectionState[n];
+      if (body) body.classList.toggle('hidden', !isOpen);
+      if (arrow) arrow.textContent = isOpen ? '▾ Recolher' : '▸ Abrir';
+    }
+
+    function toggleManagerSection(n) {
+      managerSectionState[n] = !managerSectionState[n];
+      renderManagerSectionState(n);
+    }
+
+    function focusManagerSection(n) {
+      [1, 2, 3, 4].forEach(i => {
+        managerSectionState[i] = (i === n);
+        renderManagerSectionState(i);
+      });
+      const el = document.getElementById('mgr-sec-' + n);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function setAllManagerSections(openVal) {
+      [1, 2, 3, 4].forEach(i => {
+        managerSectionState[i] = !!openVal;
+        renderManagerSectionState(i);
+      });
     }
 
     let secretTapCount = 0;
