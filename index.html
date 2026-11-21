@@ -31,8 +31,34 @@
     .border-brand-primary { border-color: var(--brand-primary); }
     .border-brand-accent { border-color: var(--brand-accent); }
   </style>
+  <script>
+    (function() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var slug = (params.get('loja') || 'recanto').toLowerCase().replace(/[^a-z0-9-]/g, '') || 'recanto';
+        var cachedRaw = localStorage.getItem('catalogo_brand_cache_' + slug);
+        if (cachedRaw) {
+          var c = JSON.parse(cachedRaw);
+          if (c.primaryColor) document.documentElement.style.setProperty('--brand-primary', c.primaryColor);
+          if (c.primaryDark) document.documentElement.style.setProperty('--brand-primary-dark', c.primaryDark);
+          if (c.accentColor) document.documentElement.style.setProperty('--brand-accent', c.accentColor);
+        }
+        if (slug !== 'recanto') {
+          document.documentElement.classList.add('partner-loading');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    html.partner-loading #store-loading-overlay { display: flex !important; }
+  </style>
 </head>
 <body class="bg-[#F4F9FA] text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+  <!-- TELA NEUTRA DE CARREGAMENTO PARA LOJAS PARCEIRAS (EVITA PISCAR CORES DO RECANTO) -->
+  <div id="store-loading-overlay" class="hidden fixed inset-0 z-[100] bg-white flex-col items-center justify-center gap-3 p-6 text-center">
+    <div class="w-10 h-10 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin"></div>
+    <p class="text-xs font-extrabold text-slate-600 tracking-wide">Carregando catálogo...</p>
+  </div>
 
   <!-- TOAST / NOTIFICAÇÃO FLUTUANTE -->
   <div id="toast-container" class="fixed top-4 right-4 z-[70] flex flex-col gap-2 pointer-events-none"></div>
@@ -535,6 +561,16 @@
             </div>
           </div>
         </div>
+        <div class="mb-3 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-300 space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="new-pickup-enabled" onchange="togglePickupInput('new-pickup-enabled', 'new-pickup-wrap')" class="w-4 h-4 accent-emerald-600 rounded">
+            <span class="text-xs font-bold text-emerald-900">🏪 Preço especial Retirar na Loja</span>
+          </label>
+          <div id="new-pickup-wrap" class="hidden pt-1.5 border-t border-emerald-200 flex items-center justify-between gap-2 flex-wrap">
+            <label class="text-[11px] font-bold text-emerald-800">Preço retirando na loja (R$)</label>
+            <input type="text" inputmode="numeric" id="new-pickup-price" oninput="formatPriceInput(this)" placeholder="Ex: 89,90" class="w-36 bg-white border border-emerald-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-800 focus:outline-none focus:border-emerald-600">
+          </div>
+        </div>
         <button onclick="addProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-extrabold py-3 rounded-2xl text-xs shadow transition">Cadastrar Produto na Nuvem</button>
         <button onclick="openBulkModal()" class="w-full mt-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-2xl text-xs shadow transition flex items-center justify-center gap-1.5">
           <span>📥</span> Colar Lista em Massa (Vários Produtos)
@@ -571,6 +607,7 @@
                 <option value="promo_active">🔥 Promo Ativa Agora</option>
                 <option value="promo_scheduled">⏳ Promo Agendada</option>
                 <option value="promo_ended">⌛ Promo Encerrada</option>
+                <option value="pickup_only">🏪 Só Retirar na Loja</option>
               </select>
               <button onclick="clearManagerFilters()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-2.5 py-1.5 rounded-xl text-[11px] transition shrink-0" title="Limpar filtros">Limpar</button>
             </div>
@@ -743,6 +780,16 @@
                 <input type="datetime-local" id="edit-promo-end" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#E84D9A]">
               </div>
             </div>
+          </div>
+        </div>
+        <div class="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-300 space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="edit-pickup-enabled" onchange="togglePickupInput('edit-pickup-enabled', 'edit-pickup-wrap')" class="w-4 h-4 accent-emerald-600 rounded">
+            <span class="text-xs font-bold text-emerald-900">🏪 Preço especial Retirar na Loja</span>
+          </label>
+          <div id="edit-pickup-wrap" class="hidden pt-1.5 border-t border-emerald-200 flex items-center justify-between gap-2 flex-wrap">
+            <label class="text-[11px] font-bold text-emerald-800">Preço retirando na loja (R$)</label>
+            <input type="text" inputmode="numeric" id="edit-product-pickup-price" oninput="formatPriceInput(this)" placeholder="Ex: 89,90" class="w-36 bg-white border border-emerald-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-800 focus:outline-none focus:border-emerald-600">
           </div>
         </div>
         <button onclick="saveEditedProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Salvar Alterações do Produto</button>
@@ -1315,6 +1362,7 @@
             subcategory: p.subcategory,
             price: parseFloat(p.price) || 0,
             promoPrice: p.promo_price != null ? (parseFloat(p.promo_price) || null) : null,
+            pickupPrice: p.pickup_price != null ? (parseFloat(p.pickup_price) || null) : null,
             barcode: p.barcode || '',
             ncm: p.ncm || '',
             stockQty: p.stock_qty != null ? (parseFloat(p.stock_qty) || 0) : null,
@@ -1346,6 +1394,8 @@
       renderManagerProducts();
       updateCustomersCountBadge();
       injectPWAManifest();
+      document.documentElement.classList.remove('partner-loading');
+      document.getElementById('store-loading-overlay')?.classList.add('hidden');
     }
 
     function hydrateStoreState(store) {
@@ -1634,6 +1684,14 @@
 
     function renderStoreConfig() {
       applyThemeColors();
+      try {
+        localStorage.setItem('catalogo_brand_cache_' + storeSlug, JSON.stringify({
+          primaryColor: storeConfig.primaryColor || '#2EB4C7',
+          primaryDark: darkenHex(storeConfig.primaryColor || '#2EB4C7', 16),
+          accentColor: storeConfig.accentColor || '#E84D9A',
+          name: storeConfig.name || ''
+        }));
+      } catch (e) {}
       document.title = `Catálogo Online - ${storeConfig.name}`;
       document.getElementById('header-store-name').textContent = storeConfig.name;
       document.getElementById('header-store-subtitle').textContent = storeConfig.subtitle;
@@ -1917,12 +1975,30 @@
       return getProductPromoState(p) === 'active';
     }
 
+    function togglePickupInput(chkId, wrapId) {
+      const chk = document.getElementById(chkId);
+      const wrap = document.getElementById(wrapId);
+      if (wrap) wrap.classList.toggle('hidden', !(chk && chk.checked));
+    }
+
+    function hasValidPickupPrice(p) {
+      return !!(p && p.pickupPrice && p.pickupPrice > 0 && p.pickupPrice < p.price);
+    }
+
     function getEffectiveProductPrice(p) {
       if (!p) return 0;
       if (isProductPromoActive(p) && p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price) {
         return p.promoPrice;
       }
       return p.price;
+    }
+
+    function getCartItemPrice(p, mode) {
+      const deliveryPrice = getEffectiveProductPrice(p);
+      if (mode === 'pickup' && hasValidPickupPrice(p)) {
+        return Math.min(deliveryPrice, p.pickupPrice);
+      }
+      return deliveryPrice;
     }
 
     function getPromoScheduleStatus(p) {
@@ -2210,6 +2286,7 @@
 
         const isPromoNow = isProductPromoActive(p);
         const hasPromoPrice = isPromoNow && p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price;
+        const hasPickup = hasValidPickupPrice(p);
         const pctOff = hasPromoPrice ? Math.round(((p.price - p.promoPrice) / p.price) * 100) : 0;
         const diffReais = hasPromoPrice ? Math.round(p.price - p.promoPrice) : 0;
 
@@ -2234,7 +2311,11 @@
           <div class="bg-white rounded-2xl p-3 flex flex-col justify-between transition ${isPromoNow ? 'shadow-md border-2 border-[#E84D9A]/50 ring-2 ring-[#E84D9A]/10 hover:shadow-lg' : 'shadow-sm border border-slate-200 hover:shadow-md hover:border-[#2EB4C7]/40'}">
             <div>
               <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square ${isPromoNow ? 'bg-pink-50/40 border-pink-100' : 'bg-slate-50 border-slate-100'} rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border group cursor-zoom-in">
-                ${isPromoNow ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMOÇÃO</span></span>` : ''}
+                ${isPromoNow && hasPickup
+                  ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMO RETIRADA</span></span>`
+                  : (isPromoNow
+                    ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMOÇÃO</span></span>`
+                    : (hasPickup ? `<span class="absolute top-1.5 left-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">🏪 RETIRADA NA LOJA</span>` : ''))}
                 ${pctOff >= 1 ? `<span class="absolute bottom-1.5 right-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow">-${pctOff}% OFF</span>` : ''}
                 <img src="${imgSrc}" alt="${p.name}" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
               </div>
@@ -2258,6 +2339,7 @@
               ` : `
                 <div class="inline-block bg-[#F0FAFB] border border-brand-primary/40 rounded-xl px-2.5 py-1 text-sm font-black text-brand-primary mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
               `)}
+              ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
               ${actionArea}
             </div>
           </div>
@@ -2295,6 +2377,13 @@
       badge.classList.toggle('hidden', totalCount === 0);
     }
 
+    let cartFulfillmentMode = 'delivery';
+
+    function setCartFulfillmentMode(mode) {
+      cartFulfillmentMode = mode === 'pickup' ? 'pickup' : 'delivery';
+      openCartModal();
+    }
+
     function openCartModal() {
       const modal = document.getElementById('cart-modal');
       const body = document.getElementById('cart-modal-body');
@@ -2312,12 +2401,19 @@
         return;
       }
 
+      const isPickupMode = cartFulfillmentMode === 'pickup';
       let subtotal = 0;
+      let deliveryTotal = 0;
+      let pickupTotal = 0;
       let itemsHtml = productIds.map(id => {
         const p = products.find(prod => prod.id == id);
         if (!p) return '';
         const qty = cart[id];
-        const unitPrice = getEffectiveProductPrice(p);
+        const delivUnit = getEffectiveProductPrice(p);
+        const pickUnit = getCartItemPrice(p, 'pickup');
+        const unitPrice = isPickupMode ? pickUnit : delivUnit;
+        deliveryTotal += delivUnit * qty;
+        pickupTotal += pickUnit * qty;
         subtotal += unitPrice * qty;
 
         return `
@@ -2326,7 +2422,7 @@
               <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-100 p-1 shrink-0">
               <div>
                 <h5 class="text-xs font-bold text-slate-800 line-clamp-1">${p.name}</h5>
-                <p class="text-[11px] text-brand-primary font-black">${unitPrice < p.price ? `<span class="line-through text-slate-400 font-semibold mr-1">R$ ${p.price.toFixed(2).replace('.', ',')}</span>` : ''}R$ ${unitPrice.toFixed(2).replace('.', ',')} un</p>
+                <p class="text-[11px] ${isPickupMode && pickUnit < delivUnit ? 'text-emerald-700' : 'text-brand-primary'} font-black">${unitPrice < p.price ? `<span class="line-through text-slate-400 font-semibold mr-1">R$ ${p.price.toFixed(2).replace('.', ',')}</span>` : ''}R$ ${unitPrice.toFixed(2).replace('.', ',')} un${isPickupMode && pickUnit < delivUnit ? ' 🏪' : ''}</p>
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -2340,18 +2436,26 @@
         `;
       }).join('');
 
+      const pickupSavings = Math.max(0, deliveryTotal - pickupTotal);
+
       body.innerHTML = `
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <button type="button" onclick="setCartFulfillmentMode('delivery')" class="py-2.5 px-2 rounded-2xl text-xs font-extrabold border-2 transition ${!isPickupMode ? 'bg-brand-primary text-white border-transparent shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">🛵 Entrega</button>
+          <button type="button" onclick="setCartFulfillmentMode('pickup')" class="py-2.5 px-2 rounded-2xl text-xs font-extrabold border-2 transition ${isPickupMode ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">🏪 Retirar na Loja</button>
+        </div>
+        ${!isPickupMode && pickupSavings >= 0.01 ? `<div class="bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-2xl px-3 py-2 mb-3 text-[11px] font-bold flex items-center justify-between gap-2 flex-wrap"><span>💡 Retirando na loja você economiza <strong>R$ ${pickupSavings.toFixed(2).replace('.', ',')}</strong>!</span><button type="button" onclick="setCartFulfillmentMode('pickup')" class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold">Trocar p/ Retirada</button></div>` : ''}
+        ${isPickupMode && pickupSavings >= 0.01 ? `<div class="bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-2xl px-3 py-2 mb-3 text-[11px] font-bold">✅ Preço especial de Retirada na Loja aplicado (economia de R$ ${pickupSavings.toFixed(2).replace('.', ',')})!</div>` : ''}
         <div class="space-y-2 mb-4">${itemsHtml}</div>
-        ${storeConfig.deliveryInfo && storeConfig.deliveryInfo.trim() ? `<div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-3 py-2 mb-3 text-[11px] font-bold">🛵 ${storeConfig.deliveryInfo.trim()}</div>` : ''}
+        ${!isPickupMode && storeConfig.deliveryInfo && storeConfig.deliveryInfo.trim() ? `<div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-3 py-2 mb-3 text-[11px] font-bold">🛵 ${storeConfig.deliveryInfo.trim()}</div>` : ''}
         <div class="bg-[#E8F8FA] p-3 rounded-2xl border border-[#B5E8EF] mb-4">
           <div class="flex justify-between items-center text-sm font-black text-[#176E7B]">
-            <span>Subtotal:</span>
+            <span>Subtotal (${isPickupMode ? 'Retirada' : 'Entrega'}):</span>
             <span>R$ ${subtotal.toFixed(2).replace('.', ',')}</span>
           </div>
         </div>
         <div class="border-t border-slate-200 pt-4 space-y-3">
           <div class="flex items-center justify-between">
-            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">📍 Dados para Entrega / Pedido</h4>
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">${isPickupMode ? '🏪 Dados para Retirada na Loja' : '📍 Dados para Entrega / Pedido'}</h4>
             <span class="text-[10px] text-rose-600 font-bold">* Obrigatório</span>
           </div>
           <div>
@@ -2363,34 +2467,37 @@
             <input type="tel" inputmode="tel" id="checkout-phone" value="(11) " oninput="clearCheckoutError('checkout-phone')" placeholder="Ex: (11) 99999-9999" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7] transition">
             <p id="err-checkout-phone" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ Informe seu telefone ou WhatsApp para contato.</p>
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-700 mb-1">Endereço de Entrega (Rua, Número, Bairro) <span class="text-rose-600">*</span></label>
-            <input type="text" id="checkout-address" oninput="clearCheckoutError('checkout-address')" placeholder="Ex: Rua das Flores, 123 - Centro" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7] transition">
-            <p id="err-checkout-address" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ Informe o endereço completo para entrega.</p>
+          <div class="${isPickupMode ? 'hidden' : 'space-y-3'}">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Endereço de Entrega (Rua, Número, Bairro) <span class="text-rose-600">*</span></label>
+              <input type="text" id="checkout-address" oninput="clearCheckoutError('checkout-address')" placeholder="Ex: Rua das Flores, 123 - Centro" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7] transition">
+              <p id="err-checkout-address" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ Informe o endereço completo para entrega.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Ponto de Referência</label>
+                <input type="text" id="checkout-reference" placeholder="Ex: Próximo à padaria" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Cor do Portão</label>
+                <input type="text" id="checkout-gate" placeholder="Ex: Portão Preto" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Tem Campainha?</label>
+                <select id="checkout-bell" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+                  <option value="Sim">Sim, tem campainha</option>
+                  <option value="Não">Não tem campainha</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Quem vai receber?</label>
+                <input type="text" id="checkout-receiver" placeholder="Ex: Eu mesma / Esposo" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+              </div>
+            </div>
           </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">Ponto de Referência</label>
-              <input type="text" id="checkout-reference" placeholder="Ex: Próximo à padaria" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">Cor do Portão</label>
-              <input type="text" id="checkout-gate" placeholder="Ex: Portão Preto" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">Tem Campainha?</label>
-              <select id="checkout-bell" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
-                <option value="Sim">Sim, tem campainha</option>
-                <option value="Não">Não tem campainha</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">Quem vai receber?</label>
-              <input type="text" id="checkout-receiver" placeholder="Ex: Eu mesma / Esposo" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
-            </div>
-          </div>
+          ${isPickupMode && storeConfig.address ? `<div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-[11px] text-emerald-900 font-semibold">📍 Retirar em: <strong>${storeConfig.address}</strong></div>` : ''}
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Forma de Pagamento <span class="text-rose-600">*</span></label>
             <select id="checkout-payment" onchange="toggleChangeField(); clearCheckoutError('checkout-payment');" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7] transition">
@@ -2497,9 +2604,10 @@
       const change = document.getElementById('checkout-change') ? document.getElementById('checkout-change').value.trim() : '';
       const obs = document.getElementById('checkout-obs').value.trim();
 
+      const isPickupMode = cartFulfillmentMode === 'pickup';
       const requiredChecks = [
         { id: 'checkout-phone', val: phone.replace(/\D/g, '').length >= 10 ? phone : '' },
-        { id: 'checkout-address', val: address },
+        ...(isPickupMode ? [] : [{ id: 'checkout-address', val: address }]),
         { id: 'checkout-payment', val: payment }
       ];
       let firstInvalidEl = null;
@@ -2525,13 +2633,16 @@
       }
 
       let text = `🛒 *NOVO PEDIDO - ${storeConfig.name}* 🐾\n\n`;
+      text += isPickupMode ? `🏪 *Modalidade:* RETIRAR NA LOJA\n` : `🛵 *Modalidade:* ENTREGA\n`;
       if (name) text += `👤 *Cliente:* ${name}\n`;
       text += `📞 *Telefone:* ${phone}\n`;
-      text += `📍 *Endereço:* ${address}\n`;
-      if (reference) text += `📌 *Referência:* ${reference}\n`;
-      if (gate) text += `🚪 *Portão:* ${gate}\n`;
-      text += `🔔 *Campainha:* ${bell}\n`;
-      if (receiver) text += `👤 *Quem recebe:* ${receiver}\n`;
+      if (!isPickupMode) {
+        text += `📍 *Endereço:* ${address}\n`;
+        if (reference) text += `📌 *Referência:* ${reference}\n`;
+        if (gate) text += `🚪 *Portão:* ${gate}\n`;
+        text += `🔔 *Campainha:* ${bell}\n`;
+        if (receiver) text += `👤 *Quem recebe:* ${receiver}\n`;
+      }
       text += `💳 *Pagamento:* ${payment}\n`;
       if (payment === "Dinheiro" && change) text += `💵 *Troco para:* ${change}\n`;
       if (obs) text += `📝 *Observações:* ${obs}\n\n`;
@@ -2543,7 +2654,7 @@
         const p = products.find(prod => prod.id == id);
         if (p) {
           const qty = cart[id];
-          const totalItem = getEffectiveProductPrice(p) * qty;
+          const totalItem = getCartItemPrice(p, cartFulfillmentMode) * qty;
           subtotal += totalItem;
           text += `• ${qty}x ${p.name} (${p.weight || 'UN'}) - R$ ${totalItem.toFixed(2).replace('.', ',')}\n`;
           itemsList.push(`${qty}x ${p.name}`);
@@ -2558,7 +2669,7 @@
             store_id: currentStoreId,
             name: name || 'Cliente',
             phone,
-            address,
+            address: isPickupMode ? 'Retirar na Loja' : address,
             items: itemsList.join(', '),
             total: subtotal,
             payment,
@@ -3022,6 +3133,9 @@
       const price = parsePriceBR(document.getElementById('new-price').value);
       const promoPriceRaw = parsePriceBR(document.getElementById('new-promo-price').value);
       const promoPrice = !isNaN(promoPriceRaw) && promoPriceRaw > 0 ? promoPriceRaw : null;
+      const pickupEnabled = !!document.getElementById('new-pickup-enabled')?.checked;
+      const pickupPriceRaw = parsePriceBR(document.getElementById('new-pickup-price')?.value || '');
+      const pickupPrice = (pickupEnabled && !isNaN(pickupPriceRaw) && pickupPriceRaw > 0) ? pickupPriceRaw : null;
       const brand = document.getElementById('new-brand').value;
       const weight = document.getElementById('new-weight').value;
       const image = document.getElementById('new-image').value.trim();
@@ -3043,6 +3157,10 @@
         showToast("⚠️ O Preço na Promoção deve ser menor que o Preço Normal!");
         return;
       }
+      if (pickupEnabled && (pickupPrice === null || pickupPrice >= price)) {
+        showToast("⚠️ O Preço Retirar na Loja deve ser menor que o Preço Normal!");
+        return;
+      }
 
       const dup = findDuplicateProduct(name, barcode);
       if (dup) {
@@ -3062,6 +3180,7 @@
           subcategory,
           price,
           promo_price: promoPrice,
+          pickup_price: pickupPrice,
           barcode: barcode || null,
           ncm: ncm || null,
           stock_qty: stockQty,
@@ -3087,6 +3206,7 @@
         subcategory: data.subcategory,
         price: parseFloat(data.price) || 0,
         promoPrice: data.promo_price != null ? (parseFloat(data.promo_price) || null) : null,
+        pickupPrice: data.pickup_price != null ? (parseFloat(data.pickup_price) || null) : null,
         barcode: data.barcode || '',
         ncm: data.ncm || '',
         stockQty: data.stock_qty != null ? (parseFloat(data.stock_qty) || 0) : null,
@@ -3104,6 +3224,9 @@
       document.getElementById('new-name').value = "";
       document.getElementById('new-price').value = "";
       document.getElementById('new-promo-price').value = "";
+      if (document.getElementById('new-pickup-enabled')) document.getElementById('new-pickup-enabled').checked = false;
+      if (document.getElementById('new-pickup-price')) document.getElementById('new-pickup-price').value = "";
+      togglePickupInput('new-pickup-enabled', 'new-pickup-wrap');
       document.getElementById('new-image').value = "";
       if (document.getElementById('new-barcode')) document.getElementById('new-barcode').value = "";
       if (document.getElementById('new-ncm')) document.getElementById('new-ncm').value = "";
@@ -3156,6 +3279,7 @@
         else if (fStatus === 'promo_active') matchSt = getProductPromoState(p) === 'active';
         else if (fStatus === 'promo_scheduled') matchSt = getProductPromoState(p) === 'scheduled';
         else if (fStatus === 'promo_ended') matchSt = getProductPromoState(p) === 'ended';
+        else if (fStatus === 'pickup_only') matchSt = hasValidPickupPrice(p);
         return matchQ && matchC && matchS && matchB && matchSt;
       });
     }
@@ -3260,14 +3384,14 @@
         const isChecked = managerSelectedIds.has(p.id);
         const hasPromoPrice = p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price;
         return `
-        <div class="p-3 rounded-2xl border shadow-sm space-y-2 transition ${isChecked ? 'border-[#E84D9A] ring-2 ring-[#E84D9A]/20' : (isActive ? 'bg-white border-slate-200' : 'bg-slate-100/90 border-slate-300 opacity-80')} ${isActive ? 'bg-white' : 'bg-slate-100/90'}">
+        <div class="p-3 rounded-2xl border shadow-sm space-y-2 transition ${isActive ? 'bg-white' : 'bg-slate-100/90 opacity-80'} ${isChecked ? 'border-[#E84D9A] ring-2 ring-[#E84D9A]/20' : (isActive ? 'border-slate-200' : 'border-slate-300')}">
           <div class="flex items-start gap-2.5">
             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleManagerSelectOne(${p.id}, this.checked)" class="mt-1 w-4 h-4 accent-[#E84D9A] rounded cursor-pointer shrink-0">
             <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-11 h-11 rounded-xl object-contain bg-slate-50 border border-slate-100 p-0.5 shrink-0 cursor-pointer" onclick="openEditProduct(${p.id})">
             <div class="min-w-0 flex-1">
               <h4 class="text-xs font-bold text-slate-800 leading-snug break-words">${isActive ? '' : '<span class="text-amber-700 font-black">[Pausado]</span> '}${p.name}</h4>
               <p class="text-[11px] text-brand-primary font-black mt-0.5">
-                Normal: R$ ${p.price.toFixed(2).replace('.', ',')}${hasPromoPrice ? ` • <span class="text-[#E84D9A]">Promo: R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>` : ''}
+                Normal: R$ ${p.price.toFixed(2).replace('.', ',')}${hasPromoPrice ? ` • <span class="text-[#E84D9A]">Promo: R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidPickupPrice(p) ? ` • <span class="text-emerald-700">🏪 Retirada: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</span>` : ''}
                 <span class="text-slate-500 font-medium"> • ${p.category} / ${p.subcategory}</span>
               </p>
               ${(p.barcode || p.ncm || p.stockQty !== null) ? `<p class="text-[10px] text-slate-400 font-semibold mt-0.5">${p.barcode ? `EAN: ${p.barcode}` : ''}${p.ncm ? `${p.barcode ? ' • ' : ''}NCM: ${p.ncm}` : ''}${p.stockQty !== null && p.stockQty !== undefined ? `${(p.barcode || p.ncm) ? ' • ' : ''}Est: ${p.stockQty}` : ''}</p>` : ''}
@@ -3317,7 +3441,8 @@
     async function toggleProductPromo(id) {
       const p = products.find(prod => prod.id == id);
       if (!p || !sb) return;
-      const nextPromo = !isProductPromoActive(p);
+      const promoState = getProductPromoState(p);
+      const nextPromo = !(promoState === 'active' || promoState === 'scheduled');
       const { error } = await sb.from('products').update({ promo: nextPromo, promo_start: null, promo_end: null }).eq('id', p.id);
       if (error) {
         const { error: err2 } = await sb.from('products').update({ promo: nextPromo }).eq('id', p.id);
@@ -3355,6 +3480,10 @@
       updateCharCount('edit-product-name', 'count-edit-name', 60);
       document.getElementById('edit-product-price').value = formatPriceBR(p.price);
       document.getElementById('edit-product-promo-price').value = (p.promoPrice && p.promoPrice > 0) ? formatPriceBR(p.promoPrice) : '';
+      const hasPick = !!(p.pickupPrice && p.pickupPrice > 0);
+      if (document.getElementById('edit-pickup-enabled')) document.getElementById('edit-pickup-enabled').checked = hasPick;
+      if (document.getElementById('edit-product-pickup-price')) document.getElementById('edit-product-pickup-price').value = hasPick ? formatPriceBR(p.pickupPrice) : '';
+      togglePickupInput('edit-pickup-enabled', 'edit-pickup-wrap');
       if (document.getElementById('edit-product-barcode')) document.getElementById('edit-product-barcode').value = p.barcode || '';
       if (document.getElementById('edit-product-ncm')) document.getElementById('edit-product-ncm').value = p.ncm || '';
       if (document.getElementById('edit-product-stock')) document.getElementById('edit-product-stock').value = (p.stockQty !== null && p.stockQty !== undefined) ? p.stockQty : '';
@@ -3398,14 +3527,25 @@
       const normalPrice = parsePriceBR(document.getElementById('edit-product-price').value) || 0;
       const promoPriceRaw = parsePriceBR(document.getElementById('edit-product-promo-price').value);
       const promoPriceVal = !isNaN(promoPriceRaw) && promoPriceRaw > 0 ? promoPriceRaw : null;
+      const editPickupEnabled = !!document.getElementById('edit-pickup-enabled')?.checked;
+      const editPickupRaw = parsePriceBR(document.getElementById('edit-product-pickup-price')?.value || '');
+      const editPickupVal = (editPickupEnabled && !isNaN(editPickupRaw) && editPickupRaw > 0) ? editPickupRaw : null;
       const editName = document.getElementById('edit-product-name').value.trim();
       const editBarcode = normalizeBarcodeKey(document.getElementById('edit-product-barcode')?.value || '');
       const editNcm = normalizeBarcodeKey(document.getElementById('edit-product-ncm')?.value || '');
       const editStockRaw = document.getElementById('edit-product-stock')?.value;
       const editStock = editStockRaw !== '' && editStockRaw != null ? (parseFloat(editStockRaw) || 0) : null;
 
+      if (!editName) {
+        showToast("⚠️ O Nome do Produto não pode ficar vazio!");
+        return;
+      }
       if (promoPriceVal !== null && promoPriceVal >= normalPrice) {
         showToast("⚠️ O Preço na Promoção deve ser menor que o Preço Normal!");
+        return;
+      }
+      if (editPickupEnabled && (editPickupVal === null || editPickupVal >= normalPrice)) {
+        showToast("⚠️ O Preço Retirar na Loja deve ser menor que o Preço Normal!");
         return;
       }
 
@@ -3421,6 +3561,7 @@
         subcategory: document.getElementById('edit-product-subcat').value,
         price: normalPrice,
         promo_price: promoPriceVal,
+        pickup_price: editPickupVal,
         barcode: editBarcode || null,
         ncm: editNcm || null,
         stock_qty: editStock,
@@ -3441,6 +3582,7 @@
         subcategory: updated.subcategory,
         price: updated.price,
         promoPrice: updated.promo_price,
+        pickupPrice: updated.pickup_price,
         barcode: updated.barcode || '',
         ncm: updated.ncm || '',
         stockQty: updated.stock_qty,
@@ -3576,6 +3718,7 @@
       if (inp) {
         inp.value = clean;
         if (barcodeIsSearch) {
+          toggleManagerSearchClear();
           clearManagerSelection();
           renderManagerProducts();
         }
