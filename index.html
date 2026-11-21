@@ -16,9 +16,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --brand-primary: #2EB4C7;
-      --brand-primary-dark: #1E95A6;
-      --brand-accent: #E84D9A;
+      --brand-primary: #23B5C8;
+      --brand-primary-dark: #178A99;
+      --brand-accent: #EE3E80;
+      --brand-header-bg: #23B5C8;
+      --brand-stripe: #F7D117;
+      --brand-card-border: #23B5C8;
+      --brand-price-color: #178A99;
+      --brand-page-bg: #F4F9FA;
+      --brand-fire-bg: #FFFFFF;
+      --brand-wa-bg: #FFFFFF;
+      --brand-wa-text: #075E54;
     }
     body { font-family: 'Inter', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -53,7 +61,7 @@
     html.partner-loading #store-loading-overlay { display: flex !important; }
   </style>
 </head>
-<body class="bg-[#F4F9FA] text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+<body id="app-body" style="background-color: var(--brand-page-bg);" class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
   <!-- TELA NEUTRA DE CARREGAMENTO PARA LOJAS PARCEIRAS (EVITA PISCAR CORES DO RECANTO) -->
   <div id="store-loading-overlay" class="hidden fixed inset-0 z-[100] bg-white flex-col items-center justify-center gap-3 p-6 text-center">
     <div class="w-10 h-10 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin"></div>
@@ -64,7 +72,7 @@
   <div id="toast-container" class="fixed top-4 right-4 z-[70] flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- CABEÇALHO DA LOJA -->
-  <header id="store-header" class="bg-brand-primary text-white shadow-md sticky top-0 z-30 border-b-4 border-[#F7D046]">
+  <header id="store-header" style="background-color: var(--brand-header-bg); border-bottom: 4px solid var(--brand-stripe);" class="text-white shadow-md sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 min-w-0 flex-1">
         <div id="header-logo-container" onclick="openLogoZoom()" title="Clique para ampliar a logo" class="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md shrink-0 border-2 border-white p-0.5 cursor-zoom-in">
@@ -76,7 +84,7 @@
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a id="header-whatsapp-btn" href="https://api.whatsapp.com/send?phone=5511999999999" target="_blank" rel="noopener noreferrer" onclick="openHeaderWhatsApp(event)" class="bg-white hover:bg-emerald-50 active:scale-95 text-[#075E54] border-2 border-white px-2.5 sm:px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-md transition-all text-xs font-black">
+        <a id="header-whatsapp-btn" href="https://api.whatsapp.com/send?phone=5511999999999" target="_blank" rel="noopener noreferrer" onclick="openHeaderWhatsApp(event)" style="background-color: var(--brand-wa-bg); color: var(--brand-wa-text);" class="hover:opacity-90 active:scale-95 border-2 border-white/60 px-2.5 sm:px-3 py-2 rounded-2xl flex items-center gap-1.5 shadow-md transition-all text-xs font-black">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 fill-[#25D366] shrink-0"><path d="M12.031 2c-5.516 0-9.969 4.453-9.969 9.969 0 1.766.469 3.484 1.344 5l-1.406 5.156 5.281-1.375c1.469.797 3.109 1.219 4.75 1.219 5.516 0 9.969-4.453 9.969-9.969S17.547 2 12.031 2zm5.813 14.125c-.25.703-1.438 1.344-2 1.422-.516.078-1.172.109-1.891-.125-.438-.141-1-.328-1.719-.641-3.016-1.297-4.984-4.344-5.141-4.547-.156-.203-1.234-1.641-1.234-3.125s.781-2.219 1.063-2.516c.281-.297.609-.375.813-.375.203 0 .406.016.578.016.188 0 .438-.078.688.516.25.609.859 2.094.938 2.25.078.156.125.344.031.547-.094.203-.141.328-.281.5-.141.172-.297.375-.422.5-.141.141-.297.297-.125.594.172.297.766 1.266 1.641 2.047 1.125 1 2.078 1.313 2.375 1.469.297.156.469.125.641-.078.172-.203.75-.875.953-1.172.203-.297.406-.25.672-.141.266.109 1.719.813 2.016.953.297.141.484.219.563.344.078.125.078.734-.172 1.438z"/></svg>
           <span class="hidden sm:inline">WhatsApp</span>
         </a>
@@ -336,6 +344,68 @@
               <button type="button" onclick="setQuickColor('accent', '#7C3AED')" class="w-5 h-5 rounded-full bg-[#7C3AED] border border-white shadow" title="Violeta"></button>
               <button type="button" onclick="setQuickColor('accent', '#0D9488')" class="w-5 h-5 rounded-full bg-[#0D9488] border border-white shadow" title="Esmeralda"></button>
               <button type="button" onclick="setQuickColor('accent', '#2563EB')" class="w-5 h-5 rounded-full bg-[#2563EB] border border-white shadow" title="Azul"></button>
+            </div>
+          </div>
+          <div class="sm:col-span-2 bg-white border-2 border-slate-200 rounded-2xl p-3 space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-[11px] font-extrabold text-slate-800">🎨 Editor Visual de Cores & Molduras (1º escolha o item → 2º clique na cor)</span>
+              <button type="button" onclick="resetAllThemeToBrandLogo()" class="text-[10px] font-black bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded-lg shadow-sm transition">🔄 Resetar Cores da Logo</button>
+            </div>
+            <div id="visual-color-targets" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5"></div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <span class="text-[11px] font-bold text-slate-700">Pintando: <strong id="visual-active-label" class="text-brand-primary">Cor do Topo (Logo)</strong></span>
+                <label class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-300 px-2 py-0.5 rounded-lg cursor-pointer">
+                  <span>Cor livre:</span>
+                  <input type="color" id="visual-free-color" oninput="applyVisualPaletteColor(this.value)" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent">
+                </label>
+              </div>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[10px] font-extrabold text-slate-500">Logo Recanto:</span>
+                <button type="button" onclick="applyVisualPaletteColor('#23B5C8')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#23B5C8" title="Turquesa Logo"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#EE3E80')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#EE3E80" title="Magenta Logo"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#F7D117')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#F7D117" title="Amarelo Logo"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#6AB43E')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#6AB43E" title="Verde Logo"></button>
+                <span class="text-[10px] font-extrabold text-slate-500 ml-1">Primárias:</span>
+                <button type="button" onclick="applyVisualPaletteColor('#DC2626')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#DC2626" title="Vermelho"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#2563EB')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#2563EB" title="Azul"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#EAB308')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#EAB308" title="Amarelo"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#16A34A')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#16A34A" title="Verde"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#EA580C')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#EA580C" title="Laranja"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#9333EA')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#9333EA" title="Roxo"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#111827')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#111827" title="Preto"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#FFFFFF')" class="w-6 h-6 rounded-full border-2 border-slate-300 shadow hover:scale-110 transition" style="background:#FFFFFF" title="Branco"></button>
+                <button type="button" onclick="applyVisualPaletteColor('#F4F9FA')" class="w-6 h-6 rounded-full border-2 border-slate-300 shadow hover:scale-110 transition" style="background:#F4F9FA" title="Gelo Suave"></button>
+              </div>
+            </div>
+            <!-- MINI PRÉVIA AO VIVO DA VITRINE -->
+            <div class="space-y-1.5">
+              <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">👁️ Prévia ao vivo da Vitrine (sem sair do Gestor)</span>
+              <div id="mgr-live-mini-page" class="rounded-2xl border-2 border-slate-300 overflow-hidden shadow-inner" style="background:#F4F9FA;">
+                <div id="mgr-live-mini-hdr" class="p-2.5 text-white" style="background:#23B5C8; border-bottom: 3px solid #F7D117;">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                      <div id="mgr-mini-name" class="text-xs font-black truncate">Sua Loja</div>
+                      <div id="mgr-mini-sub" class="text-[10px] opacity-90 truncate">Catálogo Online</div>
+                    </div>
+                    <span id="mgr-mini-wa" class="text-[9px] font-black px-2 py-1 rounded-lg border border-white/50 shrink-0" style="background:#FFFFFF; color:#075E54;">💬 WhatsApp</span>
+                  </div>
+                </div>
+                <div class="p-2 grid grid-cols-2 gap-2 max-w-sm mx-auto">
+                  <div id="mgr-mini-card1" class="bg-white rounded-xl p-2 shadow-sm border-2" style="border-color:#23B5C8;">
+                    <div class="text-[10px] font-bold text-slate-800 truncate">Produto Normal</div>
+                    <div id="mgr-mini-price1" class="text-xs font-black my-1" style="color:#178A99;">R$ 29,90</div>
+                    <div id="mgr-mini-btn1" class="text-white text-[10px] font-bold text-center py-1 rounded-lg" style="background:#23B5C8;">🛒 Adicionar</div>
+                  </div>
+                  <div id="mgr-mini-card2" class="bg-white rounded-xl p-2 shadow-sm border-2" style="border-color:#EE3E80;">
+                    <div class="flex items-center justify-between gap-1">
+                      <span id="mgr-mini-badge2" class="text-white text-[8px] font-black pl-0.5 pr-1.5 py-0.5 rounded inline-flex items-center gap-0.5" style="background:#EE3E80;"><span id="mgr-mini-fire1" class="w-3.5 h-3.5 rounded-full inline-flex items-center justify-center text-[8px]" style="background:#FFFFFF;">🔥</span>PROMO</span>
+                    </div>
+                    <div id="mgr-mini-price2" class="text-xs font-black my-1" style="color:#EE3E80;">Por R$ 99,90</div>
+                    <div id="mgr-mini-btn2" class="text-white text-[10px] font-extrabold text-center py-1 rounded-lg inline-flex items-center justify-center gap-1 w-full" style="background:#EE3E80;"><span id="mgr-mini-fire2" class="w-3.5 h-3.5 rounded-full inline-flex items-center justify-center text-[8px]" style="background:#FFFFFF;">🔥</span>Aproveitar</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="sm:col-span-2 bg-white border border-slate-200 rounded-2xl p-3 space-y-2.5">
@@ -1601,6 +1671,124 @@
       document.getElementById('image-zoom-modal').classList.remove('hidden');
     }
 
+    const VISUAL_COLOR_TARGETS = [
+      { key: 'headerBg', label: 'Cor do Topo (Logo)' },
+      { key: 'waBg', label: 'Fundo Botão WhatsApp' },
+      { key: 'primaryColor', label: 'Botões (Adicionar)' },
+      { key: 'accentColor', label: 'Promoção / Destaque' },
+      { key: 'fireBg', label: '🔥 Fundo Redondo Fogo' },
+      { key: 'cardBorder', label: 'Moldura dos Cards' },
+      { key: 'priceColor', label: 'Preço Normal' },
+      { key: 'stripeColor', label: 'Faixa do Topo' },
+      { key: 'pageBg', label: 'Fundo da Tela' }
+    ];
+    let selectedVisualTarget = 'headerBg';
+    let visualPaletteState = {
+      headerBg: '#23B5C8', waBg: '#FFFFFF', primaryColor: '#23B5C8',
+      accentColor: '#EE3E80', fireBg: '#FFFFFF', cardBorder: '#23B5C8',
+      priceColor: '#178A99', stripeColor: '#F7D117', pageBg: '#F4F9FA'
+    };
+
+    function getContrastHex(hex, lightFallback, darkFallback) {
+      const c = String(hex || '').replace('#', '');
+      if (c.length !== 6) return darkFallback;
+      const lum = (0.299 * parseInt(c.slice(0,2), 16) + 0.587 * parseInt(c.slice(2,4), 16) + 0.114 * parseInt(c.slice(4,6), 16)) / 255;
+      return lum > 0.62 ? lightFallback : darkFallback;
+    }
+
+    function applyExtendedThemeVars(st) {
+      const s = st || visualPaletteState;
+      const root = document.documentElement;
+      root.style.setProperty('--brand-header-bg', s.headerBg || storeConfig.primaryColor || '#23B5C8');
+      root.style.setProperty('--brand-stripe', s.stripeColor || '#F7D117');
+      root.style.setProperty('--brand-card-border', s.cardBorder || s.primaryColor || '#23B5C8');
+      root.style.setProperty('--brand-price-color', s.priceColor || '#178A99');
+      root.style.setProperty('--brand-page-bg', s.pageBg || '#F4F9FA');
+      root.style.setProperty('--brand-fire-bg', s.fireBg || '#FFFFFF');
+      const waBg = s.waBg || '#FFFFFF';
+      root.style.setProperty('--brand-wa-bg', waBg);
+      root.style.setProperty('--brand-wa-text', getContrastHex(waBg, '#075E54', '#FFFFFF'));
+      updateManagerLiveMiniPreview(s);
+    }
+
+    function updateManagerLiveMiniPreview(st) {
+      const s = st || visualPaletteState;
+      const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
+      setStyle('mgr-live-mini-page', 'backgroundColor', s.pageBg || '#F4F9FA');
+      setStyle('mgr-live-mini-hdr', 'backgroundColor', s.headerBg || s.primaryColor || '#23B5C8');
+      setStyle('mgr-live-mini-hdr', 'borderBottomColor', s.stripeColor || '#F7D117');
+      setStyle('mgr-mini-wa', 'backgroundColor', s.waBg || '#FFFFFF');
+      setStyle('mgr-mini-wa', 'color', getContrastHex(s.waBg || '#FFFFFF', '#075E54', '#FFFFFF'));
+      setStyle('mgr-mini-card1', 'borderColor', s.cardBorder || '#23B5C8');
+      setStyle('mgr-mini-price1', 'color', s.priceColor || '#178A99');
+      setStyle('mgr-mini-btn1', 'backgroundColor', s.primaryColor || '#23B5C8');
+      setStyle('mgr-mini-card2', 'borderColor', s.accentColor || '#EE3E80');
+      setStyle('mgr-mini-badge2', 'backgroundColor', s.accentColor || '#EE3E80');
+      setStyle('mgr-mini-price2', 'color', s.accentColor || '#EE3E80');
+      setStyle('mgr-mini-btn2', 'backgroundColor', s.accentColor || '#EE3E80');
+      setStyle('mgr-mini-fire1', 'backgroundColor', s.fireBg || '#FFFFFF');
+      setStyle('mgr-mini-fire2', 'backgroundColor', s.fireBg || '#FFFFFF');
+      const nEl = document.getElementById('mgr-mini-name');
+      const sEl = document.getElementById('mgr-mini-sub');
+      if (nEl) nEl.textContent = storeConfig.name || 'Sua Loja';
+      if (sEl) sEl.textContent = storeConfig.subtitle || 'Catálogo Online';
+    }
+
+    function renderVisualColorTargets() {
+      const wrap = document.getElementById('visual-color-targets');
+      if (!wrap) return;
+      wrap.innerHTML = VISUAL_COLOR_TARGETS.map(t => {
+        const isSel = t.key === selectedVisualTarget;
+        const col = visualPaletteState[t.key] || '#23B5C8';
+        return `
+          <button type="button" onclick="selectVisualColorTarget('${t.key}')" class="p-1.5 rounded-xl border-2 text-left flex items-center justify-between gap-1.5 transition ${isSel ? 'border-brand-primary bg-[#E8F8FA] shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}">
+            <span class="text-[10px] font-extrabold text-slate-800 leading-tight">${t.label}</span>
+            <span class="w-4 h-4 rounded-full border border-slate-300 shrink-0" style="background:${col}"></span>
+          </button>
+        `;
+      }).join('');
+      const active = VISUAL_COLOR_TARGETS.find(t => t.key === selectedVisualTarget);
+      const lbl = document.getElementById('visual-active-label');
+      const free = document.getElementById('visual-free-color');
+      if (lbl && active) lbl.textContent = active.label;
+      if (free) free.value = visualPaletteState[selectedVisualTarget] || '#23B5C8';
+    }
+
+    function selectVisualColorTarget(key) {
+      selectedVisualTarget = key;
+      renderVisualColorTargets();
+    }
+
+    function applyVisualPaletteColor(hex) {
+      visualPaletteState[selectedVisualTarget] = hex;
+      if (selectedVisualTarget === 'primaryColor') {
+        const pInp = document.getElementById('config-primary-color');
+        if (pInp) { pInp.value = hex; previewThemeColors(); }
+      } else if (selectedVisualTarget === 'accentColor') {
+        const aInp = document.getElementById('config-accent-color');
+        if (aInp) { aInp.value = hex; previewThemeColors(); }
+      }
+      renderVisualColorTargets();
+      applyExtendedThemeVars(visualPaletteState);
+    }
+
+    function resetAllThemeToBrandLogo() {
+      visualPaletteState = {
+        headerBg: '#23B5C8', waBg: '#FFFFFF', primaryColor: '#23B5C8',
+        accentColor: '#EE3E80', fireBg: '#FFFFFF', cardBorder: '#23B5C8',
+        priceColor: '#178A99', stripeColor: '#F7D117', pageBg: '#F4F9FA'
+      };
+      const pInp = document.getElementById('config-primary-color');
+      const aInp = document.getElementById('config-accent-color');
+      if (pInp) pInp.value = '#23B5C8';
+      if (aInp) aInp.value = '#EE3E80';
+      previewThemeColors();
+      resetHeaderStyles();
+      renderVisualColorTargets();
+      applyExtendedThemeVars(visualPaletteState);
+      showToast("🔄 Cores restauradas para o padrão da logo Recanto! Clique em Salvar Dados da Loja.");
+    }
+
     function applyHeaderStylesObj(hs) {
       const s = hs || {};
       const nameEl = document.getElementById('header-store-name');
@@ -1647,7 +1835,14 @@
         deliveryText: document.getElementById('hs-delivery-text')?.value || '#0F172A',
         deliveryBg: document.getElementById('hs-delivery-bg')?.value || '#F7D046',
         showAddressTop: document.getElementById('hs-show-addr-top') ? document.getElementById('hs-show-addr-top').checked : true,
-        showAddressFooter: document.getElementById('hs-show-addr-footer') ? document.getElementById('hs-show-addr-footer').checked : true
+        showAddressFooter: document.getElementById('hs-show-addr-footer') ? document.getElementById('hs-show-addr-footer').checked : true,
+        headerBg: visualPaletteState.headerBg,
+        waBg: visualPaletteState.waBg,
+        fireBg: visualPaletteState.fireBg,
+        cardBorder: visualPaletteState.cardBorder,
+        priceColor: visualPaletteState.priceColor,
+        stripeColor: visualPaletteState.stripeColor,
+        pageBg: visualPaletteState.pageBg
       };
     }
 
@@ -1744,6 +1939,19 @@
         delivEl.textContent = hasDeliv ? `🛵 ${storeConfig.deliveryInfo.trim()}` : '';
         delivEl.classList.toggle('hidden', !hasDeliv);
       }
+      visualPaletteState = {
+        headerBg: hs.headerBg || storeConfig.primaryColor || '#23B5C8',
+        waBg: hs.waBg || '#FFFFFF',
+        primaryColor: storeConfig.primaryColor || '#23B5C8',
+        accentColor: storeConfig.accentColor || '#EE3E80',
+        fireBg: hs.fireBg || '#FFFFFF',
+        cardBorder: hs.cardBorder || storeConfig.primaryColor || '#23B5C8',
+        priceColor: hs.priceColor || darkenHex(storeConfig.primaryColor || '#23B5C8', 16),
+        stripeColor: hs.stripeColor || '#F7D117',
+        pageBg: hs.pageBg || '#F4F9FA'
+      };
+      renderVisualColorTargets();
+      applyExtendedThemeVars(visualPaletteState);
       applyHeaderStylesObj(hs);
       if (badgesWrap) badgesWrap.classList.toggle('hidden', !(hasHours || hasDeliv));
       if (addrBar) addrBar.classList.toggle('hidden', !(showAddrTop || hasHours || hasDeliv));
@@ -2320,7 +2528,7 @@
         if (qty === 0) {
           actionArea = `
             <button onclick="addToCart(${p.id})" class="w-full ${isPromoNow ? 'bg-brand-accent shadow-md font-extrabold' : 'bg-brand-primary shadow font-bold'} hover:opacity-90 active:scale-95 text-white py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
-              <span>${isPromoNow ? '🔥' : '🛒'}</span> <span>${isPromoNow ? 'Aproveitar' : 'Adicionar'}</span>
+              ${isPromoNow ? `<span style="background-color: var(--brand-fire-bg);" class="w-5 h-5 rounded-full inline-flex items-center justify-center text-[11px] leading-none shadow-sm">🔥</span>` : '<span>🛒</span>'} <span>${isPromoNow ? 'Aproveitar' : 'Adicionar'}</span>
             </button>
           `;
         } else {
@@ -2334,13 +2542,13 @@
         }
 
         return `
-          <div class="bg-white rounded-2xl p-3 flex flex-col justify-between transition ${isPromoNow ? 'shadow-md border-2 border-[#E84D9A]/50 ring-2 ring-[#E84D9A]/10 hover:shadow-lg' : 'shadow-sm border border-slate-200 hover:shadow-md hover:border-[#2EB4C7]/40'}">
+          <div style="border-color: ${isPromoNow ? 'var(--brand-accent)' : 'var(--brand-card-border)'};" class="bg-white rounded-2xl p-3 flex flex-col justify-between transition border-2 ${isPromoNow ? 'shadow-md hover:shadow-lg' : 'shadow-sm hover:shadow-md'}">
             <div>
               <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square ${isPromoNow ? 'bg-pink-50/40 border-pink-100' : 'bg-slate-50 border-slate-100'} rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border group cursor-zoom-in">
                 ${isPromoNow && hasPickup
-                  ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMO RETIRADA</span></span>`
+                  ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none shadow-sm">🔥</span><span>PROMO RETIRADA</span></span>`
                   : (isPromoNow
-                    ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span class="bg-white rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none">🔥</span><span>PROMOÇÃO</span></span>`
+                    ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none shadow-sm">🔥</span><span>PROMOÇÃO</span></span>`
                     : (hasPickup ? `<span class="absolute top-1.5 left-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">🏪 RETIRADA NA LOJA</span>` : ''))}
                 ${pctOff >= 1 ? `<span class="absolute bottom-1.5 right-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow">-${pctOff}% OFF</span>` : ''}
                 <img src="${imgSrc}" alt="${p.name}" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
@@ -2363,7 +2571,7 @@
               ` : (isPromoNow ? `
                 <div class="inline-block bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1 text-base font-black text-[#BE185D] mb-2 shadow-sm">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
               ` : `
-                <div class="inline-block bg-[#F0FAFB] border border-brand-primary/40 rounded-xl px-2.5 py-1 text-sm font-black text-brand-primary mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
+                <div style="color: var(--brand-price-color);" class="inline-block bg-[#F0FAFB] border border-slate-200 rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
               `)}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
               ${actionArea}
@@ -3434,7 +3642,7 @@
         const isChecked = managerSelectedIds.has(p.id);
         const hasPromoPrice = p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price;
         return `
-        <div class="p-3 rounded-2xl border shadow-sm space-y-2 transition ${isActive ? 'bg-white' : 'bg-slate-100/90 opacity-80'} ${isChecked ? 'border-[#E84D9A] ring-2 ring-[#E84D9A]/20' : (isActive ? 'border-slate-200' : 'border-slate-300')}">
+        <div style="${isChecked ? '' : (isActive ? 'border-color: var(--brand-card-border);' : '')}" class="p-3 rounded-2xl border-2 shadow-md space-y-2 transition ${isActive ? 'bg-white' : 'bg-slate-100/90 opacity-80'} ${isChecked ? 'border-[#EE3E80] ring-2 ring-[#EE3E80]/25' : (isActive ? '' : 'border-slate-300')}">
           <div class="flex items-start gap-2.5">
             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleManagerSelectOne(${p.id}, this.checked)" class="mt-1 w-4 h-4 accent-[#E84D9A] rounded cursor-pointer shrink-0">
             <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-11 h-11 rounded-xl object-contain bg-slate-50 border border-slate-100 p-0.5 shrink-0 cursor-pointer" onclick="openEditProduct(${p.id})">
