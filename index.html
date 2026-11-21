@@ -348,13 +348,37 @@
           </div>
           <div class="sm:col-span-2 bg-white border-2 border-slate-200 rounded-2xl p-3 space-y-3">
             <div class="flex items-center justify-between gap-2 flex-wrap">
-              <span class="text-[11px] font-extrabold text-slate-800">🎨 Editor Visual de Cores & Molduras (1º escolha o item → 2º clique na cor)</span>
+              <span class="text-[11px] font-extrabold text-slate-800">🎨 Editor Visual Completo de Cores (1º escolha o item → 2º clique na cor)</span>
               <button type="button" onclick="resetAllThemeToBrandLogo()" class="text-[10px] font-black bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded-lg shadow-sm transition">🔄 Resetar Cores da Logo</button>
             </div>
-            <div id="visual-color-targets" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5"></div>
+            <div>
+              <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Vitrine, Botões & Molduras</span>
+              <div id="visual-color-targets" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5"></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between gap-2 flex-wrap mb-1">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cabeçalho (Letras e Fundos)</span>
+                <label class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 cursor-pointer select-none">
+                  <input type="checkbox" id="hs-address-nobg" checked onchange="previewHeaderStyles(); updateManagerLiveMiniPreview();" class="w-3.5 h-3.5 accent-[#2EB4C7]">
+                  <span>📍 Endereço sem fundo</span>
+                </label>
+              </div>
+              <div id="visual-header-targets" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5"></div>
+            </div>
+            <!-- Inputs ocultos sincronizados para compatibilidade total -->
+            <div class="hidden">
+              <input type="color" id="hs-name-color" value="#FFFFFF">
+              <input type="color" id="hs-subtitle-color" value="#ECFEFF">
+              <input type="color" id="hs-address-text" value="#ECFEFF">
+              <input type="color" id="hs-address-bg" value="#176E7B">
+              <input type="color" id="hs-hours-text" value="#FFFFFF">
+              <input type="color" id="hs-hours-bg" value="#176E7B">
+              <input type="color" id="hs-delivery-text" value="#0F172A">
+              <input type="color" id="hs-delivery-bg" value="#F7D046">
+            </div>
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
               <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-[11px] font-bold text-slate-700">Pintando: <strong id="visual-active-label" class="text-brand-primary">Cor do Topo (Logo)</strong></span>
+                <span class="text-[11px] font-bold text-slate-700">Pintando agora: <strong id="visual-active-label" class="text-brand-primary">Cor do Topo (Logo)</strong></span>
                 <label class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-300 px-2 py-0.5 rounded-lg cursor-pointer">
                   <span>Cor livre:</span>
                   <input type="color" id="visual-free-color" oninput="applyVisualPaletteColor(this.value)" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent">
@@ -378,7 +402,7 @@
                 <button type="button" onclick="applyVisualPaletteColor('#F4F9FA')" class="w-6 h-6 rounded-full border-2 border-slate-300 shadow hover:scale-110 transition" style="background:#F4F9FA" title="Gelo Suave"></button>
               </div>
             </div>
-            <!-- MINI PRÉVIA AO VIVO DA VITRINE -->
+            <!-- MINI PRÉVIA AO VIVO COMPLETA DA VITRINE -->
             <div class="space-y-1.5">
               <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">👁️ Prévia ao vivo da Vitrine (sem sair do Gestor)</span>
               <div id="mgr-live-mini-page" class="rounded-2xl border-2 border-slate-300 overflow-hidden shadow-inner" style="background:#F4F9FA;">
@@ -386,9 +410,16 @@
                   <div class="flex items-center justify-between gap-2">
                     <div class="min-w-0">
                       <div id="mgr-mini-name" class="text-xs font-black truncate">Sua Loja</div>
-                      <div id="mgr-mini-sub" class="text-[10px] opacity-90 truncate">Catálogo Online</div>
+                      <div id="mgr-mini-sub" class="text-[10px] truncate">Catálogo Online</div>
                     </div>
                     <span id="mgr-mini-wa" class="text-[9px] font-black px-2 py-1 rounded-lg border border-white/50 shrink-0" style="background:#FFFFFF; color:#075E54;">💬 WhatsApp</span>
+                  </div>
+                  <div class="mt-1.5 space-y-1">
+                    <div><span id="mgr-mini-addr" class="text-[10px] font-semibold inline-block">📍 Endereço da Loja</span></div>
+                    <div class="flex flex-wrap gap-1">
+                      <span id="mgr-mini-hours" class="text-[9px] font-bold px-1.5 py-0.5 rounded-md">🕒 Horário de Funcionamento</span>
+                      <span id="mgr-mini-deliv" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm">🛵 Aviso de Entrega</span>
+                    </div>
                   </div>
                 </div>
                 <div class="p-2 grid grid-cols-2 gap-2 max-w-sm mx-auto">
@@ -404,71 +435,6 @@
                     <div id="mgr-mini-price2" class="text-xs font-black my-1" style="color:#EE3E80;">Por R$ 99,90</div>
                     <div id="mgr-mini-btn2" class="text-white text-[10px] font-extrabold text-center py-1 rounded-lg inline-flex items-center justify-center gap-1 w-full" style="background:#EE3E80;"><span id="mgr-mini-fire2" class="w-3.5 h-3.5 rounded-full inline-flex items-center justify-center text-[8px]" style="background:#FFFFFF;">🔥</span>Aproveitar</div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="sm:col-span-2 bg-white border border-slate-200 rounded-2xl p-3 space-y-2.5">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-[11px] font-extrabold text-slate-700">🎨 Cores do Cabeçalho (Letras e Fundos)</span>
-              <button type="button" onclick="resetHeaderStyles()" class="text-[10px] font-bold text-brand-primary hover:underline">Restaurar padrão</button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-between gap-2">
-                <span class="font-bold text-slate-700">Nome da Loja</span>
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                  <span class="text-[10px] text-slate-500">Letra</span>
-                  <input type="color" id="hs-name-color" value="#FFFFFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                </label>
-              </div>
-              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-between gap-2">
-                <span class="font-bold text-slate-700">Subtítulo</span>
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                  <span class="text-[10px] text-slate-500">Letra</span>
-                  <input type="color" id="hs-subtitle-color" value="#ECFEFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                </label>
-              </div>
-              <div class="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-wrap items-center justify-between gap-2">
-                <span class="font-bold text-slate-700">📍 Endereço</span>
-                <div class="flex items-center gap-3 flex-wrap">
-                  <label class="flex items-center gap-1 cursor-pointer">
-                    <span class="text-[10px] text-slate-500">Letra</span>
-                    <input type="color" id="hs-address-text" value="#ECFEFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                  </label>
-                  <label class="flex items-center gap-1 cursor-pointer">
-                    <span class="text-[10px] text-slate-500">Fundo</span>
-                    <input type="color" id="hs-address-bg" value="#176E7B" oninput="document.getElementById('hs-address-nobg').checked=false; previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                  </label>
-                  <label class="flex items-center gap-1 cursor-pointer select-none">
-                    <input type="checkbox" id="hs-address-nobg" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#2EB4C7]">
-                    <span class="text-[10px] font-semibold text-slate-600">Sem fundo</span>
-                  </label>
-                </div>
-              </div>
-              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-wrap items-center justify-between gap-2">
-                <span class="font-bold text-slate-700">🕒 Horário</span>
-                <div class="flex items-center gap-2.5">
-                  <label class="flex items-center gap-1 cursor-pointer">
-                    <span class="text-[10px] text-slate-500">Letra</span>
-                    <input type="color" id="hs-hours-text" value="#FFFFFF" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                  </label>
-                  <label class="flex items-center gap-1 cursor-pointer">
-                    <span class="text-[10px] text-slate-500">Fundo</span>
-                    <input type="color" id="hs-hours-bg" value="#176E7B" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                  </label>
-                </div>
-              </div>
-              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 flex flex-wrap items-center justify-between gap-2">
-                <span class="font-bold text-slate-700">🛵 Entrega</span>
-                <div class="flex items-center gap-2.5">
-                  <label class="flex items-center gap-1 cursor-pointer">
-                    <span class="text-[10px] text-slate-500">Letra</span>
-                    <input type="color" id="hs-delivery-text" value="#0F172A" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                  </label>
-                  <label class="flex items-center gap-1 cursor-pointer">
-                    <span class="text-[10px] text-slate-500">Fundo</span>
-                    <input type="color" id="hs-delivery-bg" value="#F7D046" oninput="previewHeaderStyles()" class="w-7 h-7 rounded cursor-pointer border border-slate-300 bg-transparent">
-                  </label>
                 </div>
               </div>
             </div>
@@ -1672,15 +1638,25 @@
     }
 
     const VISUAL_COLOR_TARGETS = [
-      { key: 'headerBg', label: 'Cor do Topo (Logo)' },
-      { key: 'waBg', label: 'Fundo Botão WhatsApp' },
+      { key: 'headerBg', label: 'Cor do Topo' },
+      { key: 'waBg', label: 'Fundo WhatsApp' },
       { key: 'primaryColor', label: 'Botões (Adicionar)' },
-      { key: 'accentColor', label: 'Promoção / Destaque' },
-      { key: 'fireBg', label: '🔥 Fundo Redondo Fogo' },
-      { key: 'cardBorder', label: 'Moldura dos Cards' },
+      { key: 'accentColor', label: 'Promoção' },
+      { key: 'fireBg', label: '🔥 Fundo Fogo' },
+      { key: 'cardBorder', label: 'Moldura Cards' },
       { key: 'priceColor', label: 'Preço Normal' },
-      { key: 'stripeColor', label: 'Faixa do Topo' },
-      { key: 'pageBg', label: 'Fundo da Tela' }
+      { key: 'stripeColor', label: 'Faixa Topo' },
+      { key: 'pageBg', label: 'Fundo Tela' }
+    ];
+    const VISUAL_HEADER_TARGETS = [
+      { key: 'hsNameColor', label: 'Nome (Letra)', inputId: 'hs-name-color' },
+      { key: 'hsSubColor', label: 'Subtítulo (Letra)', inputId: 'hs-subtitle-color' },
+      { key: 'hsAddrText', label: '📍 Endereço (Letra)', inputId: 'hs-address-text' },
+      { key: 'hsAddrBg', label: '📍 Endereço (Fundo)', inputId: 'hs-address-bg' },
+      { key: 'hsHoursText', label: '🕒 Horário (Letra)', inputId: 'hs-hours-text' },
+      { key: 'hsHoursBg', label: '🕒 Horário (Fundo)', inputId: 'hs-hours-bg' },
+      { key: 'hsDelivText', label: '🛵 Entrega (Letra)', inputId: 'hs-delivery-text' },
+      { key: 'hsDelivBg', label: '🛵 Entrega (Fundo)', inputId: 'hs-delivery-bg' }
     ];
     let selectedVisualTarget = 'headerBg';
     let visualPaletteState = {
@@ -1711,6 +1687,12 @@
       updateManagerLiveMiniPreview(s);
     }
 
+    function getVisualTargetCurrentColor(key) {
+      const hdrTarget = VISUAL_HEADER_TARGETS.find(t => t.key === key);
+      if (hdrTarget) return document.getElementById(hdrTarget.inputId)?.value || '#FFFFFF';
+      return visualPaletteState[key] || '#23B5C8';
+    }
+
     function updateManagerLiveMiniPreview(st) {
       const s = st || visualPaletteState;
       const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
@@ -1730,16 +1712,43 @@
       setStyle('mgr-mini-fire2', 'backgroundColor', s.fireBg || '#FFFFFF');
       const nEl = document.getElementById('mgr-mini-name');
       const sEl = document.getElementById('mgr-mini-sub');
-      if (nEl) nEl.textContent = storeConfig.name || 'Sua Loja';
-      if (sEl) sEl.textContent = storeConfig.subtitle || 'Catálogo Online';
+      const aEl = document.getElementById('mgr-mini-addr');
+      const hEl = document.getElementById('mgr-mini-hours');
+      const dEl = document.getElementById('mgr-mini-deliv');
+      if (nEl) {
+        nEl.textContent = storeConfig.name || 'Sua Loja';
+        nEl.style.color = document.getElementById('hs-name-color')?.value || '#FFFFFF';
+      }
+      if (sEl) {
+        sEl.textContent = storeConfig.subtitle || 'Catálogo Online';
+        sEl.style.color = document.getElementById('hs-subtitle-color')?.value || '#ECFEFF';
+      }
+      if (aEl) {
+        const noBg = !!document.getElementById('hs-address-nobg')?.checked;
+        aEl.textContent = storeConfig.address ? `📍 ${storeConfig.address}` : '📍 Endereço da Loja';
+        aEl.style.color = document.getElementById('hs-address-text')?.value || '#ECFEFF';
+        aEl.style.backgroundColor = noBg ? 'transparent' : (document.getElementById('hs-address-bg')?.value || '#176E7B');
+        aEl.style.padding = noBg ? '0' : '2px 6px';
+        aEl.style.borderRadius = noBg ? '0' : '6px';
+      }
+      if (hEl) {
+        hEl.textContent = storeConfig.openingHours ? `🕒 ${storeConfig.openingHours}` : '🕒 Horário de Funcionamento';
+        hEl.style.color = document.getElementById('hs-hours-text')?.value || '#FFFFFF';
+        hEl.style.backgroundColor = document.getElementById('hs-hours-bg')?.value || '#176E7B';
+      }
+      if (dEl) {
+        dEl.textContent = storeConfig.deliveryInfo ? `🛵 ${storeConfig.deliveryInfo}` : '🛵 Aviso de Entrega';
+        dEl.style.color = document.getElementById('hs-delivery-text')?.value || '#0F172A';
+        dEl.style.backgroundColor = document.getElementById('hs-delivery-bg')?.value || '#F7D046';
+      }
     }
 
-    function renderVisualColorTargets() {
-      const wrap = document.getElementById('visual-color-targets');
+    function renderVisualTargetList(elId, targets) {
+      const wrap = document.getElementById(elId);
       if (!wrap) return;
-      wrap.innerHTML = VISUAL_COLOR_TARGETS.map(t => {
+      wrap.innerHTML = targets.map(t => {
         const isSel = t.key === selectedVisualTarget;
-        const col = visualPaletteState[t.key] || '#23B5C8';
+        const col = getVisualTargetCurrentColor(t.key);
         return `
           <button type="button" onclick="selectVisualColorTarget('${t.key}')" class="p-1.5 rounded-xl border-2 text-left flex items-center justify-between gap-1.5 transition ${isSel ? 'border-brand-primary bg-[#E8F8FA] shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}">
             <span class="text-[10px] font-extrabold text-slate-800 leading-tight">${t.label}</span>
@@ -1747,11 +1756,17 @@
           </button>
         `;
       }).join('');
-      const active = VISUAL_COLOR_TARGETS.find(t => t.key === selectedVisualTarget);
+    }
+
+    function renderVisualColorTargets() {
+      renderVisualTargetList('visual-color-targets', VISUAL_COLOR_TARGETS);
+      renderVisualTargetList('visual-header-targets', VISUAL_HEADER_TARGETS);
+      const all = [...VISUAL_COLOR_TARGETS, ...VISUAL_HEADER_TARGETS];
+      const active = all.find(t => t.key === selectedVisualTarget);
       const lbl = document.getElementById('visual-active-label');
       const free = document.getElementById('visual-free-color');
       if (lbl && active) lbl.textContent = active.label;
-      if (free) free.value = visualPaletteState[selectedVisualTarget] || '#23B5C8';
+      if (free) free.value = getVisualTargetCurrentColor(selectedVisualTarget);
     }
 
     function selectVisualColorTarget(key) {
@@ -1760,6 +1775,19 @@
     }
 
     function applyVisualPaletteColor(hex) {
+      const hdrTarget = VISUAL_HEADER_TARGETS.find(t => t.key === selectedVisualTarget);
+      if (hdrTarget) {
+        const inp = document.getElementById(hdrTarget.inputId);
+        if (inp) inp.value = hex;
+        if (selectedVisualTarget === 'hsAddrBg') {
+          const nobg = document.getElementById('hs-address-nobg');
+          if (nobg) nobg.checked = false;
+        }
+        previewHeaderStyles();
+        renderVisualColorTargets();
+        updateManagerLiveMiniPreview(visualPaletteState);
+        return;
+      }
       visualPaletteState[selectedVisualTarget] = hex;
       if (selectedVisualTarget === 'primaryColor') {
         const pInp = document.getElementById('config-primary-color');
@@ -1901,6 +1929,8 @@
       const chkFoot = document.getElementById('hs-show-addr-footer');
       if (chkTop) chkTop.checked = s.showAddressTop !== false;
       if (chkFoot) chkFoot.checked = s.showAddressFooter !== false;
+      renderVisualColorTargets();
+      updateManagerLiveMiniPreview(visualPaletteState);
     }
 
     function renderStoreConfig() {
