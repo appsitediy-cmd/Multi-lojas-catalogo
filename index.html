@@ -242,6 +242,16 @@
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Endereço da Loja</label>
             <input type="text" id="config-store-address-input" placeholder="Ex: Rua Itajubá, 338 - Carapicuíba" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
+                <input type="checkbox" id="hs-show-addr-top" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#2EB4C7] rounded">
+                <span>Mostrar no topo</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
+                <input type="checkbox" id="hs-show-addr-footer" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#2EB4C7] rounded">
+                <span>Mostrar no rodapé</span>
+              </label>
+            </div>
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">🕒 Horário de Funcionamento</label>
@@ -475,8 +485,9 @@
           <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
             <label class="block text-[11px] font-bold text-[#176E7B]">Ou cole a imagem / link da foto (Ctrl+V)</label>
             <div class="flex items-center gap-1">
-              <button type="button" onclick="searchGoogleFromInputs('new-name', 'new-barcode', false)" class="text-[10px] bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-lg">🔎 Google Nome</button>
+              <button type="button" onclick="searchGoogleFromInputs('new-name', 'new-barcode', false)" class="text-[10px] bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-lg">🔎 Nome</button>
               <button type="button" onclick="searchGoogleFromInputs('new-name', 'new-barcode', true)" class="text-[10px] bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-lg">🏷️ EAN</button>
+              <button type="button" onclick="pastePhotoIntoInput('new-image', 'new-image-preview')" class="text-[10px] bg-brand-primary hover:opacity-90 text-white font-bold px-2 py-0.5 rounded-lg">📋 Colar</button>
             </div>
           </div>
           <input type="text" id="new-image" placeholder="Cole o link ou a imagem copiada aqui..." oninput="updateImagePreview('new-image', 'new-image-preview')" onpaste="handleImagePaste(event, 'new-image', 'new-image-preview')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
@@ -694,6 +705,7 @@
             <div class="flex items-center gap-1">
               <button type="button" onclick="searchGoogleFromInputs('edit-product-name', 'edit-product-barcode', false)" class="text-[10px] bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-lg">🔎 Nome</button>
               <button type="button" onclick="searchGoogleFromInputs('edit-product-name', 'edit-product-barcode', true)" class="text-[10px] bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-lg">🏷️ EAN</button>
+              <button type="button" onclick="pastePhotoIntoInput('edit-product-image', 'edit-product-preview')" class="text-[10px] bg-brand-primary hover:opacity-90 text-white font-bold px-2 py-0.5 rounded-lg">📋 Colar</button>
             </div>
           </div>
           <div class="flex flex-col sm:flex-row gap-2">
@@ -1081,7 +1093,9 @@
         hoursBg: "#176E7B",
         hoursText: "#FFFFFF",
         deliveryBg: "#F7D046",
-        deliveryText: "#0F172A"
+        deliveryText: "#0F172A",
+        showAddressTop: true,
+        showAddressFooter: true
       },
       pixKey: "",
       logo: DEFAULT_LOGO_IMG,
@@ -1352,7 +1366,9 @@
           hoursBg: store.hours_bg_color || "#176E7B",
           hoursText: "#FFFFFF",
           deliveryBg: store.delivery_bg_color || "#F7D046",
-          deliveryText: "#0F172A"
+          deliveryText: "#0F172A",
+          showAddressTop: true,
+          showAddressFooter: true
         }, store.header_styles || {}),
         pixKey: store.pix_key || "",
         logo: store.logo_url || DEFAULT_LOGO_IMG,
@@ -1553,12 +1569,35 @@
         hoursText: document.getElementById('hs-hours-text')?.value || '#FFFFFF',
         hoursBg: document.getElementById('hs-hours-bg')?.value || '#176E7B',
         deliveryText: document.getElementById('hs-delivery-text')?.value || '#0F172A',
-        deliveryBg: document.getElementById('hs-delivery-bg')?.value || '#F7D046'
+        deliveryBg: document.getElementById('hs-delivery-bg')?.value || '#F7D046',
+        showAddressTop: document.getElementById('hs-show-addr-top') ? document.getElementById('hs-show-addr-top').checked : true,
+        showAddressFooter: document.getElementById('hs-show-addr-footer') ? document.getElementById('hs-show-addr-footer').checked : true
       };
     }
 
+    function updateAddressVisibility(hs) {
+      const s = hs || {};
+      const addrText = (document.getElementById('config-store-address-input')?.value ?? storeConfig.address ?? '').trim();
+      const hasAddr = !!addrText;
+      const showTop = hasAddr && (s.showAddressTop !== false);
+      const showFooter = hasAddr && (s.showAddressFooter !== false);
+      const hasHours = !!(storeConfig.openingHours && storeConfig.openingHours.trim());
+      const hasDeliv = !!(storeConfig.deliveryInfo && storeConfig.deliveryInfo.trim());
+      const addrEl = document.getElementById('header-store-address');
+      const addrBar = document.getElementById('header-address-bar');
+      const footerEl = document.getElementById('footer-store-label');
+      if (addrEl) {
+        addrEl.textContent = showTop ? `📍 ${addrText}` : '';
+        addrEl.classList.toggle('hidden', !showTop);
+      }
+      if (addrBar) addrBar.classList.toggle('hidden', !(showTop || hasHours || hasDeliv));
+      if (footerEl) footerEl.textContent = showFooter ? `${storeConfig.name} • 📍 ${addrText}` : storeConfig.name;
+    }
+
     function previewHeaderStyles() {
-      applyHeaderStylesObj(readHeaderStylesFromInputs());
+      const hs = readHeaderStylesFromInputs();
+      updateAddressVisibility(hs);
+      applyHeaderStylesObj(hs);
     }
 
     function resetHeaderStyles() {
@@ -1566,9 +1605,11 @@
         nameColor: '#FFFFFF', subtitleColor: '#ECFEFF',
         addressBg: '', addressText: '#ECFEFF',
         hoursBg: '#176E7B', hoursText: '#FFFFFF',
-        deliveryBg: '#F7D046', deliveryText: '#0F172A'
+        deliveryBg: '#F7D046', deliveryText: '#0F172A',
+        showAddressTop: true, showAddressFooter: true
       };
       populateHeaderStyleInputs(def);
+      updateAddressVisibility(def);
       applyHeaderStylesObj(def);
     }
 
@@ -1585,6 +1626,10 @@
       setVal('hs-hours-bg', s.hoursBg || '#176E7B');
       setVal('hs-delivery-text', s.deliveryText || '#0F172A');
       setVal('hs-delivery-bg', s.deliveryBg || '#F7D046');
+      const chkTop = document.getElementById('hs-show-addr-top');
+      const chkFoot = document.getElementById('hs-show-addr-footer');
+      if (chkTop) chkTop.checked = s.showAddressTop !== false;
+      if (chkFoot) chkFoot.checked = s.showAddressFooter !== false;
     }
 
     function renderStoreConfig() {
@@ -1597,12 +1642,15 @@
       const badgesWrap = document.getElementById('header-store-badges');
       const hoursEl = document.getElementById('header-opening-hours');
       const delivEl = document.getElementById('header-delivery-info');
+      const hs = storeConfig.headerStyles || {};
       const hasAddr = !!(storeConfig.address && storeConfig.address.trim());
+      const showAddrTop = hasAddr && (hs.showAddressTop !== false);
+      const showAddrFooter = hasAddr && (hs.showAddressFooter !== false);
       const hasHours = !!(storeConfig.openingHours && storeConfig.openingHours.trim());
       const hasDeliv = !!(storeConfig.deliveryInfo && storeConfig.deliveryInfo.trim());
       if (addrEl) {
-        addrEl.textContent = hasAddr ? `📍 ${storeConfig.address.trim()}` : '';
-        addrEl.classList.toggle('hidden', !hasAddr);
+        addrEl.textContent = showAddrTop ? `📍 ${storeConfig.address.trim()}` : '';
+        addrEl.classList.toggle('hidden', !showAddrTop);
       }
       if (hoursEl) {
         hoursEl.textContent = hasHours ? `🕒 ${storeConfig.openingHours.trim()}` : '';
@@ -1612,10 +1660,10 @@
         delivEl.textContent = hasDeliv ? `🛵 ${storeConfig.deliveryInfo.trim()}` : '';
         delivEl.classList.toggle('hidden', !hasDeliv);
       }
-      applyHeaderStylesObj(storeConfig.headerStyles);
+      applyHeaderStylesObj(hs);
       if (badgesWrap) badgesWrap.classList.toggle('hidden', !(hasHours || hasDeliv));
-      if (addrBar) addrBar.classList.toggle('hidden', !(hasAddr || hasHours || hasDeliv));
-      document.getElementById('footer-store-label').textContent = storeConfig.address ? `${storeConfig.name} • 📍 ${storeConfig.address}` : storeConfig.name;
+      if (addrBar) addrBar.classList.toggle('hidden', !(showAddrTop || hasHours || hasDeliv));
+      document.getElementById('footer-store-label').textContent = showAddrFooter ? `${storeConfig.name} • 📍 ${storeConfig.address}` : storeConfig.name;
       const logoImg = document.getElementById('header-logo-img');
       logoImg.src = storeConfig.logo || DEFAULT_LOGO_IMG;
       const zoom = storeConfig.logoZoom || 100;
@@ -3757,6 +3805,47 @@
       const val = el.value.trim();
       if (/^https?:\/\//i.test(val) || val.startsWith('data:image/')) {
         saveQuickPhotoUrlToProduct(quickPasteTargetId, val);
+      }
+    }
+
+    async function pastePhotoIntoInput(targetInputId, previewImgId) {
+      const inp = document.getElementById(targetInputId);
+      if (navigator.clipboard && navigator.clipboard.read) {
+        try {
+          const items = await navigator.clipboard.read();
+          for (const item of items) {
+            const imgType = item.types.find(t => t.startsWith('image/'));
+            if (imgType) {
+              const blob = await item.getType(imgType);
+              processImageFile(blob, targetInputId, previewImgId);
+              return;
+            }
+            if (item.types.includes('text/plain')) {
+              const txtBlob = await item.getType('text/plain');
+              const txt = (await txtBlob.text()).trim();
+              if (/^https?:\/\//i.test(txt) || txt.startsWith('data:image/')) {
+                if (inp) inp.value = txt;
+                updateImagePreview(targetInputId, previewImgId);
+                showToast("✅ Link da foto colado!");
+                return;
+              }
+            }
+          }
+        } catch (err) {}
+      } else if (navigator.clipboard && navigator.clipboard.readText) {
+        try {
+          const txt = (await navigator.clipboard.readText()).trim();
+          if (/^https?:\/\//i.test(txt) || txt.startsWith('data:image/')) {
+            if (inp) inp.value = txt;
+            updateImagePreview(targetInputId, previewImgId);
+            showToast("✅ Link da foto colado!");
+            return;
+          }
+        } catch (err) {}
+      }
+      if (inp) {
+        inp.focus();
+        showToast("📋 Toque no campo abaixo e aperte Colar / Ctrl+V!");
       }
     }
 
