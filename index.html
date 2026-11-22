@@ -2740,6 +2740,34 @@
       filterProducts();
     }
 
+    function getVariantPillLabel(v, siblings) {
+      const weightsUsed = siblings.map(s => (s.weight || '').trim());
+      const uniqueValidWeights = new Set(weightsUsed.filter(w => w && w !== 'Sem peso/medida'));
+      const w = (v.weight || '').trim();
+      if (w && w !== 'Sem peso/medida' && uniqueValidWeights.size === siblings.length) {
+        return w;
+      }
+      // Remove palavras em comum entre todos os irmãos para mostrar só a diferença (sabor, peso, kit, etc.)
+      const splitWords = (str) => String(str || '').trim().split(/\s+/).filter(Boolean);
+      const allWordLists = siblings.map(s => splitWords(s.name));
+      const firstWords = allWordLists[0] || [];
+      let prefixLen = 0;
+      while (
+        prefixLen < firstWords.length &&
+        allWordLists.every(wl => wl.length > prefixLen && wl[prefixLen].toLowerCase() === firstWords[prefixLen].toLowerCase())
+      ) {
+        prefixLen++;
+      }
+      const myWords = splitWords(v.name).slice(prefixLen);
+      let diff = myWords.join(' ').trim();
+      if (!diff) {
+        diff = (w && w !== 'Sem peso/medida') ? w : `R$ ${getEffectiveProductPrice(v).toFixed(2).replace('.', ',')}`;
+      } else if (w && w !== 'Sem peso/medida' && !diff.toLowerCase().includes(w.toLowerCase())) {
+        diff = `${w} • ${diff}`;
+      }
+      return diff.length > 22 ? diff.slice(0, 21) + '…' : diff;
+    }
+
     function getPromoScheduleStatus(p) {
       if (!p || (!p.promoStart && !p.promoEnd)) return '';
       const now = Date.now();
@@ -3091,7 +3119,7 @@
         const variantPillsHtml = isGroup ? `
           <div class="flex flex-wrap gap-1 mb-2">
             ${card.items.map(v => {
-              const label = (v.weight && v.weight !== 'Sem peso/medida') ? v.weight : v.name.slice(0, 12);
+              const label = getVariantPillLabel(v, card.items);
               const activePill = v.id === p.id;
               const vPromo = isProductPromoActive(v);
               return `<button type="button" onclick="selectCardVariant('${escAttr(card.groupKey)}', ${v.id})" class="px-2 py-1 rounded-lg text-[10px] font-extrabold border transition ${activePill ? (vPromo ? 'bg-brand-accent text-white border-transparent shadow-sm' : 'bg-indigo-600 text-white border-indigo-600 shadow-sm') : (vPromo ? 'bg-pink-50 text-[#9D174D] border-[#E84D9A]/50 hover:bg-pink-100' : 'bg-indigo-50/70 text-indigo-800 border-indigo-200 hover:bg-indigo-100')}">${vPromo ? '🔥 ' : ''}${label}</button>`;
@@ -3124,6 +3152,7 @@
                   : (isPromoNow
                     ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none shadow-sm">🔥</span><span>PROMOÇÃO</span></span>`
                     : (hasPickup ? `<span class="absolute top-1.5 left-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">🏪 RETIRADA NA LOJA</span>` : ''))}
+                ${hasWholesale ? `<span class="absolute bottom-1.5 left-1.5 z-10 ${qty >= p.wholesaleQty ? 'bg-emerald-600' : 'bg-amber-500'} text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">${qty >= p.wholesaleQty ? `✅ ${qty} UN ATACADO` : `📦 LEVE ${p.wholesaleQty}`}</span>` : ''}
                 ${pctOff >= 1 ? `<span class="absolute bottom-1.5 right-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow">-${pctOff}% OFF</span>` : ''}
                 <img src="${imgSrc}" alt="${p.name}" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
               </div>
@@ -3153,7 +3182,7 @@
               ` : `
                 <div style="color: var(--brand-price-color);" class="inline-block bg-[#F0FAFB] border border-slate-200 rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
               `)}
-              ${hasWholesale ? `<div class="bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-amber-900 mb-2 leading-snug">📦 Atacado: ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold text-amber-700">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></div>` : ''}
+              ${hasWholesale ? `<button type="button" onclick="addWholesalePack(${p.id})" class="w-full text-left bg-amber-50 hover:bg-amber-100 active:scale-95 border-2 border-amber-300 hover:border-amber-400 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-amber-900 mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5" title="Clique para adicionar o kit atacado ao carrinho"><span>📦 Atacado: ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold text-amber-700">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></span><span class="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">+${qty > 0 && qty < p.wholesaleQty ? (p.wholesaleQty - qty) : p.wholesaleQty}</span></button>` : ''}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
               ${actionArea}
             </div>
@@ -3179,6 +3208,17 @@
       cart[productId] = (cart[productId] || 0) + (parseInt(delta, 10) || 1);
       updateCartBadge();
       filterProducts();
+    }
+
+    function addWholesalePack(productId) {
+      const p = products.find(prod => prod.id == productId);
+      if (!p || !hasValidWholesale(p)) return;
+      const current = cart[productId] || 0;
+      const addQty = (current > 0 && current < p.wholesaleQty) ? (p.wholesaleQty - current) : p.wholesaleQty;
+      cart[productId] = current + addQty;
+      updateCartBadge();
+      filterProducts();
+      showToast(`📦 Kit Atacado adicionado! (${cart[productId]} un — R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} a cada ${p.wholesaleQty} un)`);
     }
 
     function decreaseCart(productId) {
