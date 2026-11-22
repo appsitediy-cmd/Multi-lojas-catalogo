@@ -784,14 +784,17 @@
             <span id="manager-selected-badge" class="text-[10px] font-extrabold text-slate-400">0 selecionado(s)</span>
           </div>
           <div id="manager-bulk-actions" class="hidden pt-2 border-t border-slate-100 flex flex-wrap gap-1.5">
-            <button type="button" onclick="bulkDisableManagerPromo()" class="flex-1 min-w-[160px] bg-brand-accent hover:opacity-90 text-white font-extrabold text-[11px] py-2 px-2.5 rounded-xl shadow-sm transition">
-              🔥 Desativar Promoção (<span id="manager-bulk-count">0</span>)
+            <button type="button" onclick="openBulkPromoModal()" class="flex-1 min-w-[155px] bg-brand-accent hover:opacity-90 text-white font-extrabold text-[11px] py-2 px-2.5 rounded-xl shadow-sm transition">
+              🔥 Colocar na Promo (<span id="manager-bulk-count-promo">0</span>)
+            </button>
+            <button type="button" onclick="bulkDisableManagerPromo()" class="bg-pink-100 hover:bg-pink-200 text-[#9D174D] font-extrabold text-[11px] py-2 px-2.5 rounded-xl transition">
+              ✕ Tirar da Promo (<span id="manager-bulk-count">0</span>)
             </button>
             <button type="button" onclick="bulkToggleManagerActive(false)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-extrabold text-[11px] py-2 px-2.5 rounded-xl transition">
               ⏸️ Pausar
             </button>
             <button type="button" onclick="bulkToggleManagerActive(true)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-extrabold text-[11px] py-2 px-2.5 rounded-xl transition">
-              ✅ Despausar / Ativar
+              ✅ Ativar
             </button>
           </div>
         </div>
@@ -1138,10 +1141,16 @@
                 <option value="skip">⏭️ Pular duplicados (importar só novos)</option>
               </select>
             </div>
-            <label class="flex items-center gap-2 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 cursor-pointer select-none self-end">
-              <input type="checkbox" id="bulk-pause-zero-stock" class="w-4 h-4 accent-[#2EB4C7] rounded">
-              <span class="text-[11px] font-bold text-slate-700">⏸️ Pausar na vitrine se estoque/saldo = 0</span>
-            </label>
+            <div class="space-y-1.5 self-end">
+              <label class="flex items-center gap-2 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="bulk-pause-zero-stock" class="w-4 h-4 accent-[#2EB4C7] rounded">
+                <span class="text-[11px] font-bold text-slate-700">⏸️ Pausar se estoque/saldo = 0</span>
+              </label>
+              <label class="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="bulk-pause-all" class="w-4 h-4 accent-amber-600 rounded">
+                <span class="text-[11px] font-bold text-amber-900">⏸️ Importar todos já pausados (revisar antes)</span>
+              </label>
+            </div>
           </div>
         </div>
         <div id="bulk-preview-wrap" class="hidden space-y-2">
@@ -1335,11 +1344,70 @@
   <!-- MODAL DE CONFIRMAÇÃO (SUBSTITUI CONFIRM NATIVO) -->
   <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl">
-      <h3 class="font-black text-sm text-slate-800 mb-2">Confirmar ação</h3>
+      <h3 id="confirm-modal-title" class="font-black text-sm text-slate-800 mb-2">Confirmar ação</h3>
       <p id="confirm-modal-message" class="text-xs text-slate-600 mb-4"></p>
       <div class="flex gap-2">
         <button onclick="closeConfirmModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
-        <button onclick="acceptConfirmModal()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Excluir</button>
+        <button id="confirm-modal-accept-btn" onclick="acceptConfirmModal()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE PROMOÇÃO EM MASSA -->
+  <div id="bulk-promo-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-brand-accent text-white p-4 flex items-center justify-between">
+        <div>
+          <h3 class="font-black text-sm flex items-center gap-1.5"><span>🔥</span> Colocar na Promoção em Massa</h3>
+          <p id="bulk-promo-subtitle" class="text-[11px] text-white/90">0 produto(s) selecionado(s)</p>
+        </div>
+        <button type="button" onclick="closeBulkPromoModal()" class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white text-xs font-bold">✕</button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3">
+        <div class="bg-[#FDF2F8] border border-[#E84D9A]/30 rounded-2xl p-3 space-y-2.5">
+          <label class="block text-[11px] font-extrabold text-[#9D174D]">Como aplicar o preço promocional?</label>
+          <select id="bulk-promo-mode" onchange="toggleBulkPromoMode(); renderBulkPromoPreview();" class="w-full bg-white border border-[#E84D9A]/40 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#E84D9A]">
+            <option value="percent">📉 Aplicar % de desconto sobre o Preço Normal</option>
+            <option value="keep">🔥 Só marcar como Promoção (manter preço atual)</option>
+          </select>
+          <div id="bulk-promo-percent-wrap" class="space-y-2 pt-1">
+            <div class="grid grid-cols-2 gap-2 items-end">
+              <div>
+                <label class="block text-[10px] font-bold text-[#9D174D] mb-0.5">Desconto (%)</label>
+                <input type="number" id="bulk-promo-percent" min="1" max="90" step="1" value="10" oninput="renderBulkPromoPreview()" class="w-full bg-white border border-[#E84D9A]/40 rounded-lg px-2.5 py-1.5 text-xs font-black text-[#9D174D] focus:outline-none focus:border-[#E84D9A]">
+              </div>
+              <label class="flex items-center gap-1.5 bg-white border border-[#E84D9A]/30 rounded-lg px-2 py-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="bulk-promo-round90" checked onchange="renderBulkPromoPreview()" class="w-3.5 h-3.5 accent-[#E84D9A] rounded">
+                <span class="text-[10px] font-bold text-[#9D174D]">Arredondar p/ ,90</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+          <p class="text-[11px] font-extrabold text-slate-700">Agendamento (opcional — vale para todo o lote)</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Início (Data e Hora)</label>
+              <input type="datetime-local" id="bulk-promo-start" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-[11px] text-slate-700">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Término (Data e Hora)</label>
+              <input type="datetime-local" id="bulk-promo-end" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-[11px] text-slate-700">
+            </div>
+          </div>
+          <label class="flex items-center gap-2 bg-white border border-[#E84D9A]/30 rounded-xl px-2.5 py-2 cursor-pointer select-none">
+            <input type="checkbox" id="bulk-promo-show-end" class="w-4 h-4 accent-[#E84D9A] rounded">
+            <span class="text-[11px] font-bold text-[#9D174D]">⏳ Mostrar término e contagem regressiva para o cliente</span>
+          </label>
+        </div>
+        <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3 space-y-1.5">
+          <p class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800">👀 Prévia dos primeiros itens</p>
+          <div id="bulk-promo-preview-list" class="space-y-1 text-[11px] text-slate-700"></div>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="closeBulkPromoModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
+          <button type="button" id="bulk-promo-apply-btn" onclick="applyBulkPromo()" class="w-2/3 bg-brand-accent hover:opacity-90 text-white font-extrabold py-2.5 rounded-xl text-xs shadow transition">🔥 Colocar na Promoção</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1801,9 +1869,17 @@
       if (val && cb) cb(val);
     }
 
-    function openConfirmModal(message, callback) {
+    function openConfirmModal(message, callback, options = {}) {
       confirmModalCallback = callback;
-      document.getElementById('confirm-modal-message').textContent = message;
+      const titleEl = document.getElementById('confirm-modal-title');
+      const msgEl = document.getElementById('confirm-modal-message');
+      const btnEl = document.getElementById('confirm-modal-accept-btn');
+      if (titleEl) titleEl.textContent = options.title || 'Confirmar ação';
+      if (msgEl) msgEl.textContent = message;
+      if (btnEl) {
+        btnEl.textContent = options.confirmText || 'Excluir';
+        btnEl.className = `w-1/2 font-bold py-2.5 rounded-xl text-xs shadow transition ${options.confirmClass || 'bg-rose-600 hover:bg-rose-700 text-white'}`;
+      }
       document.getElementById('confirm-modal').classList.remove('hidden');
     }
 
@@ -4012,7 +4088,11 @@
         const msg = dup.reason === 'barcode'
           ? `⚠️ Já existe "${dup.match.name}" com este Código de Barras (${barcode}). Deseja abrir esse produto para editar em vez de duplicar?`
           : `⚠️ Já existe um produto com esse nome ("${dup.match.name}"). Deseja abrir o cadastro existente para editar?`;
-        openConfirmModal(msg, () => openEditProduct(dup.match.id));
+        openConfirmModal(msg, () => openEditProduct(dup.match.id), {
+          title: 'Produto já cadastrado',
+          confirmText: '📂 Abrir para editar',
+          confirmClass: 'bg-brand-primary hover:opacity-90 text-white'
+        });
         return;
       }
 
@@ -4212,12 +4292,14 @@
       selectAllEl.indeterminate = selCount > 0 && selCount < visible.length;
       bulkActionsEl.classList.toggle('hidden', selCount === 0);
       if (bulkCountEl) bulkCountEl.textContent = selCount;
+      const bulkCountPromoEl = document.getElementById('manager-bulk-count-promo');
+      if (bulkCountPromoEl) bulkCountPromoEl.textContent = selCount;
     }
 
     function bulkDisableManagerPromo() {
       const ids = Array.from(managerSelectedIds);
       if (ids.length === 0 || !sb) return;
-      openConfirmModal(`Deseja desativar a promoção de ${ids.length} produto(s) selecionado(s)? Eles voltarão ao preço normal.`, async () => {
+      openConfirmModal(`Deseja tirar da promoção ${ids.length} produto(s) selecionado(s)? Eles voltarão ao preço normal.`, async () => {
         const { error } = await sb.from('products').update({ promo: false, promo_start: null, promo_end: null }).in('id', ids);
         if (error) {
           const { error: err2 } = await sb.from('products').update({ promo: false }).in('id', ids);
@@ -4233,8 +4315,123 @@
         clearManagerSelection();
         filterProducts();
         renderManagerProducts();
-        showToast(`🔥 Promoção desativada em ${ids.length} produto(s)!`);
+        showToast(`🔥 Promoção removida de ${ids.length} produto(s)!`);
+      }, {
+        title: 'Tirar da promoção',
+        confirmText: '🔥 Tirar da promoção',
+        confirmClass: 'bg-brand-accent hover:opacity-90 text-white'
       });
+    }
+
+    function openBulkPromoModal() {
+      const ids = Array.from(managerSelectedIds);
+      if (ids.length === 0) return;
+      const sub = document.getElementById('bulk-promo-subtitle');
+      const btn = document.getElementById('bulk-promo-apply-btn');
+      if (sub) sub.textContent = `${ids.length} produto(s) selecionado(s)`;
+      if (btn) btn.textContent = `🔥 Colocar ${ids.length} na Promoção`;
+      toggleBulkPromoMode();
+      renderBulkPromoPreview();
+      document.getElementById('bulk-promo-modal')?.classList.remove('hidden');
+    }
+
+    function closeBulkPromoModal() {
+      document.getElementById('bulk-promo-modal')?.classList.add('hidden');
+    }
+
+    function toggleBulkPromoMode() {
+      const mode = document.getElementById('bulk-promo-mode')?.value || 'percent';
+      const wrap = document.getElementById('bulk-promo-percent-wrap');
+      if (wrap) wrap.classList.toggle('hidden', mode !== 'percent');
+    }
+
+    function computeBulkPromoPrice(normalPrice, pct, round90) {
+      if (!normalPrice || normalPrice <= 0) return null;
+      let val = normalPrice * (1 - pct / 100);
+      if (round90 && val >= 2) {
+        const floored = Math.floor(val) + 0.90;
+        val = floored < normalPrice ? floored : Math.max(0.90, Math.floor(val) - 0.10);
+      }
+      val = Math.round(val * 100) / 100;
+      if (val <= 0 || val >= normalPrice) return null;
+      return val;
+    }
+
+    function renderBulkPromoPreview() {
+      const listEl = document.getElementById('bulk-promo-preview-list');
+      if (!listEl) return;
+      const mode = document.getElementById('bulk-promo-mode')?.value || 'percent';
+      const pct = Math.max(1, Math.min(90, parseFloat(document.getElementById('bulk-promo-percent')?.value || '10') || 10));
+      const round90 = !!document.getElementById('bulk-promo-round90')?.checked;
+      const ids = Array.from(managerSelectedIds);
+      const sample = ids.slice(0, 3).map(id => products.find(pr => pr.id === id)).filter(Boolean);
+      if (sample.length === 0) {
+        listEl.innerHTML = `<p class="text-slate-400">Nenhum produto selecionado.</p>`;
+        return;
+      }
+      listEl.innerHTML = sample.map(pr => {
+        if (mode === 'keep') {
+          return `<div class="flex items-center justify-between gap-2 bg-white px-2 py-1 rounded-lg border border-emerald-100"><span class="truncate font-bold">${pr.name}</span><span class="font-black text-[#BE185D] shrink-0">🔥 R$ ${pr.price.toFixed(2).replace('.', ',')}</span></div>`;
+        }
+        const newP = computeBulkPromoPrice(pr.price, pct, round90);
+        return `<div class="flex items-center justify-between gap-2 bg-white px-2 py-1 rounded-lg border border-emerald-100"><span class="truncate font-bold">${pr.name}</span><span class="shrink-0"><span class="line-through text-slate-400 mr-1">R$ ${pr.price.toFixed(2).replace('.', ',')}</span><strong class="text-[#BE185D]">R$ ${(newP ?? pr.price).toFixed(2).replace('.', ',')}</strong></span></div>`;
+      }).join('') + (ids.length > 3 ? `<p class="text-[10px] text-emerald-700 font-bold pt-0.5">+ outros ${ids.length - 3} produto(s) selecionado(s)</p>` : '');
+    }
+
+    async function applyBulkPromo() {
+      const ids = Array.from(managerSelectedIds);
+      if (ids.length === 0 || !sb) return;
+      const mode = document.getElementById('bulk-promo-mode')?.value || 'percent';
+      const pct = Math.max(1, Math.min(90, parseFloat(document.getElementById('bulk-promo-percent')?.value || '10') || 10));
+      const round90 = !!document.getElementById('bulk-promo-round90')?.checked;
+      const startRaw = document.getElementById('bulk-promo-start')?.value || '';
+      const endRaw = document.getElementById('bulk-promo-end')?.value || '';
+      const promoStart = startRaw ? new Date(startRaw).toISOString() : null;
+      const promoEnd = endRaw ? new Date(endRaw).toISOString() : null;
+      const promoShowEnd = !!document.getElementById('bulk-promo-show-end')?.checked;
+
+      showToast(`⏳ Aplicando promoção em ${ids.length} produto(s)...`);
+
+      if (mode === 'keep') {
+        const payload = { promo: true, promo_start: promoStart, promo_end: promoEnd, promo_show_end: promoShowEnd };
+        const { error } = await sb.from('products').update(payload).in('id', ids);
+        if (error) { showToast("⚠️ Erro ao aplicar promoção em massa."); return; }
+        products.forEach(p => {
+          if (managerSelectedIds.has(p.id)) {
+            p.promo = true;
+            p.promoStart = promoStart || '';
+            p.promoEnd = promoEnd || '';
+            p.promoShowEnd = promoShowEnd;
+          }
+        });
+      } else {
+        for (const id of ids) {
+          const p = products.find(pr => pr.id === id);
+          if (!p) continue;
+          const promoPriceVal = computeBulkPromoPrice(p.price, pct, round90);
+          const payload = {
+            promo: true,
+            promo_price: promoPriceVal,
+            promo_start: promoStart,
+            promo_end: promoEnd,
+            promo_show_end: promoShowEnd
+          };
+          const { error } = await sb.from('products').update(payload).eq('id', id);
+          if (!error) {
+            p.promo = true;
+            p.promoPrice = promoPriceVal;
+            p.promoStart = promoStart || '';
+            p.promoEnd = promoEnd || '';
+            p.promoShowEnd = promoShowEnd;
+          }
+        }
+      }
+
+      closeBulkPromoModal();
+      clearManagerSelection();
+      filterProducts();
+      renderManagerProducts();
+      showToast(`🔥 ${ids.length} produto(s) colocados na promoção!`);
     }
 
     function bulkToggleManagerActive(makeActive) {
@@ -4251,6 +4448,10 @@
         filterProducts();
         renderManagerProducts();
         showToast(makeActive ? `✅ ${ids.length} produto(s) ativado(s) na vitrine!` : `⏸️ ${ids.length} produto(s) pausado(s).`);
+      }, {
+        title: makeActive ? 'Ativar itens' : 'Pausar itens',
+        confirmText: makeActive ? '✅ Ativar itens' : '⏸️ Pausar itens',
+        confirmClass: makeActive ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'
       });
     }
 
@@ -5612,6 +5813,7 @@
       if (!sb || !currentStoreId) return;
       const dupMode = document.getElementById('bulk-duplicate-mode')?.value || 'update';
       const pauseZeroStock = !!document.getElementById('bulk-pause-zero-stock')?.checked;
+      const pauseAllImported = !!document.getElementById('bulk-pause-all')?.checked;
       const selected = bulkRows.filter(r => r.checked && r.name.trim());
       if (selected.length === 0) {
         showToast("⚠️ Adicione ou selecione ao menos 1 produto.");
@@ -5622,7 +5824,7 @@
       const toUpdate = [];
       selected.forEach(r => {
         const dup = findDuplicateProduct(r.name, r.barcode);
-        const shouldPause = pauseZeroStock && r.stockQty !== null && r.stockQty !== undefined && Number(r.stockQty) <= 0;
+        const shouldPause = pauseAllImported || (pauseZeroStock && r.stockQty !== null && r.stockQty !== undefined && Number(r.stockQty) <= 0);
         if (dup) {
           if (dupMode === 'update') {
             toUpdate.push({ id: dup.match.id, row: r, shouldPause });
