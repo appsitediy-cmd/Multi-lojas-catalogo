@@ -564,9 +564,12 @@
             </div>
           </div>
           <input type="text" id="new-image" placeholder="Cole o link ou a imagem copiada aqui..." oninput="updateImagePreview('new-image', 'new-image-preview')" onpaste="handleImagePaste(event, 'new-image', 'new-image-preview')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
-          <div id="new-image-preview-wrap" class="hidden flex items-center justify-between bg-white p-2 rounded-xl border border-[#B5E8EF] mt-2">
-            <span class="text-[11px] text-slate-500 font-medium">Prévia da Foto:</span>
-            <img id="new-image-preview" src="" alt="Prévia da foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+          <div id="new-image-preview-wrap" class="hidden flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-[#B5E8EF] mt-2">
+            <div class="flex items-center gap-2">
+              <img id="new-image-preview" src="" alt="Prévia da foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+              <span class="text-[11px] text-slate-500 font-medium">Prévia da Foto</span>
+            </div>
+            <button type="button" onclick="clearProductImageField('new-image', 'new-image-preview')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-extrabold px-2.5 py-1.5 rounded-lg text-[11px] transition">🗑️ Excluir Foto</button>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3 bg-white p-2.5 rounded-xl border border-slate-200">
@@ -574,12 +577,23 @@
             <label class="block text-[10px] font-bold text-slate-600 mb-1">Código de Barras / EAN <span class="text-slate-400 font-normal">(só Gestor)</span></label>
             <div class="flex items-center gap-1.5">
               <input type="text" inputmode="numeric" id="new-barcode" placeholder="Ex: 7896048906755" class="w-full min-w-0 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
-              <button type="button" onclick="openBarcodeScanner('new-barcode', false)" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shrink-0" title="Ler código de barras pela câmera ou foto">📷</button>
+              <button type="button" onclick="openBarcodeScanner('new-barcode', false)" class="bg-slate-800 hover:bg-slate-900 text-white px-2 py-1.5 rounded-lg text-xs font-bold shrink-0" title="Ler código de barras pela câmera ou foto">📷</button>
+              <button type="button" onclick="openCosmosByInput('new-barcode', 'new-name')" class="bg-[#1A8E99] hover:opacity-90 text-white px-2 py-1.5 rounded-lg text-xs font-bold shrink-0" title="Consultar Nome, NCM e Foto na Cosmos">⚡</button>
             </div>
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-600 mb-1">NCM <span class="text-slate-400 font-normal">(só Gestor)</span></label>
-            <input type="text" inputmode="numeric" id="new-ncm" maxlength="10" placeholder="Ex: 23091000" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <label class="block text-[10px] font-bold text-slate-600 mb-1">NCM <span class="text-slate-400 font-normal">(ou escolha)</span></label>
+            <div class="flex items-center gap-1">
+              <input type="text" inputmode="numeric" id="new-ncm" maxlength="10" placeholder="Ex: 23091000" class="w-full min-w-0 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+              <select onchange="applyQuickNcm('new-ncm', this)" class="w-16 bg-white border border-slate-300 rounded-lg px-1 py-1.5 text-[10px] font-extrabold text-[#155E75] shrink-0" title="NCM comum de Pet Shop">
+                <option value="">▾ Pet</option>
+                <option value="23091000">🐶 23091000 Ração</option>
+                <option value="25084090">🐱 25084090 Areia</option>
+                <option value="33051000">🛁 33051000 Shampoo</option>
+                <option value="30049099">💊 30049099 Vet</option>
+                <option value="42010090">🦴 42010090 Coleira</option>
+              </select>
+            </div>
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-600 mb-1">Saldo / Estoque <span class="text-slate-400 font-normal">(só Gestor)</span></label>
@@ -782,11 +796,22 @@
             <div class="flex items-center gap-1">
               <input type="text" inputmode="numeric" id="edit-product-barcode" placeholder="789..." class="w-full min-w-0 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
               <button type="button" onclick="openBarcodeScanner('edit-product-barcode', false)" class="bg-slate-800 hover:bg-slate-900 text-white px-2 py-1.5 rounded-lg text-xs font-bold shrink-0" title="Ler código de barras pela câmera ou foto">📷</button>
+              <button type="button" onclick="openCosmosByInput('edit-product-barcode', 'edit-product-name')" class="bg-[#1A8E99] hover:opacity-90 text-white px-2 py-1.5 rounded-lg text-xs font-bold shrink-0" title="Consultar Nome, NCM e Foto na Cosmos">⚡</button>
             </div>
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-600 mb-0.5">NCM</label>
-            <input type="text" inputmode="numeric" id="edit-product-ncm" maxlength="10" placeholder="23091000" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+            <div class="flex items-center gap-1">
+              <input type="text" inputmode="numeric" id="edit-product-ncm" maxlength="10" placeholder="23091000" class="w-full min-w-0 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+              <select onchange="applyQuickNcm('edit-product-ncm', this)" class="w-16 bg-white border border-slate-300 rounded-lg px-1 py-1.5 text-[10px] font-extrabold text-[#155E75] shrink-0" title="NCM comum de Pet Shop">
+                <option value="">▾ Pet</option>
+                <option value="23091000">🐶 23091000 Ração</option>
+                <option value="25084090">🐱 25084090 Areia</option>
+                <option value="33051000">🛁 33051000 Shampoo</option>
+                <option value="30049099">💊 30049099 Vet</option>
+                <option value="42010090">🦴 42010090 Coleira</option>
+              </select>
+            </div>
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Estoque / Saldo</label>
@@ -809,9 +834,12 @@
             </label>
             <input type="text" id="edit-product-image" placeholder="Ou cole link da foto" oninput="updateImagePreview('edit-product-image', 'edit-product-preview')" onpaste="handleImagePaste(event, 'edit-product-image', 'edit-product-preview')" class="w-full min-w-0 bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
           </div>
-          <div id="edit-product-preview-wrap" class="hidden flex items-center justify-between bg-white p-2 rounded-xl border border-slate-200 mt-1">
-            <span class="text-[11px] text-slate-500 font-medium">Prévia:</span>
-            <img id="edit-product-preview" src="" alt="Prévia do produto" class="w-8 h-8 rounded-lg object-cover border border-slate-200">
+          <div id="edit-product-preview-wrap" class="hidden flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-slate-200 mt-1">
+            <div class="flex items-center gap-2">
+              <img id="edit-product-preview" src="" alt="Prévia do produto" class="w-9 h-9 rounded-lg object-cover border border-slate-200">
+              <span class="text-[11px] text-slate-500 font-medium">Foto atual</span>
+            </div>
+            <button type="button" onclick="clearProductImageField('edit-product-image', 'edit-product-preview')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-extrabold px-2.5 py-1 rounded-lg text-[11px] transition">🗑️ Excluir Foto</button>
           </div>
         </div>
         <div class="bg-[#FDF2F8] p-2.5 rounded-xl border border-[#E84D9A]/30 space-y-2">
@@ -3782,7 +3810,10 @@
         <div style="${isChecked ? '' : (isActive ? 'border-color: var(--brand-card-border);' : '')}" class="p-3 rounded-2xl border-2 shadow-md space-y-2 transition ${isActive ? 'bg-white' : 'bg-slate-100/90 opacity-80'} ${isChecked ? 'border-[#E94793] ring-2 ring-[#E94793]/25' : (isActive ? '' : 'border-slate-300')}">
           <div class="flex items-start gap-2.5">
             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleManagerSelectOne(${p.id}, this.checked)" class="mt-1 w-4 h-4 accent-[#E84D9A] rounded cursor-pointer shrink-0">
-            <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-11 h-11 rounded-xl object-contain bg-slate-50 border border-slate-100 p-0.5 shrink-0 cursor-pointer" onclick="openEditProduct(${p.id})">
+            <div class="relative shrink-0">
+              <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-11 h-11 rounded-xl object-contain bg-slate-50 border border-slate-100 p-0.5 cursor-pointer" onclick="openEditProduct(${p.id})">
+              ${(p.image && p.image.trim()) ? `<button type="button" onclick="removeProductPhotoDirect(${p.id})" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black flex items-center justify-center shadow" title="Excluir foto deste produto">✕</button>` : ''}
+            </div>
             <div class="min-w-0 flex-1">
               <h4 class="text-xs font-bold text-slate-800 leading-snug break-words">${isActive ? '' : '<span class="text-amber-700 font-black">[Pausado]</span> '}${p.name}</h4>
               <p class="text-[11px] text-brand-primary font-black mt-0.5">
@@ -4192,6 +4223,46 @@
 
       if (statusEl) statusEl.textContent = '⚠️ Não foi possível ler o código na foto. Tente aproximar com boa luz.';
       showToast('⚠️ Código não identificado na foto.');
+    }
+
+    function clearProductImageField(inputId, previewImgId) {
+      const inp = document.getElementById(inputId);
+      if (inp) inp.value = '';
+      updateImagePreview(inputId, previewImgId);
+      showToast("🗑️ Foto removida do formulário.");
+    }
+
+    function removeProductPhotoDirect(productId) {
+      const p = products.find(prod => prod.id == productId);
+      if (!p || !sb) return;
+      openConfirmModal(`Deseja excluir a foto de "${p.name}"?`, async () => {
+        const { error } = await sb.from('products').update({ image_url: '' }).eq('id', p.id);
+        if (error) { showToast("⚠️ Erro ao excluir foto."); return; }
+        p.image = '';
+        filterProducts();
+        renderManagerProducts();
+        showToast("🗑️ Foto excluída do produto!");
+      });
+    }
+
+    function openCosmosByInput(barcodeId, nameId) {
+      const ean = normalizeBarcodeKey(document.getElementById(barcodeId)?.value || '');
+      const name = (document.getElementById(nameId)?.value || '').trim();
+      if (ean) {
+        window.open(`https://cosmos.bluesoft.com.br/produtos/${encodeURIComponent(ean)}`, '_blank', 'noopener,noreferrer');
+      } else if (name) {
+        window.open(`https://cosmos.bluesoft.com.br/pesquisas?q=${encodeURIComponent(name)}`, '_blank', 'noopener,noreferrer');
+      } else {
+        showToast("⚠️ Digite ou leia o EAN (ou Nome) primeiro.");
+      }
+    }
+
+    function applyQuickNcm(ncmInputId, selectEl) {
+      if (!selectEl || !selectEl.value) return;
+      const inp = document.getElementById(ncmInputId);
+      if (inp) inp.value = selectEl.value;
+      showToast(`✅ NCM ${selectEl.value} preenchido!`);
+      selectEl.value = '';
     }
 
     function searchGoogleProductPhoto(query) {
