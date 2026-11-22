@@ -154,45 +154,36 @@
   </div>
 
   <!-- CONTEÚDO PRINCIPAL (VITRINE DO CLIENTE) -->
-  <main id="client-view" class="max-w-6xl w-full mx-auto p-4 flex-grow pb-24">
+  <main id="client-view" class="max-w-6xl w-full mx-auto px-2.5 sm:px-4 pt-2.5 sm:pt-4 flex-grow pb-24">
 
-    <!-- FILTRO DE CATEGORIAS -->
-    <div class="mb-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-sm">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Categorias</h2>
-      </div>
-      <div id="category-pills" class="flex flex-wrap justify-center gap-2"></div>
-    </div>
+    <!-- BLOCO ÚNICO COMPACTO E MALEÁVEL DE FILTROS + BUSCA -->
+    <div class="mb-2.5 bg-white border border-slate-200 p-2 rounded-2xl shadow-sm space-y-1.5">
+      <div id="category-pills" class="flex flex-wrap items-center gap-1"></div>
 
-    <!-- CAIXAS SELETORAS DE SUBCATEGORIA, MARCA E ORDENACAO -->
-    <div class="mb-4 bg-white border border-slate-200 p-2.5 rounded-2xl shadow-sm grid grid-cols-2 gap-2">
-      <div id="subcategory-container-box" class="hidden col-span-2">
-        <label id="subcategory-title-label" for="client-subcat-select" class="block text-[11px] font-extrabold uppercase tracking-wider text-[#855E00] mb-1">Subcategoria</label>
-        <select id="client-subcat-select" onchange="selectSubcategory(this.value)" class="w-full bg-[#FEFCE8] border border-[#F7D046] rounded-xl px-3 py-2 text-xs font-bold text-[#855E00] focus:outline-none focus:border-[#D99B00]"></select>
+      <div class="grid grid-cols-2 gap-1.5">
+        <div id="subcategory-container-box" class="hidden col-span-2">
+          <span id="subcategory-title-label" class="hidden">Subcategoria</span>
+          <select id="client-subcat-select" onchange="selectSubcategory(this.value)" class="w-full bg-[#FEFCE8] border border-[#FCD40F] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#855E00] focus:outline-none focus:border-[#D99B00]"></select>
+        </div>
+        <div id="brand-select-wrap" class="min-w-0">
+          <select id="client-brand-select" onchange="selectBrand(this.value)" class="w-full bg-[#FDF2F8] border border-[#E94793]/40 rounded-xl px-2 py-1.5 text-xs font-bold text-[#9D174D] focus:outline-none focus:border-[#E94793]"></select>
+        </div>
+        <div id="sort-select-wrap" class="min-w-0">
+          <select id="client-sort-select" onchange="filterProducts()" class="w-full bg-[#E8F8FA] border border-[#24B7C5]/50 rounded-xl px-2 py-1.5 text-xs font-bold text-[#155E75] focus:outline-none focus:border-[#24B7C5]">
+            <option value="promo-first">🔥 Promoção</option>
+            <option value="price-asc">💰 Menor preço</option>
+            <option value="price-desc">💎 Maior preço</option>
+            <option value="name-asc">🔤 Nome (A → Z)</option>
+          </select>
+        </div>
       </div>
-      <div id="brand-select-wrap" class="min-w-0">
-        <label for="client-brand-select" class="block text-[11px] font-extrabold uppercase tracking-wider text-[#9D174D] mb-1">Marca</label>
-        <select id="client-brand-select" onchange="selectBrand(this.value)" class="w-full bg-[#FDF2F8] border border-[#E84D9A]/40 rounded-xl px-2.5 py-2 text-xs font-bold text-[#9D174D] focus:outline-none focus:border-[#E84D9A]"></select>
-      </div>
-      <div class="min-w-0">
-        <label for="client-sort-select" class="block text-[11px] font-extrabold uppercase tracking-wider text-[#176E7B] mb-1">Ordenar por</label>
-        <select id="client-sort-select" onchange="filterProducts()" class="w-full bg-[#E8F8FA] border border-[#2EB4C7]/50 rounded-xl px-2.5 py-2 text-xs font-bold text-[#176E7B] focus:outline-none focus:border-[#2EB4C7]">
-          <option value="promo-first">🔥 Promoção</option>
-          <option value="price-asc">💰 Menor preço</option>
-          <option value="price-desc">💎 Maior preço</option>
-          <option value="name-asc">🔤 Nome (A → Z)</option>
-        </select>
-      </div>
-    </div>
 
-    <!-- BARRA DE PESQUISA -->
-    <div class="mb-4">
       <div class="relative flex items-center">
-        <span class="absolute left-2 flex items-center justify-center w-8 h-8 rounded-xl bg-brand-primary text-white shadow-sm pointer-events-none">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <span class="absolute left-1.5 flex items-center justify-center w-7 h-7 rounded-xl bg-brand-primary text-white shadow-sm pointer-events-none">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </span>
-        <input type="text" id="search-input" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, Brinquedo...)" class="w-full bg-white border-2 border-brand-primary rounded-2xl pl-12 pr-11 py-3 text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#2EB4C7] shadow-sm">
-        <button id="search-clear-btn" type="button" onclick="clearSearchInput()" class="hidden absolute right-2.5 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center transition" title="Limpar busca">✕</button>
+        <input type="text" id="search-input" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, 15kg...)" class="w-full bg-slate-50 border-2 border-brand-primary/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#24B7C5]">
+        <button id="search-clear-btn" type="button" onclick="clearSearchInput()" class="hidden absolute right-2 w-6 h-6 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 font-bold text-[11px] flex items-center justify-center transition" title="Limpar busca">✕</button>
       </div>
     </div>
 
@@ -616,6 +607,10 @@
               <input type="datetime-local" id="new-promo-end" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#E84D9A]">
             </div>
           </div>
+          <label class="flex items-center gap-2 bg-white border border-[#E84D9A]/30 rounded-xl px-2.5 py-2 cursor-pointer select-none">
+            <input type="checkbox" id="new-promo-show-end" class="w-4 h-4 accent-[#E84D9A] rounded">
+            <span class="text-[11px] font-bold text-[#9D174D]">⏳ Mostrar término e contagem regressiva para o cliente</span>
+          </label>
         </div>
         <div class="mb-3 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-300 space-y-2">
           <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -842,6 +837,10 @@
                 <input type="datetime-local" id="edit-promo-end" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#E84D9A]">
               </div>
             </div>
+            <label class="flex items-center gap-2 bg-white border border-[#E84D9A]/30 rounded-xl px-2.5 py-2 cursor-pointer select-none">
+              <input type="checkbox" id="edit-promo-show-end" class="w-4 h-4 accent-[#E84D9A] rounded">
+              <span class="text-[11px] font-bold text-[#9D174D]">⏳ Mostrar término e contagem regressiva para o cliente</span>
+            </label>
           </div>
         </div>
         <div class="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-300 space-y-2">
@@ -1440,6 +1439,7 @@
             promo: !!p.promo,
             promoStart: p.promo_start || '',
             promoEnd: p.promo_end || '',
+            promoShowEnd: !!p.promo_show_end,
             active: p.active !== false
           }));
         }
@@ -1876,7 +1876,8 @@
         cardBorder: visualPaletteState.cardBorder,
         priceColor: visualPaletteState.priceColor,
         stripeColor: visualPaletteState.stripeColor,
-        pageBg: visualPaletteState.pageBg
+        pageBg: visualPaletteState.pageBg,
+        hiddenBrands: getHiddenClientBrands()
       };
     }
 
@@ -2189,20 +2190,20 @@
 
     function renderCategoryPills() {
       const container = document.getElementById('category-pills');
-      const promoBtn = `
-        <button onclick="togglePromoFilter()" class="px-3.5 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm inline-flex items-center gap-1.5 ${onlyPromo ? 'bg-brand-accent text-white' : 'bg-[#FDF2F8] text-brand-accent border border-[#E84D9A]/40 hover:bg-[#FCE7F3]'}">
-          <span class="bg-white rounded-full w-5 h-5 inline-flex items-center justify-center shadow-sm text-[11px] leading-none">🔥</span><span>Promoções</span>
-        </button>
-      `;
       const catButtons = categories.map(cat => {
         const active = !onlyPromo && currentCategory === cat;
         return `
-          <button onclick="selectCategory('${escAttr(cat)}')" class="px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm ${active ? 'bg-brand-primary text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">
-            ${cat}
+          <button onclick="selectCategory('${escAttr(cat)}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all shadow-sm ${active ? 'bg-brand-primary text-white' : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'}">
+            ${cat === 'Todos' ? 'Tudo' : cat}
           </button>
         `;
       }).join('');
-      container.innerHTML = promoBtn + catButtons;
+      const promoBtn = `
+        <button onclick="togglePromoFilter()" class="ml-auto px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shadow-sm inline-flex items-center gap-1 ${onlyPromo ? 'bg-brand-accent text-white' : 'bg-[#FDF2F8] text-brand-accent border border-[#E94793]/40 hover:bg-[#FCE7F3]'}">
+          <span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center shadow-sm text-[10px] leading-none">🔥</span><span>Promoções</span>
+        </button>
+      `;
+      container.innerHTML = catButtons + promoBtn;
       renderSubcategoryPillsBox();
     }
 
@@ -2243,6 +2244,45 @@
 
     function isProductPromoActive(p) {
       return getProductPromoState(p) === 'active';
+    }
+
+    function formatPromoEndLabel(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const dt = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const tm = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      return `Termina em ${dt} às ${tm}`;
+    }
+
+    function formatCountdownDiff(endMs) {
+      const diff = Math.max(0, endMs - Date.now());
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      const pad = n => String(n).padStart(2, '0');
+      return d > 0 ? `⏱️ Falta ${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s` : `⏱️ Falta ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+    }
+
+    function tickPromoCountdowns() {
+      const els = document.querySelectorAll('.promo-live-countdown');
+      if (!els.length) return;
+      let anyExpired = false;
+      const now = Date.now();
+      els.forEach(el => {
+        const endMs = parseInt(el.getAttribute('data-end-ms'), 10);
+        if (!endMs || isNaN(endMs)) return;
+        if (now >= endMs) {
+          anyExpired = true;
+        } else {
+          el.textContent = formatCountdownDiff(endMs);
+        }
+      });
+      if (anyExpired) {
+        filterProducts();
+        renderManagerProducts();
+      }
     }
 
     function togglePickupInput(chkId, wrapId) {
@@ -2303,21 +2343,33 @@
       document.getElementById('edit-promo-end').value = '';
     }
 
+    function getHiddenClientBrands() {
+      const arr = storeConfig?.headerStyles?.hiddenBrands;
+      return Array.isArray(arr) ? arr : [];
+    }
+
     function renderBrandPills() {
       const brandSelect = document.getElementById('client-brand-select');
+      const brandWrap = document.getElementById('brand-select-wrap');
+      const sortWrap = document.getElementById('sort-select-wrap');
       if (!brandSelect) return;
+      const hiddenSet = new Set(getHiddenClientBrands());
       const matching = products.filter(p => {
+        if (p.active === false) return false;
         const matchCat = currentCategory === "Todos" || p.category === currentCategory;
         const matchSub = currentSubcategory === "Todos" || p.subcategory === currentSubcategory;
         const matchPromo = !onlyPromo || isProductPromoActive(p);
         return matchCat && matchSub && matchPromo;
       });
-      const presentBrands = new Set(matching.map(p => p.brand).filter(Boolean));
-      const available = brands.filter(b => presentBrands.has(b));
-      presentBrands.forEach(b => { if (!available.includes(b)) available.push(b); });
+      const presentBrands = new Set(matching.map(p => p.brand).filter(b => b && !hiddenSet.has(b)));
+      const available = brands.filter(b => presentBrands.has(b) && !hiddenSet.has(b));
+      presentBrands.forEach(b => { if (!available.includes(b) && !hiddenSet.has(b)) available.push(b); });
       if (currentBrand !== "Todos" && !available.includes(currentBrand)) {
         currentBrand = "Todos";
       }
+      const hasVisibleBrands = available.length > 0;
+      if (brandWrap) brandWrap.classList.toggle('hidden', !hasVisibleBrands);
+      if (sortWrap) sortWrap.classList.toggle('col-span-2', !hasVisibleBrands);
       const allBrands = ["Todos", ...available];
       brandSelect.innerHTML = allBrands.map(b => `
         <option value="${b}" ${currentBrand === b ? 'selected' : ''}>${b === 'Todos' ? 'Todas as Marcas' : b}</option>
@@ -2519,7 +2571,20 @@
       } else if (sortBy === 'price-desc') {
         filtered.sort((a, b) => getEffectiveProductPrice(b) - getEffectiveProductPrice(a));
       } else if (sortBy === 'promo-first') {
-        filtered.sort((a, b) => (isProductPromoActive(b) ? 1 : 0) - (isProductPromoActive(a) ? 1 : 0));
+        const promoRank = (p) => {
+          if (!isProductPromoActive(p)) return 0;
+          const endMs = (p.promoShowEnd && p.promoEnd) ? new Date(p.promoEnd).getTime() : null;
+          if (endMs && !isNaN(endMs) && endMs > Date.now()) return 2;
+          return 1;
+        };
+        filtered.sort((a, b) => {
+          const rDiff = promoRank(b) - promoRank(a);
+          if (rDiff !== 0) return rDiff;
+          if (promoRank(a) === 2 && promoRank(b) === 2) {
+            return new Date(a.promoEnd).getTime() - new Date(b.promoEnd).getTime();
+          }
+          return 0;
+        });
       } else if (sortBy === 'name-asc') {
         filtered.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
       }
@@ -2559,6 +2624,13 @@
         const hasPickup = hasValidPickupPrice(p);
         const pctOff = hasPromoPrice ? Math.round(((p.price - p.promoPrice) / p.price) * 100) : 0;
         const diffReais = hasPromoPrice ? Math.round(p.price - p.promoPrice) : 0;
+        const endMs = (isPromoNow && p.promoShowEnd && p.promoEnd) ? new Date(p.promoEnd).getTime() : null;
+        const showClientCountdown = !!(endMs && !isNaN(endMs) && endMs > Date.now());
+        const countdownBlock = showClientCountdown ? `
+          <div class="mt-1.5 pt-1 border-t border-[#E94793]/20 text-[10px] font-extrabold text-[#9D174D] space-y-0.5">
+            <div class="flex items-center gap-1"><span>⏳</span><span>${formatPromoEndLabel(p.promoEnd)}</span></div>
+            <div class="promo-live-countdown text-[10px] font-black text-rose-600 tabular-nums" data-end-ms="${endMs}">${formatCountdownDiff(endMs)}</div>
+          </div>` : '';
 
         let actionArea = '';
         if (qty === 0) {
@@ -2603,9 +2675,13 @@
                     <span class="text-base font-black text-[#BE185D] leading-tight">Por R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>
                     ${diffReais >= 1 ? `<span class="text-[9px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded-md">-R$ ${diffReais}</span>` : ''}
                   </div>
+                  ${countdownBlock}
                 </div>
               ` : (isPromoNow ? `
-                <div class="inline-block bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1 text-base font-black text-[#BE185D] mb-2 shadow-sm">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
+                <div class="bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
+                  <div class="text-base font-black text-[#BE185D]">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
+                  ${countdownBlock}
+                </div>
               ` : `
                 <div style="color: var(--brand-price-color);" class="inline-block bg-[#F0FAFB] border border-slate-200 rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
               `)}
@@ -3065,18 +3141,39 @@
       }
     }
 
+    async function toggleBrandClientVisibility(brandName, showToClient) {
+      if (!storeConfig.headerStyles || typeof storeConfig.headerStyles !== 'object') storeConfig.headerStyles = {};
+      const current = new Set(getHiddenClientBrands());
+      if (showToClient) current.delete(brandName);
+      else current.add(brandName);
+      storeConfig.headerStyles.hiddenBrands = Array.from(current);
+      renderManagerBrands();
+      renderBrandPills();
+      const ok = await saveStoreMetaToCloud();
+      if (ok) {
+        showToast(showToClient ? `👁️ Marca "${brandName}" visível na vitrine!` : `🙈 Marca "${brandName}" oculta para clientes (só Gestor).`);
+      }
+    }
+
     function renderManagerBrands() {
       const list = document.getElementById('manager-brand-list');
       if (!list) return;
-      list.innerHTML = brands.map(b => `
-        <div class="flex items-center justify-between bg-[#FDF2F8] px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#9D174D] gap-1.5">
-          <span>${b}</span>
+      const hiddenSet = new Set(getHiddenClientBrands());
+      list.innerHTML = brands.map(b => {
+        const isVisible = !hiddenSet.has(b);
+        return `
+        <div class="flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-bold gap-1.5 border transition ${isVisible ? 'bg-[#FDF2F8] border-[#E94793]/30 text-[#9D174D]' : 'bg-slate-100 border-slate-300 text-slate-400'}">
+          <label class="inline-flex items-center gap-1.5 cursor-pointer select-none" title="${isVisible ? 'Visível no filtro do cliente (desmarque para ocultar)' : 'Oculta para o cliente (marque para exibir)'}">
+            <input type="checkbox" ${isVisible ? 'checked' : ''} onchange="toggleBrandClientVisibility('${escAttr(b)}', this.checked)" class="w-3.5 h-3.5 accent-[#E94793] rounded cursor-pointer">
+            <span>${b}</span>
+            <span class="text-[10px]">${isVisible ? '👁️' : '🙈'}</span>
+          </label>
           <div class="flex items-center gap-1">
             <button onclick="editBrandModal('${escAttr(b)}')" class="text-slate-600 hover:text-slate-900 font-bold" title="Editar">✏️</button>
             <button onclick="deleteBrand('${escAttr(b)}')" class="text-rose-600 hover:text-rose-800 font-black" title="Excluir">×</button>
           </div>
         </div>
-      `).join('');
+      `; }).join('');
     }
 
     function renderManagerSubcategories() {
@@ -3438,6 +3535,7 @@
       const promoStart = promoStartRaw ? new Date(promoStartRaw).toISOString() : null;
       const promoEnd = promoEndRaw ? new Date(promoEndRaw).toISOString() : null;
       const promo = document.getElementById('new-promo').checked;
+      const promoShowEnd = !!document.getElementById('new-promo-show-end')?.checked;
       const barcode = normalizeBarcodeKey(document.getElementById('new-barcode')?.value || '');
       const ncm = normalizeBarcodeKey(document.getElementById('new-ncm')?.value || '');
       const stockRaw = document.getElementById('new-stock')?.value;
@@ -3483,7 +3581,8 @@
           image_url: image,
           promo,
           promo_start: promoStart,
-          promo_end: promoEnd
+          promo_end: promoEnd,
+          promo_show_end: promoShowEnd
         })
         .select('*')
         .single();
@@ -3510,6 +3609,7 @@
         promo: !!data.promo,
         promoStart: data.promo_start || '',
         promoEnd: data.promo_end || '',
+        promoShowEnd: !!data.promo_show_end,
         active: data.active !== false
       });
 
@@ -3528,6 +3628,7 @@
       document.getElementById('new-promo').checked = false;
       document.getElementById('new-promo-start').value = '';
       document.getElementById('new-promo-end').value = '';
+      if (document.getElementById('new-promo-show-end')) document.getElementById('new-promo-show-end').checked = false;
       document.getElementById('new-image-preview-wrap').classList.add('hidden');
       showToast("✅ Produto salvo na nuvem!");
     }
@@ -3785,6 +3886,7 @@
       document.getElementById('edit-product-promo').checked = !!p.promo;
       document.getElementById('edit-promo-start').value = toLocalDateTimeInput(p.promoStart);
       document.getElementById('edit-promo-end').value = toLocalDateTimeInput(p.promoEnd);
+      if (document.getElementById('edit-promo-show-end')) document.getElementById('edit-promo-show-end').checked = !!p.promoShowEnd;
 
       const catSelect = document.getElementById('edit-product-cat');
       const brandSelect = document.getElementById('edit-product-brand');
@@ -3864,7 +3966,8 @@
         image_url: document.getElementById('edit-product-image').value.trim(),
         promo: document.getElementById('edit-product-promo').checked,
         promo_start: document.getElementById('edit-promo-start').value ? new Date(document.getElementById('edit-promo-start').value).toISOString() : null,
-        promo_end: document.getElementById('edit-promo-end').value ? new Date(document.getElementById('edit-promo-end').value).toISOString() : null
+        promo_end: document.getElementById('edit-promo-end').value ? new Date(document.getElementById('edit-promo-end').value).toISOString() : null,
+        promo_show_end: !!document.getElementById('edit-promo-show-end')?.checked
       };
 
       const { error } = await sb.from('products').update(updated).eq('id', id);
@@ -3885,7 +3988,8 @@
         image: updated.image_url,
         promo: updated.promo,
         promoStart: updated.promo_start || '',
-        promoEnd: updated.promo_end || ''
+        promoEnd: updated.promo_end || '',
+        promoShowEnd: !!updated.promo_show_end
       });
 
       filterProducts();
@@ -5198,6 +5302,7 @@
       secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1800);
     }
 
+    setInterval(tickPromoCountdowns, 1000);
     setInterval(() => {
       if (products.some(p => p.promoStart || p.promoEnd)) {
         filterProducts();
