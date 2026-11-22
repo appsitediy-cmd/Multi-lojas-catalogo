@@ -291,10 +291,30 @@
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">🕒 Horário de Funcionamento</label>
             <input type="text" id="config-opening-hours" placeholder="Ex: Seg a Sáb: 08h às 19h • Dom: 08h às 13h" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
+                <input type="checkbox" id="hs-show-hours-top" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#24B7C5] rounded">
+                <span>Mostrar no topo</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
+                <input type="checkbox" id="hs-show-hours-footer" onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#24B7C5] rounded">
+                <span>Mostrar no rodapé</span>
+              </label>
+            </div>
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">🛵 Aviso de Entrega / Pedido Mínimo</label>
             <input type="text" id="config-delivery-info" placeholder="Ex: Entrega grátis até 1,5km • Pedido mín. R$ 50,00" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
+                <input type="checkbox" id="hs-show-delivery-top" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#24B7C5] rounded">
+                <span>Mostrar no topo</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
+                <input type="checkbox" id="hs-show-delivery-footer" onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#24B7C5] rounded">
+                <span>Mostrar no rodapé</span>
+              </label>
+            </div>
           </div>
           <div class="sm:col-span-2">
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Chave Pix da Loja (para pagamento no carrinho)</label>
@@ -490,10 +510,17 @@
           </div>
           <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
             <div class="flex items-center justify-between gap-2 mb-2">
-              <span class="text-xs font-bold text-slate-700">Pesos / Medidas</span>
-              <button onclick="addNewWeightQuick()" class="text-[11px] bg-[#7CB342] text-white font-bold px-2.5 py-1 rounded-lg hover:bg-[#689F38] transition shrink-0 whitespace-nowrap">+ Nova</button>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-xs font-bold text-slate-700 truncate">Pesos / Medidas</span>
+                <span id="manager-weight-count" class="text-[10px] font-extrabold bg-[#F4FCEB] text-[#4D7C0F] px-1.5 py-0.5 rounded-md border border-[#7CB342]/30">A–Z</span>
+              </div>
+              <button onclick="addNewWeightQuick('manager-weight-select')" class="text-[11px] bg-[#7CB342] text-white font-bold px-2.5 py-1 rounded-lg hover:bg-[#689F38] transition shrink-0 whitespace-nowrap">+ Nova</button>
             </div>
-            <div id="manager-weight-list" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1"></div>
+            <select id="manager-weight-select" class="w-full bg-[#F4FCEB] border border-[#7CB342]/50 rounded-xl px-2.5 py-2 text-xs font-bold text-[#365314] focus:outline-none focus:border-[#7CB342] mb-2"></select>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button type="button" onclick="editSelectedManagerWeight()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-[11px] transition flex items-center justify-center gap-1">✏️ Editar</button>
+              <button type="button" onclick="deleteSelectedManagerWeight()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-1.5 px-2 rounded-lg text-[11px] transition flex items-center justify-center gap-1">🗑️ Excluir</button>
+            </div>
           </div>
         </div>
         </div>
@@ -512,7 +539,7 @@
               <label class="block text-[11px] font-bold text-[#176E7B]">Nome do Produto (máx. 60 caracteres)</label>
               <span id="count-new-name" class="text-[10px] font-bold text-[#176E7B]">0/60</span>
             </div>
-            <input type="text" id="new-name" maxlength="60" oninput="updateCharCount('new-name', 'count-new-name', 60)" placeholder="Ex: Ração Golden Special 15kg" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm">
+            <input type="text" id="new-name" maxlength="60" oninput="updateCharCount('new-name', 'count-new-name', 60); renderVariantSearchResults('new')" placeholder="Ex: Ração Golden Special 15kg" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm">
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
@@ -552,6 +579,50 @@
               <span>📸</span> <span>Abrir Galeria</span>
               <input type="file" accept="image/*" onchange="handleProductPhotoUpload(event, 'new-image', 'new-image-preview')" class="hidden">
             </label>
+          </div>
+        </div>
+        <div class="mb-3 rounded-2xl border-2 border-indigo-400 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 overflow-hidden shadow-sm">
+          <button type="button" onclick="toggleVariantPanel('new')" class="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-left hover:bg-indigo-100/60 transition">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shrink-0 shadow-sm">🧩</span>
+              <div class="min-w-0">
+                <div class="text-xs font-black text-indigo-950 leading-tight">Variações (Pesos / Tamanhos / Sabores)</div>
+                <div class="text-[10px] font-semibold text-indigo-700">Agrupar no mesmo card da vitrine</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span id="new-variant-badge" class="text-[10px] font-black bg-indigo-600 text-white px-2 py-0.5 rounded-full">0</span>
+              <span id="new-variant-chevron" class="text-xs font-black text-indigo-700">▾</span>
+            </div>
+          </button>
+          <div id="new-variants-panel" class="hidden px-3 pb-3 pt-2 border-t border-indigo-200 bg-white/90 space-y-2.5">
+            <div id="new-variant-linked-list" class="space-y-1.5"></div>
+            <div class="grid grid-cols-2 gap-1.5 bg-indigo-50 p-1 rounded-xl">
+              <button type="button" id="new-vtab-search" onclick="switchVariantTab('new', 'search')" class="py-1.5 px-2 rounded-lg text-[11px] font-extrabold bg-indigo-600 text-white shadow-sm transition">🔎 Procurar já cadastrado</button>
+              <button type="button" id="new-vtab-create" onclick="switchVariantTab('new', 'create')" class="py-1.5 px-2 rounded-lg text-[11px] font-extrabold text-indigo-800 hover:bg-white/70 transition">➕ Criar nova variação</button>
+            </div>
+            <div id="new-variant-search-box" class="space-y-1.5">
+              <input type="text" id="new-variant-search-input" oninput="renderVariantSearchResults('new')" placeholder="Digite nome, peso ou EAN do produto já cadastrado..." class="w-full bg-slate-50 border border-indigo-200 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500">
+              <div id="new-variant-search-results" class="max-h-40 overflow-y-auto space-y-1"></div>
+            </div>
+            <div id="new-variant-create-box" class="hidden space-y-2 bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-200">
+              <p class="text-[10px] font-bold text-indigo-800">Cria outro produto herdando Categoria, Marca e Foto automaticamente:</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Peso / Medida</label>
+                  <select id="new-variant-new-weight" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800"></select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Preço Normal (R$)</label>
+                  <input type="text" inputmode="numeric" id="new-variant-new-price" oninput="formatPriceInput(this)" placeholder="Ex: 189,90" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">EAN / Cód. Barras (opcional)</label>
+                <input type="text" inputmode="numeric" id="new-variant-new-barcode" placeholder="Ex: 789..." class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+              </div>
+              <button type="button" onclick="createAndLinkVariant('new')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition">➕ Adicionar esta Variação à Lista</button>
+            </div>
           </div>
         </div>
         <div class="mb-3">
@@ -636,6 +707,25 @@
             <input type="text" inputmode="numeric" id="new-pickup-price" oninput="formatPriceInput(this)" placeholder="Ex: 89,90" class="w-36 bg-white border border-emerald-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-800 focus:outline-none focus:border-emerald-600">
           </div>
         </div>
+        <div class="mb-3 bg-amber-50/85 p-2.5 rounded-xl border border-amber-300 space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="new-wholesale-enabled" onchange="toggleWholesaleInput('new-wholesale-enabled', 'new-wholesale-wrap')" class="w-4 h-4 accent-amber-600 rounded">
+            <span class="text-xs font-bold text-amber-900">📦 Preço de Atacado (Leve X por Y)</span>
+          </label>
+          <div id="new-wholesale-wrap" class="hidden pt-1.5 border-t border-amber-200 space-y-1.5">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold text-amber-800 mb-0.5">A partir de (un)</label>
+                <input type="number" min="2" step="1" id="new-wholesale-qty" oninput="updateWholesalePreview('new-wholesale-qty', 'new-wholesale-price', 'new-wholesale-preview')" placeholder="Ex: 4" class="w-full bg-white border border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-amber-900 focus:outline-none focus:border-amber-600">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-amber-800 mb-0.5">Preço do Kit (R$)</label>
+                <input type="text" inputmode="numeric" id="new-wholesale-price" oninput="formatPriceInput(this); updateWholesalePreview('new-wholesale-qty', 'new-wholesale-price', 'new-wholesale-preview')" placeholder="Ex: 9,99" class="w-full bg-white border border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-amber-900 focus:outline-none focus:border-amber-600">
+              </div>
+            </div>
+            <p id="new-wholesale-preview" class="text-[10px] font-bold text-amber-800 hidden"></p>
+          </div>
+        </div>
         <button onclick="addProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-extrabold py-3 rounded-2xl text-xs shadow transition">Cadastrar Produto na Nuvem</button>
         <button onclick="openBulkModal()" class="w-full mt-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-2xl text-xs shadow transition flex items-center justify-center gap-1.5">
           <span>📥</span> Colar Lista em Massa (Vários Produtos)
@@ -678,6 +768,8 @@
                 <option value="promo_scheduled">⏳ Promo Agendada</option>
                 <option value="promo_ended">⌛ Promo Encerrada</option>
                 <option value="pickup_only">🏪 Só Retirar na Loja</option>
+                <option value="wholesale_only">📦 Só Atacado</option>
+                <option value="variants_only">🧩 Só com Variações</option>
               </select>
               <button onclick="clearManagerFilters()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-2.5 py-1.5 rounded-xl text-[11px] transition shrink-0" title="Limpar filtros">Limpar</button>
             </div>
@@ -752,7 +844,7 @@
             <label class="block text-[11px] font-bold text-slate-700">Nome do Produto (máx. 60 caracteres)</label>
             <span id="count-edit-name" class="text-[10px] font-bold text-slate-400">0/60</span>
           </div>
-          <input type="text" id="edit-product-name" maxlength="60" oninput="updateCharCount('edit-product-name', 'count-edit-name', 60)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-[#2EB4C7]">
+          <input type="text" id="edit-product-name" maxlength="60" oninput="updateCharCount('edit-product-name', 'count-edit-name', 60); renderVariantSearchResults('edit')" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-[#2EB4C7]">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -789,6 +881,50 @@
             <button type="button" onclick="addNewWeightQuick('edit-product-weight')" class="text-[10px] bg-slate-700 text-white font-bold px-1.5 py-0.5 rounded">+ Nova</button>
           </div>
           <select id="edit-product-weight" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800"></select>
+        </div>
+        <div class="rounded-2xl border-2 border-indigo-400 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 overflow-hidden shadow-sm">
+          <button type="button" onclick="toggleVariantPanel('edit')" class="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-left hover:bg-indigo-100/60 transition">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shrink-0 shadow-sm">🧩</span>
+              <div class="min-w-0">
+                <div class="text-xs font-black text-indigo-950 leading-tight">Variações (Pesos / Tamanhos / Sabores)</div>
+                <div class="text-[10px] font-semibold text-indigo-700">Vincular produtos no mesmo card</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span id="edit-variant-badge" class="text-[10px] font-black bg-indigo-600 text-white px-2 py-0.5 rounded-full">0</span>
+              <span id="edit-variant-chevron" class="text-xs font-black text-indigo-700">▾</span>
+            </div>
+          </button>
+          <div id="edit-variants-panel" class="hidden px-3 pb-3 pt-2 border-t border-indigo-200 bg-white/90 space-y-2.5">
+            <div id="edit-variant-linked-list" class="space-y-1.5"></div>
+            <div class="grid grid-cols-2 gap-1.5 bg-indigo-50 p-1 rounded-xl">
+              <button type="button" id="edit-vtab-search" onclick="switchVariantTab('edit', 'search')" class="py-1.5 px-2 rounded-lg text-[11px] font-extrabold bg-indigo-600 text-white shadow-sm transition">🔎 Procurar já cadastrado</button>
+              <button type="button" id="edit-vtab-create" onclick="switchVariantTab('edit', 'create')" class="py-1.5 px-2 rounded-lg text-[11px] font-extrabold text-indigo-800 hover:bg-white/70 transition">➕ Criar nova variação</button>
+            </div>
+            <div id="edit-variant-search-box" class="space-y-1.5">
+              <input type="text" id="edit-variant-search-input" oninput="renderVariantSearchResults('edit')" placeholder="Digite nome, peso ou EAN do produto já cadastrado..." class="w-full bg-slate-50 border border-indigo-200 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500">
+              <div id="edit-variant-search-results" class="max-h-40 overflow-y-auto space-y-1"></div>
+            </div>
+            <div id="edit-variant-create-box" class="hidden space-y-2 bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-200">
+              <p class="text-[10px] font-bold text-indigo-800">Cria outro produto herdando Categoria, Marca e Foto automaticamente:</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Peso / Medida</label>
+                  <select id="edit-variant-new-weight" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800"></select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Preço Normal (R$)</label>
+                  <input type="text" inputmode="numeric" id="edit-variant-new-price" oninput="formatPriceInput(this)" placeholder="Ex: 189,90" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">EAN / Cód. Barras (opcional)</label>
+                <input type="text" inputmode="numeric" id="edit-variant-new-barcode" placeholder="Ex: 789..." class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+              </div>
+              <button type="button" onclick="createAndLinkVariant('edit')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition">➕ Criar e Vincular Agora</button>
+            </div>
+          </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
           <div>
@@ -879,6 +1015,25 @@
           <div id="edit-pickup-wrap" class="hidden pt-1.5 border-t border-emerald-200 flex items-center justify-between gap-2 flex-wrap">
             <label class="text-[11px] font-bold text-emerald-800">Preço retirando na loja (R$)</label>
             <input type="text" inputmode="numeric" id="edit-product-pickup-price" oninput="formatPriceInput(this)" placeholder="Ex: 89,90" class="w-36 bg-white border border-emerald-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-800 focus:outline-none focus:border-emerald-600">
+          </div>
+        </div>
+        <div class="bg-amber-50/85 p-2.5 rounded-xl border border-amber-300 space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="edit-wholesale-enabled" onchange="toggleWholesaleInput('edit-wholesale-enabled', 'edit-wholesale-wrap')" class="w-4 h-4 accent-amber-600 rounded">
+            <span class="text-xs font-bold text-amber-900">📦 Preço de Atacado (Leve X por Y)</span>
+          </label>
+          <div id="edit-wholesale-wrap" class="hidden pt-1.5 border-t border-amber-200 space-y-1.5">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold text-amber-800 mb-0.5">A partir de (un)</label>
+                <input type="number" min="2" step="1" id="edit-wholesale-qty" oninput="updateWholesalePreview('edit-wholesale-qty', 'edit-wholesale-price', 'edit-wholesale-preview')" placeholder="Ex: 4" class="w-full bg-white border border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-amber-900 focus:outline-none focus:border-amber-600">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-amber-800 mb-0.5">Preço do Kit (R$)</label>
+                <input type="text" inputmode="numeric" id="edit-wholesale-price" oninput="formatPriceInput(this); updateWholesalePreview('edit-wholesale-qty', 'edit-wholesale-price', 'edit-wholesale-preview')" placeholder="Ex: 9,99" class="w-full bg-white border border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-black text-amber-900 focus:outline-none focus:border-amber-600">
+              </div>
+            </div>
+            <p id="edit-wholesale-preview" class="text-[10px] font-bold text-amber-800 hidden"></p>
           </div>
         </div>
         <button onclick="saveEditedProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Salvar Alterações do Produto</button>
@@ -1231,7 +1386,11 @@
         deliveryBg: "#F7D046",
         deliveryText: "#0F172A",
         showAddressTop: true,
-        showAddressFooter: true
+        showAddressFooter: true,
+        showHoursTop: true,
+        showHoursFooter: false,
+        showDeliveryTop: true,
+        showDeliveryFooter: false
       },
       pixKey: "",
       logo: DEFAULT_LOGO_IMG,
@@ -1468,6 +1627,9 @@
             promoStart: p.promo_start || '',
             promoEnd: p.promo_end || '',
             promoShowEnd: !!p.promo_show_end,
+            variantGroup: (p.variant_group || '').trim(),
+            wholesaleQty: p.wholesale_qty != null ? (parseInt(p.wholesale_qty, 10) || null) : null,
+            wholesalePrice: p.wholesale_price != null ? (parseFloat(p.wholesale_price) || null) : null,
             active: p.active !== false
           }));
         }
@@ -1514,7 +1676,11 @@
           deliveryBg: store.delivery_bg_color || "#F7D046",
           deliveryText: "#0F172A",
           showAddressTop: true,
-          showAddressFooter: true
+          showAddressFooter: true,
+          showHoursTop: true,
+          showHoursFooter: false,
+          showDeliveryTop: true,
+          showDeliveryFooter: false
         }, store.header_styles || {}),
         pixKey: store.pix_key || "",
         logo: store.logo_url || DEFAULT_LOGO_IMG,
@@ -1898,6 +2064,10 @@
         deliveryBg: document.getElementById('hs-delivery-bg')?.value || '#F7D046',
         showAddressTop: document.getElementById('hs-show-addr-top') ? document.getElementById('hs-show-addr-top').checked : true,
         showAddressFooter: document.getElementById('hs-show-addr-footer') ? document.getElementById('hs-show-addr-footer').checked : true,
+        showHoursTop: document.getElementById('hs-show-hours-top') ? document.getElementById('hs-show-hours-top').checked : true,
+        showHoursFooter: document.getElementById('hs-show-hours-footer') ? document.getElementById('hs-show-hours-footer').checked : false,
+        showDeliveryTop: document.getElementById('hs-show-delivery-top') ? document.getElementById('hs-show-delivery-top').checked : true,
+        showDeliveryFooter: document.getElementById('hs-show-delivery-footer') ? document.getElementById('hs-show-delivery-footer').checked : false,
         headerBg: visualPaletteState.headerBg,
         waBg: visualPaletteState.waBg,
         fireBg: visualPaletteState.fireBg,
@@ -1909,23 +2079,43 @@
       };
     }
 
+    function buildFooterStoreText(s, addrText, hoursText, delivText) {
+      const parts = [storeConfig.name];
+      if (addrText && s.showAddressFooter !== false) parts.push(`📍 ${addrText}`);
+      if (hoursText && s.showHoursFooter === true) parts.push(`🕒 ${hoursText}`);
+      if (delivText && s.showDeliveryFooter === true) parts.push(`🛵 ${delivText}`);
+      return parts.join(' • ');
+    }
+
     function updateAddressVisibility(hs) {
       const s = hs || {};
       const addrText = (document.getElementById('config-store-address-input')?.value ?? storeConfig.address ?? '').trim();
-      const hasAddr = !!addrText;
-      const showTop = hasAddr && (s.showAddressTop !== false);
-      const showFooter = hasAddr && (s.showAddressFooter !== false);
-      const hasHours = !!(storeConfig.openingHours && storeConfig.openingHours.trim());
-      const hasDeliv = !!(storeConfig.deliveryInfo && storeConfig.deliveryInfo.trim());
+      const hoursText = (document.getElementById('config-opening-hours')?.value ?? storeConfig.openingHours ?? '').trim();
+      const delivText = (document.getElementById('config-delivery-info')?.value ?? storeConfig.deliveryInfo ?? '').trim();
+      const showAddrTop = !!addrText && (s.showAddressTop !== false);
+      const showHoursTop = !!hoursText && (s.showHoursTop !== false);
+      const showDelivTop = !!delivText && (s.showDeliveryTop !== false);
       const addrEl = document.getElementById('header-store-address');
+      const hoursEl = document.getElementById('header-opening-hours');
+      const delivEl = document.getElementById('header-delivery-info');
+      const badgesWrap = document.getElementById('header-store-badges');
       const addrBar = document.getElementById('header-address-bar');
       const footerEl = document.getElementById('footer-store-label');
       if (addrEl) {
-        addrEl.textContent = showTop ? `📍 ${addrText}` : '';
-        addrEl.classList.toggle('hidden', !showTop);
+        addrEl.textContent = showAddrTop ? `📍 ${addrText}` : '';
+        addrEl.classList.toggle('hidden', !showAddrTop);
       }
-      if (addrBar) addrBar.classList.toggle('hidden', !(showTop || hasHours || hasDeliv));
-      if (footerEl) footerEl.textContent = showFooter ? `${storeConfig.name} • 📍 ${addrText}` : storeConfig.name;
+      if (hoursEl) {
+        hoursEl.textContent = showHoursTop ? `🕒 ${hoursText}` : '';
+        hoursEl.classList.toggle('hidden', !showHoursTop);
+      }
+      if (delivEl) {
+        delivEl.textContent = showDelivTop ? `🛵 ${delivText}` : '';
+        delivEl.classList.toggle('hidden', !showDelivTop);
+      }
+      if (badgesWrap) badgesWrap.classList.toggle('hidden', !(showHoursTop || showDelivTop));
+      if (addrBar) addrBar.classList.toggle('hidden', !(showAddrTop || showHoursTop || showDelivTop));
+      if (footerEl) footerEl.textContent = buildFooterStoreText(s, addrText, hoursText, delivText);
     }
 
     function previewHeaderStyles() {
@@ -1940,7 +2130,9 @@
         addressBg: '', addressText: '#ECFEFF',
         hoursBg: '#1A8E99', hoursText: '#FFFFFF',
         deliveryBg: '#FCD40F', deliveryText: '#0F172A',
-        showAddressTop: true, showAddressFooter: true
+        showAddressTop: true, showAddressFooter: true,
+        showHoursTop: true, showHoursFooter: false,
+        showDeliveryTop: true, showDeliveryFooter: false
       };
       populateHeaderStyleInputs(def);
       updateAddressVisibility(def);
@@ -1962,8 +2154,16 @@
       setVal('hs-delivery-bg', s.deliveryBg || '#F7D046');
       const chkTop = document.getElementById('hs-show-addr-top');
       const chkFoot = document.getElementById('hs-show-addr-footer');
+      const chkHTop = document.getElementById('hs-show-hours-top');
+      const chkHFoot = document.getElementById('hs-show-hours-footer');
+      const chkDTop = document.getElementById('hs-show-delivery-top');
+      const chkDFoot = document.getElementById('hs-show-delivery-footer');
       if (chkTop) chkTop.checked = s.showAddressTop !== false;
       if (chkFoot) chkFoot.checked = s.showAddressFooter !== false;
+      if (chkHTop) chkHTop.checked = s.showHoursTop !== false;
+      if (chkHFoot) chkHFoot.checked = s.showHoursFooter === true;
+      if (chkDTop) chkDTop.checked = s.showDeliveryTop !== false;
+      if (chkDFoot) chkDFoot.checked = s.showDeliveryFooter === true;
       renderVisualColorTargets();
       updateManagerLiveMiniPreview(visualPaletteState);
     }
@@ -1987,22 +2187,23 @@
       const hoursEl = document.getElementById('header-opening-hours');
       const delivEl = document.getElementById('header-delivery-info');
       const hs = storeConfig.headerStyles || {};
-      const hasAddr = !!(storeConfig.address && storeConfig.address.trim());
-      const showAddrTop = hasAddr && (hs.showAddressTop !== false);
-      const showAddrFooter = hasAddr && (hs.showAddressFooter !== false);
-      const hasHours = !!(storeConfig.openingHours && storeConfig.openingHours.trim());
-      const hasDeliv = !!(storeConfig.deliveryInfo && storeConfig.deliveryInfo.trim());
+      const addrClean = (storeConfig.address || '').trim();
+      const hoursClean = (storeConfig.openingHours || '').trim();
+      const delivClean = (storeConfig.deliveryInfo || '').trim();
+      const showAddrTop = !!addrClean && (hs.showAddressTop !== false);
+      const showHoursTop = !!hoursClean && (hs.showHoursTop !== false);
+      const showDelivTop = !!delivClean && (hs.showDeliveryTop !== false);
       if (addrEl) {
-        addrEl.textContent = showAddrTop ? `📍 ${storeConfig.address.trim()}` : '';
+        addrEl.textContent = showAddrTop ? `📍 ${addrClean}` : '';
         addrEl.classList.toggle('hidden', !showAddrTop);
       }
       if (hoursEl) {
-        hoursEl.textContent = hasHours ? `🕒 ${storeConfig.openingHours.trim()}` : '';
-        hoursEl.classList.toggle('hidden', !hasHours);
+        hoursEl.textContent = showHoursTop ? `🕒 ${hoursClean}` : '';
+        hoursEl.classList.toggle('hidden', !showHoursTop);
       }
       if (delivEl) {
-        delivEl.textContent = hasDeliv ? `🛵 ${storeConfig.deliveryInfo.trim()}` : '';
-        delivEl.classList.toggle('hidden', !hasDeliv);
+        delivEl.textContent = showDelivTop ? `🛵 ${delivClean}` : '';
+        delivEl.classList.toggle('hidden', !showDelivTop);
       }
       visualPaletteState = {
         headerBg: hs.headerBg || storeConfig.primaryColor || '#24B7C5',
@@ -2018,9 +2219,9 @@
       renderVisualColorTargets();
       applyExtendedThemeVars(visualPaletteState);
       applyHeaderStylesObj(hs);
-      if (badgesWrap) badgesWrap.classList.toggle('hidden', !(hasHours || hasDeliv));
-      if (addrBar) addrBar.classList.toggle('hidden', !(showAddrTop || hasHours || hasDeliv));
-      document.getElementById('footer-store-label').textContent = showAddrFooter ? `${storeConfig.name} • 📍 ${storeConfig.address}` : storeConfig.name;
+      if (badgesWrap) badgesWrap.classList.toggle('hidden', !(showHoursTop || showDelivTop));
+      if (addrBar) addrBar.classList.toggle('hidden', !(showAddrTop || showHoursTop || showDelivTop));
+      document.getElementById('footer-store-label').textContent = buildFooterStoreText(hs, addrClean, hoursClean, delivClean);
       const logoImg = document.getElementById('header-logo-img');
       logoImg.src = storeConfig.logo || DEFAULT_LOGO_IMG;
       const zoom = storeConfig.logoZoom || 100;
@@ -2331,12 +2532,136 @@
       return p.price;
     }
 
+    function parseWeightSortKey(label) {
+      const raw = String(label || '').trim();
+      const norm = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      if (!norm || norm === 'sem peso/medida') return { group: 0, value: 0, text: '' };
+
+      // 1) Massa (mg, g, gr, kg) -> converte tudo para gramas
+      const massMatch = norm.match(/(\d+(?:[.,]\d+)?)\s*(mg|gr|g|kg|quilos?|kilos?)\b/);
+      if (massMatch) {
+        const num = parseFloat(massMatch[1].replace(',', '.'));
+        const unit = massMatch[2];
+        let grams = num;
+        if (unit === 'mg') grams = num / 1000;
+        else if (unit === 'kg' || unit.startsWith('quilo') || unit.startsWith('kilo')) grams = num * 1000;
+        return { group: 1, value: grams, text: norm };
+      }
+
+      // 2) Volume / Líquidos (ml, l, lt, litro) -> converte tudo para mililitros
+      const volMatch = norm.match(/(\d+(?:[.,]\d+)?)\s*(ml|l|lt|lts|litros?)\b/);
+      if (volMatch) {
+        const num = parseFloat(volMatch[1].replace(',', '.'));
+        const unit = volMatch[2];
+        const ml = unit === 'ml' ? num : num * 1000;
+        return { group: 2, value: ml, text: norm };
+      }
+
+      // 3) Comprimento / Medidas (mm, cm, m) -> converte para cm
+      const lenMatch = norm.match(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m|metros?)\b/);
+      if (lenMatch) {
+        const num = parseFloat(lenMatch[1].replace(',', '.'));
+        const unit = lenMatch[2];
+        let cm = num;
+        if (unit === 'mm') cm = num / 10;
+        else if (unit === 'm' || unit.startsWith('metro')) cm = num * 100;
+        return { group: 3, value: cm, text: norm };
+      }
+
+      // 4) Unidades / Quantidades (un, pct, comp, cx, sachê, etc.)
+      const unitMatch = norm.match(/(\d+(?:[.,]\d+)?)\s*(un|und|unid|unidades?|comp|comprimidos?|pct|pacotes?|cx|caixas?|saches?|pares?|par|tabletes?|doses?)\b/);
+      if (unitMatch) {
+        const num = parseFloat(unitMatch[1].replace(',', '.'));
+        return { group: 4, value: num, text: norm };
+      }
+
+      // 5) Tamanhos de vestuário / coleira / cama (PP, P, M, G, GG, XG, EXG ou Nº X)
+      const sizeOrder = { 'pp': 1, 'xp': 1, 'p': 2, 'm': 3, 'g': 4, 'gg': 5, 'xg': 6, 'exg': 7, 'eg': 7, 'xxg': 8 };
+      const cleanSize = norm.replace(/^(tam\.?|tamanho)\s*/, '').trim();
+      if (sizeOrder[cleanSize] !== undefined) {
+        return { group: 5, value: sizeOrder[cleanSize], text: norm };
+      }
+      const numSizeMatch = norm.match(/^(?:n[ºo°.]?|tam\.?|tamanho)?\s*(\d+(?:[.,]\d+)?)$/);
+      if (numSizeMatch) {
+        return { group: 5, value: 100 + parseFloat(numSizeMatch[1].replace(',', '.')), text: norm };
+      }
+
+      // 6) Outros textos em ordem alfabética A-Z
+      return { group: 6, value: 0, text: norm };
+    }
+
+    function compareWeightsSmart(a, b) {
+      const ka = parseWeightSortKey(a);
+      const kb = parseWeightSortKey(b);
+      if (ka.group !== kb.group) return ka.group - kb.group;
+      if (ka.value !== kb.value) return ka.value - kb.value;
+      return String(a || '').localeCompare(String(b || ''), 'pt-BR', { numeric: true, sensitivity: 'base' });
+    }
+
+    function sortWeightsNatural(list) {
+      const arr = Array.isArray(list) ? [...list] : [];
+      return arr.sort(compareWeightsSmart);
+    }
+
+    function toggleWholesaleInput(chkId, wrapId) {
+      const chk = document.getElementById(chkId);
+      const wrap = document.getElementById(wrapId);
+      if (wrap) wrap.classList.toggle('hidden', !(chk && chk.checked));
+    }
+
+    function updateWholesalePreview(qtyId, priceId, previewId) {
+      const qty = parseInt(document.getElementById(qtyId)?.value || '0', 10);
+      const kitPrice = parsePriceBR(document.getElementById(priceId)?.value || '');
+      const el = document.getElementById(previewId);
+      if (!el) return;
+      if (qty >= 2 && !isNaN(kitPrice) && kitPrice > 0) {
+        const unit = kitPrice / qty;
+        el.textContent = `💡 No catálogo: "Atacado: ${qty} un por R$ ${kitPrice.toFixed(2).replace('.', ',')} (R$ ${unit.toFixed(2).replace('.', ',')}/un)"`;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    function hasValidWholesale(p) {
+      return !!(p && p.wholesaleQty && p.wholesaleQty >= 2 && p.wholesalePrice && p.wholesalePrice > 0);
+    }
+
     function getCartItemPrice(p, mode) {
       const deliveryPrice = getEffectiveProductPrice(p);
       if (mode === 'pickup' && hasValidPickupPrice(p)) {
         return Math.min(deliveryPrice, p.pickupPrice);
       }
       return deliveryPrice;
+    }
+
+    function getCartLinePricing(p, qty, mode) {
+      const baseUnit = getCartItemPrice(p, mode);
+      let unitPrice = baseUnit;
+      let lineTotal = baseUnit * qty;
+      let isWholesaleApplied = false;
+      let missingForWholesale = 0;
+
+      if (hasValidWholesale(p)) {
+        const wUnit = p.wholesalePrice / p.wholesaleQty;
+        if (wUnit < baseUnit) {
+          if (qty >= p.wholesaleQty) {
+            isWholesaleApplied = true;
+            unitPrice = wUnit;
+            lineTotal = (qty === p.wholesaleQty) ? p.wholesalePrice : (wUnit * qty);
+          } else {
+            missingForWholesale = p.wholesaleQty - qty;
+          }
+        }
+      }
+      return { baseUnit, unitPrice, lineTotal, isWholesaleApplied, missingForWholesale };
+    }
+
+    const selectedVariantByGroup = {};
+
+    function selectCardVariant(groupKey, prodId) {
+      selectedVariantByGroup[groupKey] = prodId;
+      filterProducts();
     }
 
     function getPromoScheduleStatus(p) {
@@ -2632,24 +2957,51 @@
         listTitle.textContent = "Todos os Produtos";
       }
 
-      countBadge.textContent = `${filtered.length} ${filtered.length === 1 ? 'item' : 'itens'}`;
+      const displayCards = [];
+      const seenVariantGroups = new Set();
+      filtered.forEach(item => {
+        const gKey = (item.variantGroup || '').trim();
+        if (!gKey) {
+          displayCards.push({ groupKey: null, items: [item] });
+        } else if (!seenVariantGroups.has(gKey)) {
+          seenVariantGroups.add(gKey);
+          const siblings = filtered.filter(x => (x.variantGroup || '').trim() === gKey);
+          siblings.sort((a, b) => compareWeightsSmart(a.weight || a.name, b.weight || b.name));
+          displayCards.push({ groupKey: gKey, items: siblings });
+        }
+      });
+
+      countBadge.textContent = `${displayCards.length} ${displayCards.length === 1 ? 'item' : 'itens'}`;
       const emptyWaBtn = document.getElementById('empty-whatsapp-btn');
       if (emptyWaBtn) emptyWaBtn.classList.toggle('hidden', !query);
 
-      if (filtered.length === 0) {
+      if (displayCards.length === 0) {
         grid.innerHTML = "";
         empty.classList.remove('hidden');
         return;
       }
 
       empty.classList.add('hidden');
-      grid.innerHTML = filtered.map(p => {
+      grid.innerHTML = displayCards.map(card => {
+        const isGroup = card.items.length > 1;
+        let p = card.items[0];
+        if (isGroup && card.groupKey) {
+          const savedId = selectedVariantByGroup[card.groupKey];
+          const found = card.items.find(x => x.id == savedId);
+          if (found) p = found;
+          else {
+            const promoSibling = card.items.find(x => isProductPromoActive(x));
+            if (promoSibling) p = promoSibling;
+          }
+        }
         const qty = cart[p.id] || 0;
         const imgSrc = p.image || DEFAULT_PRODUCT_IMG;
 
         const isPromoNow = isProductPromoActive(p);
         const hasPromoPrice = isPromoNow && p.promoPrice && p.promoPrice > 0 && p.promoPrice < p.price;
         const hasPickup = hasValidPickupPrice(p);
+        const hasWholesale = hasValidWholesale(p);
+        const wholesaleUnit = hasWholesale ? (p.wholesalePrice / p.wholesaleQty) : 0;
         const pctOff = hasPromoPrice ? Math.round(((p.price - p.promoPrice) / p.price) * 100) : 0;
         const diffReais = hasPromoPrice ? Math.round(p.price - p.promoPrice) : 0;
         const endMs = (isPromoNow && p.promoShowEnd && p.promoEnd) ? new Date(p.promoEnd).getTime() : null;
@@ -2658,6 +3010,16 @@
           <div class="mt-1.5 pt-1 border-t border-[#E94793]/20 text-[10px] font-extrabold text-[#9D174D] space-y-0.5">
             <div class="flex items-center gap-1"><span>⏳</span><span>${formatPromoEndLabel(p.promoEnd)}</span></div>
             <div class="promo-live-countdown text-[10px] font-black text-rose-600 tabular-nums" data-end-ms="${endMs}">${formatCountdownDiff(endMs)}</div>
+          </div>` : '';
+
+        const variantPillsHtml = isGroup ? `
+          <div class="flex flex-wrap gap-1 mb-2">
+            ${card.items.map(v => {
+              const label = (v.weight && v.weight !== 'Sem peso/medida') ? v.weight : v.name.slice(0, 12);
+              const activePill = v.id === p.id;
+              const vPromo = isProductPromoActive(v);
+              return `<button type="button" onclick="selectCardVariant('${escAttr(card.groupKey)}', ${v.id})" class="px-2 py-1 rounded-lg text-[10px] font-extrabold border transition ${activePill ? (vPromo ? 'bg-brand-accent text-white border-transparent shadow-sm' : 'bg-indigo-600 text-white border-indigo-600 shadow-sm') : (vPromo ? 'bg-pink-50 text-[#9D174D] border-[#E84D9A]/50 hover:bg-pink-100' : 'bg-indigo-50/70 text-indigo-800 border-indigo-200 hover:bg-indigo-100')}">${vPromo ? '🔥 ' : ''}${label}</button>`;
+            }).join('')}
           </div>` : '';
 
         let actionArea = '';
@@ -2691,9 +3053,11 @@
               </div>
               <div class="flex items-center gap-1 mb-1 flex-wrap">
                 <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">${p.category}</span>
-                ${p.weight && p.weight !== 'Sem peso/medida' ? `<span class="text-[10px] bg-[#F4FCEB] text-[#4D7C0F] font-bold px-2 py-0.5 rounded-md">${p.weight}</span>` : ''}
+                ${!isGroup && p.weight && p.weight !== 'Sem peso/medida' ? `<span class="text-[10px] bg-[#F4FCEB] text-[#4D7C0F] font-bold px-2 py-0.5 rounded-md">${p.weight}</span>` : ''}
+                ${isGroup ? `<span class="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-md">🧩 ${card.items.length} opções</span>` : ''}
               </div>
               <h4 class="text-xs font-bold text-slate-800 mb-1.5 leading-snug break-words">${p.name}</h4>
+              ${variantPillsHtml}
             </div>
             <div>
               ${hasPromoPrice ? `
@@ -2713,6 +3077,7 @@
               ` : `
                 <div style="color: var(--brand-price-color);" class="inline-block bg-[#F0FAFB] border border-slate-200 rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
               `)}
+              ${hasWholesale ? `<div class="bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-amber-900 mb-2 leading-snug">📦 Atacado: ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold text-amber-700">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></div>` : ''}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
               ${actionArea}
             </div>
@@ -2730,6 +3095,12 @@
 
     function increaseCart(productId) {
       cart[productId] = (cart[productId] || 0) + 1;
+      updateCartBadge();
+      filterProducts();
+    }
+
+    function addBulkToCart(productId, delta) {
+      cart[productId] = (cart[productId] || 0) + (parseInt(delta, 10) || 1);
       updateCartBadge();
       filterProducts();
     }
@@ -2795,29 +3166,43 @@
         const p = products.find(prod => prod.id == id);
         if (!p) return '';
         const qty = cart[id];
-        const delivUnit = getEffectiveProductPrice(p);
-        const pickUnit = getCartItemPrice(p, 'pickup');
-        const unitPrice = isPickupMode ? pickUnit : delivUnit;
-        deliveryTotal += delivUnit * qty;
-        pickupTotal += pickUnit * qty;
-        subtotal += unitPrice * qty;
+        const delivPricing = getCartLinePricing(p, qty, 'delivery');
+        const pickPricing = getCartLinePricing(p, qty, 'pickup');
+        const activePricing = isPickupMode ? pickPricing : delivPricing;
+        deliveryTotal += delivPricing.lineTotal;
+        pickupTotal += pickPricing.lineTotal;
+        subtotal += activePricing.lineTotal;
+
+        const isPickBetter = isPickupMode && pickPricing.lineTotal < delivPricing.lineTotal;
+        const unitPrice = activePricing.unitPrice;
+        const wholesaleNote = activePricing.isWholesaleApplied
+          ? `<div class="mt-1 inline-block bg-amber-100 text-amber-900 border border-amber-300 rounded-lg px-2 py-0.5 text-[10px] font-extrabold">📦 Atacado aplicado (${p.wholesaleQty} por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')})!</div>`
+          : (activePricing.missingForWholesale > 0
+            ? `<div class="mt-1 flex items-center justify-between gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 text-[10px] font-bold text-amber-900"><span>💡 Falta${activePricing.missingForWholesale > 1 ? 'm' : ''} ${activePricing.missingForWholesale} un p/ levar ${p.wholesaleQty} por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}!</span><button type="button" onclick="addBulkToCart(${p.id}, ${activePricing.missingForWholesale}); openCartModal();" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-0.5 rounded font-black shrink-0">+${activePricing.missingForWholesale}</button></div>`
+            : '');
 
         return `
-          <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
-            <div class="flex items-center gap-2.5">
-              <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-100 p-1 shrink-0">
-              <div>
-                <h5 class="text-xs font-bold text-slate-800 line-clamp-1">${p.name}</h5>
-                <p class="text-[11px] ${isPickupMode && pickUnit < delivUnit ? 'text-emerald-700' : 'text-brand-primary'} font-black">${unitPrice < p.price ? `<span class="line-through text-slate-400 font-semibold mr-1">R$ ${p.price.toFixed(2).replace('.', ',')}</span>` : ''}R$ ${unitPrice.toFixed(2).replace('.', ',')} un${isPickupMode && pickUnit < delivUnit ? ' 🏪' : ''}</p>
+          <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-100 p-1 shrink-0">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1 flex-wrap">
+                    <h5 class="text-xs font-bold text-slate-800 line-clamp-1">${p.name}</h5>
+                    ${p.weight && p.weight !== 'Sem peso/medida' ? `<span class="text-[9px] font-extrabold bg-[#F4FCEB] text-[#4D7C0F] border border-[#7CB342]/30 px-1.5 py-0.5 rounded">${p.weight}</span>` : ''}
+                  </div>
+                  <p class="text-[11px] ${activePricing.isWholesaleApplied ? 'text-amber-700' : (isPickBetter ? 'text-emerald-700' : 'text-brand-primary')} font-black">${unitPrice < p.price ? `<span class="line-through text-slate-400 font-semibold mr-1">R$ ${p.price.toFixed(2).replace('.', ',')}</span>` : ''}R$ ${unitPrice.toFixed(2).replace('.', ',')} un${activePricing.isWholesaleApplied ? ' 📦' : (isPickBetter ? ' 🏪' : '')}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="flex items-center bg-white border border-slate-300 rounded-xl px-1 py-0.5">
+                  <button onclick="decreaseCart(${p.id}); openCartModal();" class="w-6 h-6 text-slate-600 font-extrabold rounded hover:bg-slate-100 flex items-center justify-center text-xs">-</button>
+                  <span class="text-xs font-bold px-2">${qty}</span>
+                  <button onclick="increaseCart(${p.id}); openCartModal();" class="w-6 h-6 text-slate-600 font-extrabold rounded hover:bg-slate-100 flex items-center justify-center text-xs">+</button>
+                </div>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="flex items-center bg-white border border-slate-300 rounded-xl px-1 py-0.5">
-                <button onclick="decreaseCart(${p.id}); openCartModal();" class="w-6 h-6 text-slate-600 font-extrabold rounded hover:bg-slate-100 flex items-center justify-center text-xs">-</button>
-                <span class="text-xs font-bold px-2">${qty}</span>
-                <button onclick="increaseCart(${p.id}); openCartModal();" class="w-6 h-6 text-slate-600 font-extrabold rounded hover:bg-slate-100 flex items-center justify-center text-xs">+</button>
-              </div>
-            </div>
+            ${wholesaleNote}
           </div>
         `;
       }).join('');
@@ -3052,10 +3437,11 @@
         const p = products.find(prod => prod.id == id);
         if (p) {
           const qty = cart[id];
-          const totalItem = getCartItemPrice(p, cartFulfillmentMode) * qty;
-          subtotal += totalItem;
-          text += `• ${qty}x ${p.name} (${p.weight || 'UN'}) - R$ ${totalItem.toFixed(2).replace('.', ',')}\n`;
-          itemsList.push(`${qty}x ${p.name}`);
+          const line = getCartLinePricing(p, qty, cartFulfillmentMode);
+          subtotal += line.lineTotal;
+          const tag = line.isWholesaleApplied ? ' [Atacado]' : '';
+          text += `• ${qty}x ${p.name} (${p.weight || 'UN'})${tag} - R$ ${line.lineTotal.toFixed(2).replace('.', ',')}\n`;
+          itemsList.push(`${qty}x ${p.name}${tag}`);
         }
       });
 
@@ -3094,7 +3480,20 @@
 
       if (catSelect) catSelect.innerHTML = categories.filter(c => c !== "Todos").map(c => `<option value="${c}">${c}</option>`).join('');
       if (brandSelect) brandSelect.innerHTML = brands.map(b => `<option value="${b}">${b}</option>`).join('');
-      if (weightSelect) weightSelect.innerHTML = weights.map(w => `<option value="${w}">${w}</option>`).join('');
+      const sortedW = sortWeightsNatural(weights);
+      if (weightSelect) {
+        const prevW = weightSelect.value;
+        weightSelect.innerHTML = sortedW.map(w => `<option value="${w}">${w}</option>`).join('');
+        if (prevW && sortedW.includes(prevW)) weightSelect.value = prevW;
+      }
+      ['new-variant-new-weight', 'edit-variant-new-weight'].forEach(selId => {
+        const el = document.getElementById(selId);
+        if (el) {
+          const prev = el.value;
+          el.innerHTML = sortedW.map(w => `<option value="${w}">${w}</option>`).join('');
+          if (prev && sortedW.includes(prev)) el.value = prev;
+        }
+      });
 
       updateSubcatDropdown('new-category', 'new-subcategory');
 
@@ -3226,17 +3625,26 @@
     }
 
     function renderManagerWeights() {
-      const list = document.getElementById('manager-weight-list');
-      if (!list) return;
-      list.innerHTML = weights.map(w => `
-        <div class="flex items-center justify-between bg-[#F4FCEB] px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#4D7C0F] gap-1.5">
-          <span>${w}</span>
-          <div class="flex items-center gap-1">
-            <button onclick="editWeightModal('${escAttr(w)}')" class="text-slate-600 hover:text-slate-900 font-bold" title="Editar">✏️</button>
-            <button onclick="deleteWeight('${escAttr(w)}')" class="text-rose-600 hover:text-rose-800 font-black" title="Excluir">×</button>
-          </div>
-        </div>
-      `).join('');
+      const sel = document.getElementById('manager-weight-select');
+      const countEl = document.getElementById('manager-weight-count');
+      if (!sel) return;
+      const prev = sel.value;
+      const sortedW = sortWeightsNatural(weights);
+      sel.innerHTML = sortedW.map(w => `<option value="${escAttr(w)}">${w}</option>`).join('');
+      if (prev && sortedW.includes(prev)) sel.value = prev;
+      if (countEl) countEl.textContent = `${sortedW.length} • A–Z`;
+    }
+
+    function editSelectedManagerWeight() {
+      const sel = document.getElementById('manager-weight-select');
+      if (!sel || !sel.value) { showToast("⚠️ Selecione um peso/medida primeiro."); return; }
+      editWeightModal(sel.value);
+    }
+
+    function deleteSelectedManagerWeight() {
+      const sel = document.getElementById('manager-weight-select');
+      if (!sel || !sel.value) { showToast("⚠️ Selecione um peso/medida primeiro."); return; }
+      deleteWeight(sel.value);
     }
 
     function syncEditProductSelects(preserve = true) {
@@ -3259,8 +3667,9 @@
       }
       if (eWeight) {
         const prevW = eWeight.value;
-        eWeight.innerHTML = weights.map(w => `<option value="${w}">${w}</option>`).join('');
-        if (preserve && prevW && weights.includes(prevW)) eWeight.value = prevW;
+        const sortedW = sortWeightsNatural(weights);
+        eWeight.innerHTML = sortedW.map(w => `<option value="${w}">${w}</option>`).join('');
+        if (preserve && prevW && sortedW.includes(prevW)) eWeight.value = prevW;
       }
     }
 
@@ -3492,6 +3901,7 @@
         await saveStoreMetaToCloud();
         renderManagerWeights();
         updateManagerDropdowns();
+        syncEditProductSelects(true);
         renderManagerProducts();
         filterProducts();
         showToast(`✅ Peso/medida atualizado para "${newWeight}"!`);
@@ -3504,6 +3914,7 @@
         await saveStoreMetaToCloud();
         renderManagerWeights();
         updateManagerDropdowns();
+        syncEditProductSelects(true);
         showToast("🗑️ Peso/medida excluído.");
       });
     }
@@ -3555,6 +3966,11 @@
       const pickupEnabled = !!document.getElementById('new-pickup-enabled')?.checked;
       const pickupPriceRaw = parsePriceBR(document.getElementById('new-pickup-price')?.value || '');
       const pickupPrice = (pickupEnabled && !isNaN(pickupPriceRaw) && pickupPriceRaw > 0) ? pickupPriceRaw : null;
+      const wholesaleEnabled = !!document.getElementById('new-wholesale-enabled')?.checked;
+      const wholesaleQtyRaw = parseInt(document.getElementById('new-wholesale-qty')?.value || '0', 10);
+      const wholesalePriceRaw = parsePriceBR(document.getElementById('new-wholesale-price')?.value || '');
+      const wholesaleQty = (wholesaleEnabled && wholesaleQtyRaw >= 2) ? wholesaleQtyRaw : null;
+      const wholesalePrice = (wholesaleEnabled && !isNaN(wholesalePriceRaw) && wholesalePriceRaw > 0) ? wholesalePriceRaw : null;
       const brand = document.getElementById('new-brand').value;
       const weight = document.getElementById('new-weight').value;
       const image = document.getElementById('new-image').value.trim();
@@ -3580,6 +3996,15 @@
       if (pickupEnabled && (pickupPrice === null || pickupPrice >= price)) {
         showToast("⚠️ O Preço Retirar na Loja deve ser menor que o Preço Normal!");
         return;
+      }
+      if (wholesaleEnabled && (!wholesaleQty || wholesaleQty < 2 || !wholesalePrice || (wholesalePrice / wholesaleQty) >= price)) {
+        showToast("⚠️ No Atacado, informe quantidade mínima (≥ 2) e um preço total mais barato por unidade!");
+        return;
+      }
+      let newVariantGroupKey = '';
+      if (pendingNewVariantLinkedIds.size > 0 || pendingNewVariantQueue.length > 0) {
+        const firstLinked = products.find(pr => pendingNewVariantLinkedIds.has(pr.id) && pr.variantGroup);
+        newVariantGroupKey = firstLinked ? firstLinked.variantGroup : generateVariantGroupKey(name);
       }
 
       const dup = findDuplicateProduct(name, barcode);
@@ -3610,13 +4035,16 @@
           promo,
           promo_start: promoStart,
           promo_end: promoEnd,
-          promo_show_end: promoShowEnd
+          promo_show_end: promoShowEnd,
+          variant_group: newVariantGroupKey || null,
+          wholesale_qty: wholesaleQty,
+          wholesale_price: wholesalePrice
         })
         .select('*')
         .single();
 
       if (error || !data) {
-        showToast("⚠️ Erro ao cadastrar! Verifique se barcode, ncm e stock_qty existem no Supabase.");
+        showToast("⚠️ Erro ao cadastrar! Rode o SQL de variant_group, wholesale_qty e wholesale_price no Supabase.");
         return;
       }
 
@@ -3638,8 +4066,46 @@
         promoStart: data.promo_start || '',
         promoEnd: data.promo_end || '',
         promoShowEnd: !!data.promo_show_end,
+        variantGroup: (data.variant_group || '').trim(),
+        wholesaleQty: data.wholesale_qty != null ? (parseInt(data.wholesale_qty, 10) || null) : null,
+        wholesalePrice: data.wholesale_price != null ? (parseFloat(data.wholesale_price) || null) : null,
         active: data.active !== false
       });
+
+      if (newVariantGroupKey) {
+        const linkedIds = Array.from(pendingNewVariantLinkedIds);
+        if (linkedIds.length > 0) {
+          await sb.from('products').update({ variant_group: newVariantGroupKey }).in('id', linkedIds);
+          products.forEach(pr => { if (pendingNewVariantLinkedIds.has(pr.id)) pr.variantGroup = newVariantGroupKey; });
+        }
+        for (const vItem of pendingNewVariantQueue) {
+          const vName = buildVariantName(name, vItem.weight);
+          const { data: vData } = await sb.from('products').insert({
+            store_id: currentStoreId,
+            name: vName,
+            category,
+            subcategory,
+            price: vItem.price,
+            barcode: vItem.barcode || null,
+            brand,
+            weight: vItem.weight,
+            image_url: image,
+            promo: false,
+            variant_group: newVariantGroupKey
+          }).select('*').single();
+          if (vData) {
+            products.unshift({
+              id: vData.id, name: vData.name, category: vData.category, subcategory: vData.subcategory,
+              price: parseFloat(vData.price) || 0, promoPrice: null, pickupPrice: null,
+              barcode: vData.barcode || '', ncm: '', stockQty: null, brand: vData.brand,
+              weight: vData.weight, image: vData.image_url || '', promo: false,
+              promoStart: '', promoEnd: '', promoShowEnd: false,
+              variantGroup: newVariantGroupKey, wholesaleQty: null, wholesalePrice: null, active: true
+            });
+          }
+        }
+      }
+      resetNewVariantDraftState();
 
       filterProducts();
       renderManagerProducts();
@@ -3649,6 +4115,11 @@
       if (document.getElementById('new-pickup-enabled')) document.getElementById('new-pickup-enabled').checked = false;
       if (document.getElementById('new-pickup-price')) document.getElementById('new-pickup-price').value = "";
       togglePickupInput('new-pickup-enabled', 'new-pickup-wrap');
+      if (document.getElementById('new-wholesale-enabled')) document.getElementById('new-wholesale-enabled').checked = false;
+      if (document.getElementById('new-wholesale-qty')) document.getElementById('new-wholesale-qty').value = "";
+      if (document.getElementById('new-wholesale-price')) document.getElementById('new-wholesale-price').value = "";
+      toggleWholesaleInput('new-wholesale-enabled', 'new-wholesale-wrap');
+      updateWholesalePreview('new-wholesale-qty', 'new-wholesale-price', 'new-wholesale-preview');
       document.getElementById('new-image').value = "";
       if (document.getElementById('new-barcode')) document.getElementById('new-barcode').value = "";
       if (document.getElementById('new-ncm')) document.getElementById('new-ncm').value = "";
@@ -3703,6 +4174,8 @@
         else if (fStatus === 'promo_scheduled') matchSt = getProductPromoState(p) === 'scheduled';
         else if (fStatus === 'promo_ended') matchSt = getProductPromoState(p) === 'ended';
         else if (fStatus === 'pickup_only') matchSt = hasValidPickupPrice(p);
+        else if (fStatus === 'wholesale_only') matchSt = hasValidWholesale(p);
+        else if (fStatus === 'variants_only') matchSt = !!(p.variantGroup && p.variantGroup.trim());
         return matchQ && matchC && matchS && matchB && matchSt;
       });
     }
@@ -3817,7 +4290,7 @@
             <div class="min-w-0 flex-1">
               <h4 class="text-xs font-bold text-slate-800 leading-snug break-words">${isActive ? '' : '<span class="text-amber-700 font-black">[Pausado]</span> '}${p.name}</h4>
               <p class="text-[11px] text-brand-primary font-black mt-0.5">
-                Normal: R$ ${p.price.toFixed(2).replace('.', ',')}${hasPromoPrice ? ` • <span class="text-[#E84D9A]">Promo: R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidPickupPrice(p) ? ` • <span class="text-emerald-700">🏪 Retirada: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</span>` : ''}
+                Normal: R$ ${p.price.toFixed(2).replace('.', ',')}${hasPromoPrice ? ` • <span class="text-[#E84D9A]">Promo: R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidPickupPrice(p) ? ` • <span class="text-emerald-700">🏪 Retirada: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidWholesale(p) ? ` • <span class="text-amber-700">📦 Atacado: ${p.wholesaleQty}x R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}</span>` : ''}${p.variantGroup ? ` • <span class="text-indigo-700">🧩 Variação</span>` : ''}
                 <span class="text-slate-500 font-medium"> • ${p.category} / ${p.subcategory}</span>
               </p>
               ${(p.barcode || p.ncm || p.stockQty !== null) ? `<p class="text-[10px] text-slate-400 font-semibold mt-0.5">${p.barcode ? `EAN: ${p.barcode}` : ''}${p.ncm ? `${p.barcode ? ' • ' : ''}NCM: ${p.ncm}` : ''}${p.stockQty !== null && p.stockQty !== undefined ? `${(p.barcode || p.ncm) ? ' • ' : ''}Est: ${p.stockQty}` : ''}</p>` : ''}
@@ -3884,11 +4357,20 @@
 
     function deleteProduct(id) {
       openConfirmModal("Deseja realmente excluir este produto?", async () => {
+        const deletedItem = products.find(p => p.id === id);
+        const oldGroup = deletedItem?.variantGroup || '';
         if (sb) {
           const { error } = await sb.from('products').delete().eq('id', id);
           if (error) { showToast("⚠️ Erro ao excluir produto."); return; }
         }
         products = products.filter(p => p.id !== id);
+        if (oldGroup) {
+          const remaining = products.filter(p => p.variantGroup === oldGroup);
+          if (remaining.length === 1) {
+            remaining[0].variantGroup = '';
+            if (sb) await sb.from('products').update({ variant_group: null }).eq('id', remaining[0].id);
+          }
+        }
         delete cart[id];
         filterProducts();
         renderManagerProducts();
@@ -3910,6 +4392,13 @@
       if (document.getElementById('edit-pickup-enabled')) document.getElementById('edit-pickup-enabled').checked = hasPick;
       if (document.getElementById('edit-product-pickup-price')) document.getElementById('edit-product-pickup-price').value = hasPick ? formatPriceBR(p.pickupPrice) : '';
       togglePickupInput('edit-pickup-enabled', 'edit-pickup-wrap');
+
+      const hasWh = hasValidWholesale(p);
+      if (document.getElementById('edit-wholesale-enabled')) document.getElementById('edit-wholesale-enabled').checked = hasWh;
+      if (document.getElementById('edit-wholesale-qty')) document.getElementById('edit-wholesale-qty').value = hasWh ? p.wholesaleQty : '';
+      if (document.getElementById('edit-wholesale-price')) document.getElementById('edit-wholesale-price').value = hasWh ? formatPriceBR(p.wholesalePrice) : '';
+      toggleWholesaleInput('edit-wholesale-enabled', 'edit-wholesale-wrap');
+      updateWholesalePreview('edit-wholesale-qty', 'edit-wholesale-price', 'edit-wholesale-preview');
       if (document.getElementById('edit-product-barcode')) document.getElementById('edit-product-barcode').value = p.barcode || '';
       if (document.getElementById('edit-product-ncm')) document.getElementById('edit-product-ncm').value = p.ncm || '';
       if (document.getElementById('edit-product-stock')) document.getElementById('edit-product-stock').value = (p.stockQty !== null && p.stockQty !== undefined) ? p.stockQty : '';
@@ -3925,7 +4414,11 @@
 
       catSelect.innerHTML = categories.filter(c => c !== "Todos").map(c => `<option value="${c}" ${c === p.category ? 'selected' : ''}>${c}</option>`).join('');
       brandSelect.innerHTML = brands.map(b => `<option value="${b}" ${b === p.brand ? 'selected' : ''}>${b}</option>`).join('');
-      weightSelect.innerHTML = weights.map(w => `<option value="${w}" ${w === p.weight ? 'selected' : ''}>${w}</option>`).join('');
+      const sortedW = sortWeightsNatural(weights);
+      weightSelect.innerHTML = sortedW.map(w => `<option value="${w}" ${w === p.weight ? 'selected' : ''}>${w}</option>`).join('');
+      const editVarW = document.getElementById('edit-variant-new-weight');
+      if (editVarW) editVarW.innerHTML = sortedW.map(w => `<option value="${w}">${w}</option>`).join('');
+      refreshEditVariantPanel(p.id);
 
       updateSubcatDropdown('edit-product-cat', 'edit-product-subcat');
       document.getElementById('edit-product-subcat').value = p.subcategory;
@@ -3946,6 +4439,349 @@
       document.getElementById('edit-product-modal').classList.add('hidden');
     }
 
+    // === GERENCIADOR DE VARIAÇÕES (CADASTRO & EDIÇÃO) ===
+    const pendingNewVariantLinkedIds = new Set();
+    let pendingNewVariantQueue = [];
+
+    function generateVariantGroupKey(baseName) {
+      const slug = normalizeProductNameKey(baseName || 'grupo').replace(/\s+/g, '-').slice(0, 32) || 'grupo';
+      return `${slug}-${Date.now().toString(36).slice(-4)}`;
+    }
+
+    function buildVariantName(baseName, newWeight) {
+      const cleanBase = String(baseName || 'Produto').trim();
+      if (!newWeight || newWeight === 'Sem peso/medida') return cleanBase;
+      const stripped = cleanBase.replace(/\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|un|und|unid|cm)/gi, '').replace(/\s+/g, ' ').trim();
+      return `${stripped || cleanBase} ${newWeight}`.slice(0, 60);
+    }
+
+    function resetNewVariantDraftState() {
+      pendingNewVariantLinkedIds.clear();
+      pendingNewVariantQueue = [];
+      const panel = document.getElementById('new-variants-panel');
+      if (panel) panel.classList.add('hidden');
+      const chev = document.getElementById('new-variant-chevron');
+      if (chev) chev.textContent = '▾';
+      const sInp = document.getElementById('new-variant-search-input');
+      if (sInp) sInp.value = '';
+      renderVariantLinkedList('new');
+      renderVariantSearchResults('new');
+    }
+
+    function toggleVariantPanel(ctx) {
+      const panel = document.getElementById(`${ctx}-variants-panel`);
+      const chev = document.getElementById(`${ctx}-variant-chevron`);
+      if (!panel) return;
+      const willOpen = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !willOpen);
+      if (chev) chev.textContent = willOpen ? '▴' : '▾';
+      if (willOpen) {
+        updateManagerDropdowns();
+        renderVariantLinkedList(ctx);
+        renderVariantSearchResults(ctx);
+      }
+    }
+
+    function switchVariantTab(ctx, tab) {
+      const sBox = document.getElementById(`${ctx}-variant-search-box`);
+      const cBox = document.getElementById(`${ctx}-variant-create-box`);
+      const sTab = document.getElementById(`${ctx}-vtab-search`);
+      const cTab = document.getElementById(`${ctx}-vtab-create`);
+      const isSearch = tab === 'search';
+      if (sBox) sBox.classList.toggle('hidden', !isSearch);
+      if (cBox) cBox.classList.toggle('hidden', isSearch);
+      if (sTab) sTab.className = `py-1.5 px-2 rounded-lg text-[11px] font-extrabold transition ${isSearch ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-800 hover:bg-white/70'}`;
+      if (cTab) cTab.className = `py-1.5 px-2 rounded-lg text-[11px] font-extrabold transition ${!isSearch ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-800 hover:bg-white/70'}`;
+    }
+
+    function refreshEditVariantPanel(prodId) {
+      const panel = document.getElementById('edit-variants-panel');
+      const chev = document.getElementById('edit-variant-chevron');
+      if (panel) panel.classList.add('hidden');
+      if (chev) chev.textContent = '▾';
+      const sInp = document.getElementById('edit-variant-search-input');
+      if (sInp) sInp.value = '';
+      renderVariantLinkedList('edit');
+      renderVariantSearchResults('edit');
+    }
+
+    function getEditCurrentProduct() {
+      const id = parseInt(document.getElementById('edit-product-id')?.value || '0', 10);
+      return products.find(pr => pr.id === id) || null;
+    }
+
+    function renderVariantLinkedList(ctx) {
+      const box = document.getElementById(`${ctx}-variant-linked-list`);
+      const badge = document.getElementById(`${ctx}-variant-badge`);
+      if (!box) return;
+
+      if (ctx === 'new') {
+        const linkedProds = products.filter(pr => pendingNewVariantLinkedIds.has(pr.id));
+        const total = linkedProds.length + pendingNewVariantQueue.length;
+        if (badge) badge.textContent = String(total);
+        if (total === 0) {
+          box.innerHTML = `<p class="text-[11px] text-slate-400 font-medium text-center py-1">Nenhuma variação vinculada ainda. Procure um produto existente ou crie uma nova abaixo.</p>`;
+          return;
+        }
+        const existingRows = linkedProds.map(pr => `
+          <div class="flex items-center justify-between gap-2 bg-indigo-50 border border-indigo-200 rounded-xl px-2.5 py-1.5">
+            <div class="min-w-0">
+              <span class="inline-block bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded mr-1">${pr.weight || 'UN'}</span>
+              <span class="text-[11px] font-bold text-slate-800">${pr.name}</span>
+              <span class="text-[10px] font-black text-indigo-700 ml-1">R$ ${pr.price.toFixed(2).replace('.', ',')}</span>
+            </div>
+            <button type="button" onclick="unlinkVariantProduct('new', ${pr.id})" class="text-[10px] font-extrabold text-rose-600 hover:underline shrink-0">Desvincular</button>
+          </div>`).join('');
+        const queuedRows = pendingNewVariantQueue.map((q, idx) => `
+          <div class="flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-2.5 py-1.5">
+            <div class="min-w-0">
+              <span class="inline-block bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded mr-1">NOVO • ${q.weight}</span>
+              <span class="text-[11px] font-bold text-emerald-900">R$ ${q.price.toFixed(2).replace('.', ',')}</span>
+              ${q.barcode ? `<span class="text-[10px] text-slate-500 ml-1">EAN: ${q.barcode}</span>` : ''}
+            </div>
+            <button type="button" onclick="removeQueuedNewVariant(${idx})" class="text-[10px] font-extrabold text-rose-600 hover:underline shrink-0">Remover</button>
+          </div>`).join('');
+        box.innerHTML = existingRows + queuedRows;
+      } else {
+        const cur = getEditCurrentProduct();
+        const siblings = (cur && cur.variantGroup)
+          ? products.filter(pr => pr.id !== cur.id && pr.variantGroup === cur.variantGroup)
+          : [];
+        if (badge) badge.textContent = String(siblings.length);
+        if (siblings.length === 0) {
+          box.innerHTML = `<p class="text-[11px] text-slate-400 font-medium text-center py-1">Nenhuma variação vinculada a este produto ainda.</p>`;
+          return;
+        }
+        box.innerHTML = siblings.map(pr => `
+          <div class="flex items-center justify-between gap-2 bg-indigo-50 border border-indigo-200 rounded-xl px-2.5 py-1.5">
+            <div class="min-w-0">
+              <span class="inline-block bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded mr-1">${pr.weight || 'UN'}</span>
+              <span class="text-[11px] font-bold text-slate-800">${pr.name}</span>
+              <span class="text-[10px] font-black text-indigo-700 ml-1">R$ ${pr.price.toFixed(2).replace('.', ',')}</span>
+            </div>
+            <button type="button" onclick="unlinkVariantProduct('edit', ${pr.id})" class="text-[10px] font-extrabold text-rose-600 hover:underline shrink-0">Desvincular</button>
+          </div>`).join('');
+      }
+    }
+
+    function getVariantBaseTokens(name) {
+      const stripped = String(name || '')
+        .replace(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|gr|ml|l|lt|un|und|unid|cm|mm|mg)\b/gi, ' ')
+        .replace(/\b\d+(?:[.,]\d+)?\b/g, ' ');
+      const stopWords = new Set(['de', 'da', 'do', 'das', 'dos', 'para', 'com', 'sem', 'em', 'e', 'a', 'o', 'os', 'as', 'por', 'pct', 'pc', 'cx']);
+      return normalizeProductNameKey(stripped)
+        .split(' ')
+        .filter(t => t.length >= 2 && !stopWords.has(t));
+    }
+
+    function scoreVariantSimilarity(refName, refBrand, refCat, candidate) {
+      const refTokens = getVariantBaseTokens(refName);
+      const candTokens = getVariantBaseTokens(candidate.name);
+      if (refTokens.length === 0) return 0;
+
+      const candSet = new Set(candTokens);
+      let score = 0;
+      let matchedTokens = 0;
+
+      refTokens.forEach((tok, idx) => {
+        if (candSet.has(tok)) {
+          matchedTokens++;
+          score += (idx < 2 ? 18 : 12) + Math.min(tok.length, 8);
+        } else if (tok.length >= 4 && candTokens.some(ct => ct.startsWith(tok.slice(0, 4)) || tok.startsWith(ct.slice(0, 4)))) {
+          matchedTokens += 0.5;
+          score += 6;
+        }
+      });
+
+      const refBase = refTokens.join(' ');
+      const candBase = candTokens.join(' ');
+      if (refBase && candBase) {
+        if (candBase === refBase) score += 50;
+        else if (candBase.includes(refBase) || refBase.includes(candBase)) score += 30;
+      }
+
+      if (matchedTokens > 0) {
+        if (refBrand && refBrand !== 'Sem Marca' && candidate.brand === refBrand) score += 10;
+        if (refCat && candidate.category === refCat) score += 6;
+      }
+      return score;
+    }
+
+    function renderVariantSearchResults(ctx) {
+      const box = document.getElementById(`${ctx}-variant-search-results`);
+      const inp = document.getElementById(`${ctx}-variant-search-input`);
+      if (!box) return;
+      const q = (inp?.value || '').trim().toLowerCase();
+      const curEdit = ctx === 'edit' ? getEditCurrentProduct() : null;
+      const refName = ctx === 'edit'
+        ? (document.getElementById('edit-product-name')?.value || curEdit?.name || '')
+        : (document.getElementById('new-name')?.value || '');
+      const refBrand = ctx === 'edit'
+        ? (document.getElementById('edit-product-brand')?.value || curEdit?.brand || '')
+        : (document.getElementById('new-brand')?.value || '');
+      const refCat = ctx === 'edit'
+        ? (document.getElementById('edit-product-cat')?.value || curEdit?.category || '')
+        : (document.getElementById('new-category')?.value || '');
+
+      const excludeIds = new Set();
+      if (ctx === 'new') {
+        pendingNewVariantLinkedIds.forEach(id => excludeIds.add(id));
+      } else if (curEdit) {
+        excludeIds.add(curEdit.id);
+        if (curEdit.variantGroup) {
+          products.filter(pr => pr.variantGroup === curEdit.variantGroup).forEach(pr => excludeIds.add(pr.id));
+        }
+      }
+
+      const scored = products
+        .filter(pr => {
+          if (excludeIds.has(pr.id)) return false;
+          if (!q) return true;
+          return smartMatchProduct(pr, q) || (pr.barcode || '').toLowerCase().includes(q) || (pr.weight || '').toLowerCase().includes(q);
+        })
+        .map(pr => ({ pr, sim: scoreVariantSimilarity(refName, refBrand, refCat, pr) }))
+        .sort((a, b) => {
+          if (b.sim !== a.sim) return b.sim - a.sim;
+          return String(a.pr.name).localeCompare(String(b.pr.name), 'pt-BR', { numeric: true, sensitivity: 'base' });
+        })
+        .slice(0, 15);
+
+      if (scored.length === 0) {
+        box.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-2">Nenhum produto disponível para vincular.</p>`;
+        return;
+      }
+      box.innerHTML = scored.map(({ pr, sim }) => `
+        <div class="flex items-center justify-between gap-2 ${sim >= 20 ? 'bg-indigo-50/75 border-indigo-200' : 'bg-slate-50 border-slate-200'} hover:bg-indigo-100/70 border rounded-xl px-2.5 py-1.5 transition">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1 min-w-0">
+              ${sim >= 20 ? `<span class="text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.5 rounded shrink-0">⭐ Parecido</span>` : ''}
+              <span class="text-[11px] font-bold text-slate-800 truncate">${pr.name}</span>
+            </div>
+            <div class="text-[10px] font-semibold text-slate-500">${pr.weight || 'Sem peso'} • <strong class="text-slate-700">R$ ${pr.price.toFixed(2).replace('.', ',')}</strong></div>
+          </div>
+          <button type="button" onclick="linkExistingVariantProduct('${ctx}', ${pr.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 py-1 rounded-lg text-[10px] shrink-0">+ Vincular</button>
+        </div>`).join('');
+    }
+
+    async function linkExistingVariantProduct(ctx, targetId) {
+      const target = products.find(pr => pr.id === targetId);
+      if (!target) return;
+      if (ctx === 'new') {
+        pendingNewVariantLinkedIds.add(targetId);
+        renderVariantLinkedList('new');
+        renderVariantSearchResults('new');
+        showToast(`🧩 "${target.name}" adicionado às variações (será vinculado ao cadastrar)!`);
+        return;
+      }
+      const cur = getEditCurrentProduct();
+      if (!cur || !sb) return;
+      const gKey = cur.variantGroup || target.variantGroup || generateVariantGroupKey(cur.name);
+      const { error } = await sb.from('products').update({ variant_group: gKey }).in('id', [cur.id, target.id]);
+      if (error) {
+        showToast("⚠️ Rode o SQL de variant_group no Supabase para vincular variações!");
+        return;
+      }
+      cur.variantGroup = gKey;
+      target.variantGroup = gKey;
+      renderVariantLinkedList('edit');
+      renderVariantSearchResults('edit');
+      filterProducts();
+      renderManagerProducts();
+      showToast(`🧩 "${target.name}" vinculado como variação!`);
+    }
+
+    async function unlinkVariantProduct(ctx, targetId) {
+      if (ctx === 'new') {
+        pendingNewVariantLinkedIds.delete(targetId);
+        renderVariantLinkedList('new');
+        renderVariantSearchResults('new');
+        return;
+      }
+      const target = products.find(pr => pr.id === targetId);
+      const cur = getEditCurrentProduct();
+      if (!target || !sb) return;
+      const { error } = await sb.from('products').update({ variant_group: null }).eq('id', target.id);
+      if (error) { showToast("⚠️ Erro ao desvincular variação."); return; }
+      target.variantGroup = '';
+      if (cur && cur.variantGroup) {
+        const remaining = products.filter(pr => pr.variantGroup === cur.variantGroup);
+        if (remaining.length <= 1) {
+          await sb.from('products').update({ variant_group: null }).eq('id', cur.id);
+          cur.variantGroup = '';
+        }
+      }
+      renderVariantLinkedList('edit');
+      renderVariantSearchResults('edit');
+      filterProducts();
+      renderManagerProducts();
+      showToast("🔗 Variação desvinculada.");
+    }
+
+    function removeQueuedNewVariant(idx) {
+      pendingNewVariantQueue.splice(idx, 1);
+      renderVariantLinkedList('new');
+    }
+
+    async function createAndLinkVariant(ctx) {
+      const weight = document.getElementById(`${ctx}-variant-new-weight`)?.value || 'Sem peso/medida';
+      const price = parsePriceBR(document.getElementById(`${ctx}-variant-new-price`)?.value || '');
+      const barcode = normalizeBarcodeKey(document.getElementById(`${ctx}-variant-new-barcode`)?.value || '');
+      if (isNaN(price) || price <= 0) {
+        showToast("⚠️ Informe o Preço Normal da nova variação!");
+        return;
+      }
+      if (ctx === 'new') {
+        pendingNewVariantQueue.push({ weight, price, barcode });
+        document.getElementById('new-variant-new-price').value = '';
+        document.getElementById('new-variant-new-barcode').value = '';
+        renderVariantLinkedList('new');
+        showToast(`✅ Nova variação (${weight}) pronta! Ela será salva junto ao cadastrar o produto.`);
+        return;
+      }
+      const cur = getEditCurrentProduct();
+      if (!cur || !sb || !currentStoreId) return;
+      const gKey = cur.variantGroup || generateVariantGroupKey(cur.name);
+      if (!cur.variantGroup) {
+        const { error: errCur } = await sb.from('products').update({ variant_group: gKey }).eq('id', cur.id);
+        if (errCur) { showToast("⚠️ Rode o SQL de variant_group no Supabase primeiro!"); return; }
+        cur.variantGroup = gKey;
+      }
+      const vName = buildVariantName(cur.name, weight);
+      const { data: vData, error } = await sb.from('products').insert({
+        store_id: currentStoreId,
+        name: vName,
+        category: cur.category,
+        subcategory: cur.subcategory,
+        price,
+        barcode: barcode || null,
+        brand: cur.brand,
+        weight,
+        image_url: cur.image || '',
+        promo: false,
+        variant_group: gKey
+      }).select('*').single();
+
+      if (error || !vData) {
+        showToast("⚠️ Erro ao criar variação na nuvem!");
+        return;
+      }
+      products.unshift({
+        id: vData.id, name: vData.name, category: vData.category, subcategory: vData.subcategory,
+        price: parseFloat(vData.price) || 0, promoPrice: null, pickupPrice: null,
+        barcode: vData.barcode || '', ncm: '', stockQty: null, brand: vData.brand,
+        weight: vData.weight, image: vData.image_url || '', promo: false,
+        promoStart: '', promoEnd: '', promoShowEnd: false,
+        variantGroup: gKey, wholesaleQty: null, wholesalePrice: null, active: true
+      });
+      document.getElementById('edit-variant-new-price').value = '';
+      document.getElementById('edit-variant-new-barcode').value = '';
+      renderVariantLinkedList('edit');
+      renderVariantSearchResults('edit');
+      filterProducts();
+      renderManagerProducts();
+      showToast(`🧩 Variação "${vName}" criada e vinculada!`);
+    }
+
     async function saveEditedProduct() {
       const id = parseInt(document.getElementById('edit-product-id').value, 10);
       const p = products.find(prod => prod.id === id);
@@ -3957,6 +4793,11 @@
       const editPickupEnabled = !!document.getElementById('edit-pickup-enabled')?.checked;
       const editPickupRaw = parsePriceBR(document.getElementById('edit-product-pickup-price')?.value || '');
       const editPickupVal = (editPickupEnabled && !isNaN(editPickupRaw) && editPickupRaw > 0) ? editPickupRaw : null;
+      const editWholesaleEnabled = !!document.getElementById('edit-wholesale-enabled')?.checked;
+      const editWholesaleQtyRaw = parseInt(document.getElementById('edit-wholesale-qty')?.value || '0', 10);
+      const editWholesalePriceRaw = parsePriceBR(document.getElementById('edit-wholesale-price')?.value || '');
+      const editWholesaleQty = (editWholesaleEnabled && editWholesaleQtyRaw >= 2) ? editWholesaleQtyRaw : null;
+      const editWholesalePrice = (editWholesaleEnabled && !isNaN(editWholesalePriceRaw) && editWholesalePriceRaw > 0) ? editWholesalePriceRaw : null;
       const editName = document.getElementById('edit-product-name').value.trim();
       const editBarcode = normalizeBarcodeKey(document.getElementById('edit-product-barcode')?.value || '');
       const editNcm = normalizeBarcodeKey(document.getElementById('edit-product-ncm')?.value || '');
@@ -3973,6 +4814,10 @@
       }
       if (editPickupEnabled && (editPickupVal === null || editPickupVal >= normalPrice)) {
         showToast("⚠️ O Preço Retirar na Loja deve ser menor que o Preço Normal!");
+        return;
+      }
+      if (editWholesaleEnabled && (!editWholesaleQty || editWholesaleQty < 2 || !editWholesalePrice || (editWholesalePrice / editWholesaleQty) >= normalPrice)) {
+        showToast("⚠️ No Atacado, informe quantidade mínima (≥ 2) e um preço total mais barato por unidade!");
         return;
       }
 
@@ -3998,11 +4843,13 @@
         promo: document.getElementById('edit-product-promo').checked,
         promo_start: document.getElementById('edit-promo-start').value ? new Date(document.getElementById('edit-promo-start').value).toISOString() : null,
         promo_end: document.getElementById('edit-promo-end').value ? new Date(document.getElementById('edit-promo-end').value).toISOString() : null,
-        promo_show_end: !!document.getElementById('edit-promo-show-end')?.checked
+        promo_show_end: !!document.getElementById('edit-promo-show-end')?.checked,
+        wholesale_qty: editWholesaleQty,
+        wholesale_price: editWholesalePrice
       };
 
       const { error } = await sb.from('products').update(updated).eq('id', id);
-      if (error) { showToast("⚠️ Verifique se barcode, ncm, stock_qty e promo_price existem no Supabase!"); return; }
+      if (error) { showToast("⚠️ Rode o SQL de variant_group, wholesale_qty e wholesale_price no Supabase!"); return; }
 
       Object.assign(p, {
         name: updated.name,
@@ -4020,7 +4867,9 @@
         promo: updated.promo,
         promoStart: updated.promo_start || '',
         promoEnd: updated.promo_end || '',
-        promoShowEnd: !!updated.promo_show_end
+        promoShowEnd: !!updated.promo_show_end,
+        wholesaleQty: updated.wholesale_qty,
+        wholesalePrice: updated.wholesale_price
       });
 
       filterProducts();
