@@ -606,20 +606,73 @@
               <div id="new-variant-search-results" class="max-h-40 overflow-y-auto space-y-1"></div>
             </div>
             <div id="new-variant-create-box" class="hidden space-y-2 bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-200">
-              <p class="text-[10px] font-bold text-indigo-800">Cria outro produto herdando Categoria, Marca e Foto automaticamente:</p>
+              <p class="text-[10px] font-bold text-indigo-800">Cria outro produto herdando Categoria, Marca, NCM e Foto automaticamente:</p>
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Peso / Medida</label>
-                  <select id="new-variant-new-weight" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800"></select>
+                  <select id="new-variant-new-weight" onchange="syncVariantCreateDefaults('new')" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800"></select>
                 </div>
                 <div>
                   <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Preço Normal (R$)</label>
-                  <input type="text" inputmode="numeric" id="new-variant-new-price" oninput="formatPriceInput(this)" placeholder="Ex: 189,90" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
+                  <input type="text" inputmode="numeric" id="new-variant-new-price" oninput="formatPriceInput(this)" placeholder="Ex: 109,90" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
                 </div>
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">EAN / Cód. Barras (opcional)</label>
-                <input type="text" inputmode="numeric" id="new-variant-new-barcode" placeholder="Ex: 789..." class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Nome da Variação (automático, mas editável)</label>
+                <input type="text" id="new-variant-new-name" maxlength="60" placeholder="Ex: Special Dog Carne 15kg" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">EAN (opcional)</label>
+                  <input type="text" inputmode="numeric" id="new-variant-new-barcode" placeholder="789..." class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">NCM (herdado)</label>
+                  <input type="text" inputmode="numeric" id="new-variant-new-ncm" maxlength="10" placeholder="23091000" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Estoque</label>
+                  <input type="number" step="any" min="0" id="new-variant-new-stock" placeholder="Ex: 5" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                </div>
+              </div>
+              <div class="bg-[#FDF2F8] border border-[#E84D9A]/30 rounded-xl p-2 space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="new-variant-promo-enabled" onchange="toggleVariantExtraWrap('new-variant-promo-enabled', 'new-variant-promo-wrap')" class="w-3.5 h-3.5 accent-[#E84D9A] rounded">
+                  <span class="text-[11px] font-bold text-[#9D174D]">🔥 Já colocar esta variação em Promoção</span>
+                </label>
+                <div id="new-variant-promo-wrap" class="hidden pt-1.5 border-t border-[#E84D9A]/20 space-y-1.5">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex-1 min-w-[110px]">
+                      <label class="block text-[10px] font-bold text-[#9D174D] mb-0.5">Preço Promo (R$)</label>
+                      <input type="text" inputmode="numeric" id="new-variant-promo-price" oninput="formatPriceInput(this)" placeholder="Ex: 99,90" class="w-full bg-white border border-[#E84D9A]/40 rounded-lg px-2 py-1 text-xs font-black text-[#9D174D]">
+                    </div>
+                    <button type="button" onclick="copyMainPromoToVariant('new')" class="mt-3 bg-white hover:bg-pink-50 border border-[#E84D9A]/40 text-[#9D174D] font-extrabold px-2 py-1.5 rounded-lg text-[10px] transition shrink-0">📋 Copiar datas da promo principal</button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <div>
+                      <label class="block text-[9px] font-bold text-[#9D174D]/80 mb-0.5">Início (opcional)</label>
+                      <input type="datetime-local" id="new-variant-promo-start" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-1.5 py-1 text-[10px] text-slate-700">
+                    </div>
+                    <div>
+                      <label class="block text-[9px] font-bold text-[#9D174D]/80 mb-0.5">Término (opcional)</label>
+                      <input type="datetime-local" id="new-variant-promo-end" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-1.5 py-1 text-[10px] text-slate-700">
+                    </div>
+                  </div>
+                  <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="new-variant-promo-show-end" class="w-3.5 h-3.5 accent-[#E84D9A] rounded">
+                    <span class="text-[10px] font-bold text-[#9D174D]">⏳ Mostrar contagem regressiva</span>
+                  </label>
+                </div>
+              </div>
+              <div class="bg-emerald-50/85 border border-emerald-300 rounded-xl p-2 space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="new-variant-pickup-enabled" onchange="toggleVariantExtraWrap('new-variant-pickup-enabled', 'new-variant-pickup-wrap')" class="w-3.5 h-3.5 accent-emerald-600 rounded">
+                  <span class="text-[11px] font-bold text-emerald-900">🏪 Preço especial Retirar na Loja</span>
+                </label>
+                <div id="new-variant-pickup-wrap" class="hidden pt-1.5 border-t border-emerald-200 flex items-center justify-between gap-2">
+                  <label class="text-[10px] font-bold text-emerald-800">Preço retirada (R$)</label>
+                  <input type="text" inputmode="numeric" id="new-variant-pickup-price" oninput="formatPriceInput(this)" placeholder="Ex: 89,90" class="w-32 bg-white border border-emerald-400 rounded-lg px-2 py-1 text-xs font-black text-emerald-800">
+                </div>
               </div>
               <button type="button" onclick="createAndLinkVariant('new')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition">➕ Adicionar esta Variação à Lista</button>
             </div>
@@ -910,20 +963,73 @@
               <div id="edit-variant-search-results" class="max-h-40 overflow-y-auto space-y-1"></div>
             </div>
             <div id="edit-variant-create-box" class="hidden space-y-2 bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-200">
-              <p class="text-[10px] font-bold text-indigo-800">Cria outro produto herdando Categoria, Marca e Foto automaticamente:</p>
+              <p class="text-[10px] font-bold text-indigo-800">Cria outro produto herdando Categoria, Marca, NCM e Foto automaticamente:</p>
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Peso / Medida</label>
-                  <select id="edit-variant-new-weight" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800"></select>
+                  <select id="edit-variant-new-weight" onchange="syncVariantCreateDefaults('edit')" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800"></select>
                 </div>
                 <div>
                   <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Preço Normal (R$)</label>
-                  <input type="text" inputmode="numeric" id="edit-variant-new-price" oninput="formatPriceInput(this)" placeholder="Ex: 189,90" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
+                  <input type="text" inputmode="numeric" id="edit-variant-new-price" oninput="formatPriceInput(this)" placeholder="Ex: 109,90" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
                 </div>
               </div>
               <div>
-                <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">EAN / Cód. Barras (opcional)</label>
-                <input type="text" inputmode="numeric" id="edit-variant-new-barcode" placeholder="Ex: 789..." class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Nome da Variação (automático, mas editável)</label>
+                <input type="text" id="edit-variant-new-name" maxlength="60" placeholder="Ex: Special Dog Carne 15kg" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800">
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">EAN (opcional)</label>
+                  <input type="text" inputmode="numeric" id="edit-variant-new-barcode" placeholder="789..." class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">NCM (herdado)</label>
+                  <input type="text" inputmode="numeric" id="edit-variant-new-ncm" maxlength="10" placeholder="23091000" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-indigo-900 mb-0.5">Estoque</label>
+                  <input type="number" step="any" min="0" id="edit-variant-new-stock" placeholder="Ex: 5" class="w-full bg-white border border-indigo-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+                </div>
+              </div>
+              <div class="bg-[#FDF2F8] border border-[#E84D9A]/30 rounded-xl p-2 space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="edit-variant-promo-enabled" onchange="toggleVariantExtraWrap('edit-variant-promo-enabled', 'edit-variant-promo-wrap')" class="w-3.5 h-3.5 accent-[#E84D9A] rounded">
+                  <span class="text-[11px] font-bold text-[#9D174D]">🔥 Já colocar esta variação em Promoção</span>
+                </label>
+                <div id="edit-variant-promo-wrap" class="hidden pt-1.5 border-t border-[#E84D9A]/20 space-y-1.5">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex-1 min-w-[110px]">
+                      <label class="block text-[10px] font-bold text-[#9D174D] mb-0.5">Preço Promo (R$)</label>
+                      <input type="text" inputmode="numeric" id="edit-variant-promo-price" oninput="formatPriceInput(this)" placeholder="Ex: 99,90" class="w-full bg-white border border-[#E84D9A]/40 rounded-lg px-2 py-1 text-xs font-black text-[#9D174D]">
+                    </div>
+                    <button type="button" onclick="copyMainPromoToVariant('edit')" class="mt-3 bg-white hover:bg-pink-50 border border-[#E84D9A]/40 text-[#9D174D] font-extrabold px-2 py-1.5 rounded-lg text-[10px] transition shrink-0">📋 Copiar datas da promo principal</button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <div>
+                      <label class="block text-[9px] font-bold text-[#9D174D]/80 mb-0.5">Início (opcional)</label>
+                      <input type="datetime-local" id="edit-variant-promo-start" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-1.5 py-1 text-[10px] text-slate-700">
+                    </div>
+                    <div>
+                      <label class="block text-[9px] font-bold text-[#9D174D]/80 mb-0.5">Término (opcional)</label>
+                      <input type="datetime-local" id="edit-variant-promo-end" class="w-full bg-white border border-[#E84D9A]/30 rounded-lg px-1.5 py-1 text-[10px] text-slate-700">
+                    </div>
+                  </div>
+                  <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="edit-variant-promo-show-end" class="w-3.5 h-3.5 accent-[#E84D9A] rounded">
+                    <span class="text-[10px] font-bold text-[#9D174D]">⏳ Mostrar contagem regressiva</span>
+                  </label>
+                </div>
+              </div>
+              <div class="bg-emerald-50/85 border border-emerald-300 rounded-xl p-2 space-y-1.5">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="edit-variant-pickup-enabled" onchange="toggleVariantExtraWrap('edit-variant-pickup-enabled', 'edit-variant-pickup-wrap')" class="w-3.5 h-3.5 accent-emerald-600 rounded">
+                  <span class="text-[11px] font-bold text-emerald-900">🏪 Preço especial Retirar na Loja</span>
+                </label>
+                <div id="edit-variant-pickup-wrap" class="hidden pt-1.5 border-t border-emerald-200 flex items-center justify-between gap-2">
+                  <label class="text-[10px] font-bold text-emerald-800">Preço retirada (R$)</label>
+                  <input type="text" inputmode="numeric" id="edit-variant-pickup-price" oninput="formatPriceInput(this)" placeholder="Ex: 89,90" class="w-32 bg-white border border-emerald-400 rounded-lg px-2 py-1 text-xs font-black text-emerald-800">
+                </div>
               </div>
               <button type="button" onclick="createAndLinkVariant('edit')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-2 rounded-xl text-xs shadow-sm transition">➕ Criar e Vincular Agora</button>
             </div>
@@ -4228,27 +4334,38 @@
           products.forEach(pr => { if (pendingNewVariantLinkedIds.has(pr.id)) pr.variantGroup = newVariantGroupKey; });
         }
         for (const vItem of pendingNewVariantQueue) {
-          const vName = buildVariantName(name, vItem.weight);
+          const vName = (vItem.name || '').trim() || buildVariantName(name, vItem.weight);
+          const vNcm = vItem.ncm || ncm || null;
+          const vStock = vItem.stockQty !== undefined ? vItem.stockQty : null;
           const { data: vData } = await sb.from('products').insert({
             store_id: currentStoreId,
             name: vName,
             category,
             subcategory,
             price: vItem.price,
+            promo_price: vItem.promoPrice || null,
+            pickup_price: vItem.pickupPrice || null,
             barcode: vItem.barcode || null,
+            ncm: vNcm,
+            stock_qty: vStock,
             brand,
             weight: vItem.weight,
             image_url: image,
-            promo: false,
+            promo: !!vItem.promo,
+            promo_start: vItem.promoStart || null,
+            promo_end: vItem.promoEnd || null,
+            promo_show_end: !!vItem.promoShowEnd,
             variant_group: newVariantGroupKey
           }).select('*').single();
           if (vData) {
             products.unshift({
               id: vData.id, name: vData.name, category: vData.category, subcategory: vData.subcategory,
-              price: parseFloat(vData.price) || 0, promoPrice: null, pickupPrice: null,
-              barcode: vData.barcode || '', ncm: '', stockQty: null, brand: vData.brand,
-              weight: vData.weight, image: vData.image_url || '', promo: false,
-              promoStart: '', promoEnd: '', promoShowEnd: false,
+              price: parseFloat(vData.price) || 0,
+              promoPrice: vData.promo_price != null ? (parseFloat(vData.promo_price) || null) : null,
+              pickupPrice: vData.pickup_price != null ? (parseFloat(vData.pickup_price) || null) : null,
+              barcode: vData.barcode || '', ncm: vData.ncm || '', stockQty: vData.stock_qty != null ? (parseFloat(vData.stock_qty) || 0) : null,
+              brand: vData.brand, weight: vData.weight, image: vData.image_url || '', promo: !!vData.promo,
+              promoStart: vData.promo_start || '', promoEnd: vData.promo_end || '', promoShowEnd: !!vData.promo_show_end,
               variantGroup: newVariantGroupKey, wholesaleQty: null, wholesalePrice: null, active: true
             });
           }
@@ -4558,7 +4675,7 @@
               ${(p.image && p.image.trim()) ? `<button type="button" onclick="removeProductPhotoDirect(${p.id})" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black flex items-center justify-center shadow" title="Excluir foto deste produto">✕</button>` : ''}
             </div>
             <div class="min-w-0 flex-1">
-              <h4 class="text-xs font-bold text-slate-800 leading-snug break-words">${isActive ? '' : '<span class="text-amber-700 font-black">[Pausado]</span> '}${p.name}</h4>
+              <h4 class="text-xs font-bold text-slate-800 leading-snug break-words">${p.weight && p.weight !== 'Sem peso/medida' ? `<span class="inline-block bg-[#F4FCEB] text-[#4D7C0F] border border-[#7CB342]/40 text-[10px] font-black px-1.5 py-0.5 rounded-md mr-1 align-middle">${p.weight}</span>` : ''}${isActive ? '' : '<span class="text-amber-700 font-black">[Pausado]</span> '}${p.name}</h4>
               <p class="text-[11px] text-brand-primary font-black mt-0.5">
                 Normal: R$ ${p.price.toFixed(2).replace('.', ',')}${hasPromoPrice ? ` • <span class="text-[#E84D9A]">Promo: R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidPickupPrice(p) ? ` • <span class="text-emerald-700">🏪 Retirada: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidWholesale(p) ? ` • <span class="text-amber-700">📦 Atacado: ${p.wholesaleQty}x R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}</span>` : ''}${p.variantGroup ? ` • <span class="text-indigo-700">🧩 Variação</span>` : ''}
                 <span class="text-slate-500 font-medium"> • ${p.category} / ${p.subcategory}</span>
@@ -4721,8 +4838,25 @@
     function buildVariantName(baseName, newWeight) {
       const cleanBase = String(baseName || 'Produto').trim();
       if (!newWeight || newWeight === 'Sem peso/medida') return cleanBase;
-      const stripped = cleanBase.replace(/\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|un|und|unid|cm)/gi, '').replace(/\s+/g, ' ').trim();
+      const stripped = cleanBase
+        .replace(/(?:^|\s)\d+(?:[.,]\d+)?\s*(?:kg|g|gr|ml|l|lt|lts|un|und|unid|cm|mm|mg)(?=\s|$)/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
       return `${stripped || cleanBase} ${newWeight}`.slice(0, 60);
+    }
+
+    function syncVariantCreateDefaults(ctx) {
+      const nameInp = document.getElementById(`${ctx}-variant-new-name`);
+      const weightSel = document.getElementById(`${ctx}-variant-new-weight`);
+      const ncmInp = document.getElementById(`${ctx}-variant-new-ncm`);
+      const baseName = ctx === 'edit'
+        ? (document.getElementById('edit-product-name')?.value || getEditCurrentProduct()?.name || '')
+        : (document.getElementById('new-name')?.value || '');
+      const baseNcm = ctx === 'edit'
+        ? (document.getElementById('edit-product-ncm')?.value || getEditCurrentProduct()?.ncm || '')
+        : (document.getElementById('new-ncm')?.value || '');
+      if (nameInp) nameInp.value = buildVariantName(baseName, weightSel?.value || '');
+      if (ncmInp && !ncmInp.value.trim() && baseNcm) ncmInp.value = baseNcm;
     }
 
     function resetNewVariantDraftState() {
@@ -4762,6 +4896,7 @@
       if (cBox) cBox.classList.toggle('hidden', isSearch);
       if (sTab) sTab.className = `py-1.5 px-2 rounded-lg text-[11px] font-extrabold transition ${isSearch ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-800 hover:bg-white/70'}`;
       if (cTab) cTab.className = `py-1.5 px-2 rounded-lg text-[11px] font-extrabold transition ${!isSearch ? 'bg-indigo-600 text-white shadow-sm' : 'text-indigo-800 hover:bg-white/70'}`;
+      if (!isSearch) syncVariantCreateDefaults(ctx);
     }
 
     function refreshEditVariantPanel(prodId) {
@@ -4769,8 +4904,11 @@
       const chev = document.getElementById('edit-variant-chevron');
       if (panel) panel.classList.add('hidden');
       if (chev) chev.textContent = '▾';
-      const sInp = document.getElementById('edit-variant-search-input');
-      if (sInp) sInp.value = '';
+      ['edit-variant-search-input', 'edit-variant-new-name', 'edit-variant-new-price', 'edit-variant-new-barcode', 'edit-variant-new-ncm', 'edit-variant-new-stock'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      resetVariantCreatorExtras('edit');
       renderVariantLinkedList('edit');
       renderVariantSearchResults('edit');
     }
@@ -4806,7 +4944,10 @@
           <div class="flex items-center justify-between gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-2.5 py-1.5">
             <div class="min-w-0">
               <span class="inline-block bg-emerald-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded mr-1">NOVO • ${q.weight}</span>
-              <span class="text-[11px] font-bold text-emerald-900">R$ ${q.price.toFixed(2).replace('.', ',')}</span>
+              ${q.name ? `<span class="text-[11px] font-bold text-slate-800 mr-1">${q.name}</span>` : ''}
+              <span class="text-[11px] font-black text-emerald-900">R$ ${q.price.toFixed(2).replace('.', ',')}</span>
+              ${q.promo ? `<span class="text-[10px] font-black text-[#BE185D] ml-1">🔥${q.promoPrice ? ` R$ ${q.promoPrice.toFixed(2).replace('.', ',')}` : ' Promo'}</span>` : ''}
+              ${q.pickupPrice ? `<span class="text-[10px] font-black text-emerald-700 ml-1">🏪 R$ ${q.pickupPrice.toFixed(2).replace('.', ',')}</span>` : ''}
               ${q.barcode ? `<span class="text-[10px] text-slate-500 ml-1">EAN: ${q.barcode}</span>` : ''}
             </div>
             <button type="button" onclick="removeQueuedNewVariant(${idx})" class="text-[10px] font-extrabold text-rose-600 hover:underline shrink-0">Remover</button>
@@ -4992,22 +5133,96 @@
       renderVariantLinkedList('new');
     }
 
+    function toggleVariantExtraWrap(chkId, wrapId) {
+      const chk = document.getElementById(chkId);
+      const wrap = document.getElementById(wrapId);
+      if (wrap) wrap.classList.toggle('hidden', !(chk && chk.checked));
+    }
+
+    function copyMainPromoToVariant(ctx) {
+      const srcStart = document.getElementById(ctx === 'edit' ? 'edit-promo-start' : 'new-promo-start')?.value || '';
+      const srcEnd = document.getElementById(ctx === 'edit' ? 'edit-promo-end' : 'new-promo-end')?.value || '';
+      const srcShow = !!document.getElementById(ctx === 'edit' ? 'edit-promo-show-end' : 'new-promo-show-end')?.checked;
+      const dstStart = document.getElementById(`${ctx}-variant-promo-start`);
+      const dstEnd = document.getElementById(`${ctx}-variant-promo-end`);
+      const dstShow = document.getElementById(`${ctx}-variant-promo-show-end`);
+      if (dstStart) dstStart.value = srcStart;
+      if (dstEnd) dstEnd.value = srcEnd;
+      if (dstShow) dstShow.checked = srcShow;
+      showToast(srcStart || srcEnd ? "📋 Datas da promoção principal copiadas!" : "ℹ️ O produto principal não tem datas agendadas.");
+    }
+
+    function resetVariantCreatorExtras(ctx) {
+      ['promo-enabled', 'pickup-enabled', 'promo-show-end'].forEach(suf => {
+        const el = document.getElementById(`${ctx}-variant-${suf}`);
+        if (el) el.checked = false;
+      });
+      ['promo-price', 'promo-start', 'promo-end', 'pickup-price'].forEach(suf => {
+        const el = document.getElementById(`${ctx}-variant-${suf}`);
+        if (el) el.value = '';
+      });
+      toggleVariantExtraWrap(`${ctx}-variant-promo-enabled`, `${ctx}-variant-promo-wrap`);
+      toggleVariantExtraWrap(`${ctx}-variant-pickup-enabled`, `${ctx}-variant-pickup-wrap`);
+    }
+
     async function createAndLinkVariant(ctx) {
       const weight = document.getElementById(`${ctx}-variant-new-weight`)?.value || 'Sem peso/medida';
       const price = parsePriceBR(document.getElementById(`${ctx}-variant-new-price`)?.value || '');
+      const customName = (document.getElementById(`${ctx}-variant-new-name`)?.value || '').trim();
       const barcode = normalizeBarcodeKey(document.getElementById(`${ctx}-variant-new-barcode`)?.value || '');
+      const ncmVal = normalizeBarcodeKey(document.getElementById(`${ctx}-variant-new-ncm`)?.value || '');
+      const stockRaw = document.getElementById(`${ctx}-variant-new-stock`)?.value;
+      const stockQty = (stockRaw !== '' && stockRaw != null) ? (parseFloat(stockRaw) || 0) : null;
+
+      const promoEnabled = !!document.getElementById(`${ctx}-variant-promo-enabled`)?.checked;
+      const promoPriceRaw = parsePriceBR(document.getElementById(`${ctx}-variant-promo-price`)?.value || '');
+      const promoPrice = (promoEnabled && !isNaN(promoPriceRaw) && promoPriceRaw > 0) ? promoPriceRaw : null;
+      const promoStartRaw = promoEnabled ? (document.getElementById(`${ctx}-variant-promo-start`)?.value || '') : '';
+      const promoEndRaw = promoEnabled ? (document.getElementById(`${ctx}-variant-promo-end`)?.value || '') : '';
+      const promoStart = promoStartRaw ? new Date(promoStartRaw).toISOString() : null;
+      const promoEnd = promoEndRaw ? new Date(promoEndRaw).toISOString() : null;
+      const promoShowEnd = promoEnabled && !!document.getElementById(`${ctx}-variant-promo-show-end`)?.checked;
+
+      const pickupEnabled = !!document.getElementById(`${ctx}-variant-pickup-enabled`)?.checked;
+      const pickupPriceRaw = parsePriceBR(document.getElementById(`${ctx}-variant-pickup-price`)?.value || '');
+      const pickupPrice = (pickupEnabled && !isNaN(pickupPriceRaw) && pickupPriceRaw > 0) ? pickupPriceRaw : null;
+
       if (isNaN(price) || price <= 0) {
         showToast("⚠️ Informe o Preço Normal da nova variação!");
         return;
       }
-      if (ctx === 'new') {
-        pendingNewVariantQueue.push({ weight, price, barcode });
-        document.getElementById('new-variant-new-price').value = '';
-        document.getElementById('new-variant-new-barcode').value = '';
-        renderVariantLinkedList('new');
-        showToast(`✅ Nova variação (${weight}) pronta! Ela será salva junto ao cadastrar o produto.`);
+      if (promoEnabled && promoPrice !== null && promoPrice >= price) {
+        showToast("⚠️ O Preço Promo da variação deve ser menor que o Preço Normal!");
         return;
       }
+      if (pickupEnabled && (pickupPrice === null || pickupPrice >= price)) {
+        showToast("⚠️ O Preço Retirar na Loja da variação deve ser menor que o Preço Normal!");
+        return;
+      }
+      if (barcode) {
+        const dupEan = findDuplicateProduct('', barcode);
+        if (dupEan) {
+          showToast(`⚠️ Esse EAN já pertence a "${dupEan.match.name}". Vincule pela aba "Procurar já cadastrado"!`);
+          return;
+        }
+      }
+
+      if (ctx === 'new') {
+        const baseName = document.getElementById('new-name')?.value || '';
+        const finalName = customName || buildVariantName(baseName, weight);
+        pendingNewVariantQueue.push({
+          name: finalName, weight, price, barcode, ncm: ncmVal, stockQty,
+          promo: promoEnabled, promoPrice, promoStart, promoEnd, promoShowEnd, pickupPrice
+        });
+        document.getElementById('new-variant-new-price').value = '';
+        document.getElementById('new-variant-new-barcode').value = '';
+        if (document.getElementById('new-variant-new-stock')) document.getElementById('new-variant-new-stock').value = '';
+        resetVariantCreatorExtras('new');
+        renderVariantLinkedList('new');
+        showToast(`✅ Nova variação "${finalName}" pronta! Será salva ao cadastrar o produto.`);
+        return;
+      }
+
       const cur = getEditCurrentProduct();
       if (!cur || !sb || !currentStoreId) return;
       const gKey = cur.variantGroup || generateVariantGroupKey(cur.name);
@@ -5016,18 +5231,26 @@
         if (errCur) { showToast("⚠️ Rode o SQL de variant_group no Supabase primeiro!"); return; }
         cur.variantGroup = gKey;
       }
-      const vName = buildVariantName(cur.name, weight);
+      const vName = customName || buildVariantName(cur.name, weight);
+      const finalNcm = ncmVal || cur.ncm || null;
       const { data: vData, error } = await sb.from('products').insert({
         store_id: currentStoreId,
         name: vName,
         category: cur.category,
         subcategory: cur.subcategory,
         price,
+        promo_price: promoPrice,
+        pickup_price: pickupPrice,
         barcode: barcode || null,
+        ncm: finalNcm,
+        stock_qty: stockQty,
         brand: cur.brand,
         weight,
         image_url: cur.image || '',
-        promo: false,
+        promo: promoEnabled,
+        promo_start: promoStart,
+        promo_end: promoEnd,
+        promo_show_end: promoShowEnd,
         variant_group: gKey
       }).select('*').single();
 
@@ -5037,14 +5260,19 @@
       }
       products.unshift({
         id: vData.id, name: vData.name, category: vData.category, subcategory: vData.subcategory,
-        price: parseFloat(vData.price) || 0, promoPrice: null, pickupPrice: null,
-        barcode: vData.barcode || '', ncm: '', stockQty: null, brand: vData.brand,
-        weight: vData.weight, image: vData.image_url || '', promo: false,
-        promoStart: '', promoEnd: '', promoShowEnd: false,
+        price: parseFloat(vData.price) || 0,
+        promoPrice: vData.promo_price != null ? (parseFloat(vData.promo_price) || null) : null,
+        pickupPrice: vData.pickup_price != null ? (parseFloat(vData.pickup_price) || null) : null,
+        barcode: vData.barcode || '', ncm: vData.ncm || '', stockQty: vData.stock_qty != null ? (parseFloat(vData.stock_qty) || 0) : null,
+        brand: vData.brand, weight: vData.weight, image: vData.image_url || '', promo: !!vData.promo,
+        promoStart: vData.promo_start || '', promoEnd: vData.promo_end || '', promoShowEnd: !!vData.promo_show_end,
         variantGroup: gKey, wholesaleQty: null, wholesalePrice: null, active: true
       });
       document.getElementById('edit-variant-new-price').value = '';
       document.getElementById('edit-variant-new-barcode').value = '';
+      if (document.getElementById('edit-variant-new-stock')) document.getElementById('edit-variant-new-stock').value = '';
+      resetVariantCreatorExtras('edit');
+      syncVariantCreateDefaults('edit');
       renderVariantLinkedList('edit');
       renderVariantSearchResults('edit');
       filterProducts();
