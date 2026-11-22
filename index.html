@@ -3231,6 +3231,30 @@
       filterProducts();
     }
 
+    function removeFromCart(productId) {
+      delete cart[productId];
+      updateCartBadge();
+      filterProducts();
+      openCartModal();
+      showToast("🗑️ Item removido do carrinho.");
+    }
+
+    function clearEntireCart() {
+      const totalItems = Object.keys(cart).length;
+      if (totalItems === 0) return;
+      openConfirmModal("Deseja remover todos os itens do seu carrinho?", () => {
+        Object.keys(cart).forEach(k => delete cart[k]);
+        updateCartBadge();
+        filterProducts();
+        openCartModal();
+        showToast("🧹 Carrinho esvaziado!");
+      }, {
+        title: "Esvaziar carrinho",
+        confirmText: "🗑️ Esvaziar",
+        confirmClass: "bg-rose-600 hover:bg-rose-700 text-white"
+      });
+    }
+
     function updateCartBadge() {
       const totalCount = Object.values(cart).reduce((a, b) => a + b, 0);
       const badge = document.getElementById('cart-badge');
@@ -3310,12 +3334,13 @@
                   <p class="text-[11px] ${activePricing.isWholesaleApplied ? 'text-amber-700' : (isPickBetter ? 'text-emerald-700' : 'text-brand-primary')} font-black">${unitPrice < p.price ? `<span class="line-through text-slate-400 font-semibold mr-1">R$ ${p.price.toFixed(2).replace('.', ',')}</span>` : ''}R$ ${unitPrice.toFixed(2).replace('.', ',')} un${activePricing.isWholesaleApplied ? ' 📦' : (isPickBetter ? ' 🏪' : '')}</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 shrink-0">
                 <div class="flex items-center bg-white border border-slate-300 rounded-xl px-1 py-0.5">
                   <button onclick="decreaseCart(${p.id}); openCartModal();" class="w-6 h-6 text-slate-600 font-extrabold rounded hover:bg-slate-100 flex items-center justify-center text-xs">-</button>
                   <span class="text-xs font-bold px-2">${qty}</span>
                   <button onclick="increaseCart(${p.id}); openCartModal();" class="w-6 h-6 text-slate-600 font-extrabold rounded hover:bg-slate-100 flex items-center justify-center text-xs">+</button>
                 </div>
+                <button type="button" onclick="removeFromCart(${p.id})" class="w-7 h-7 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 flex items-center justify-center text-xs font-bold transition" title="Excluir item do carrinho">🗑️</button>
               </div>
             </div>
             ${wholesaleNote}
@@ -3332,6 +3357,10 @@
         </div>
         ${!isPickupMode && pickupSavings >= 0.01 ? `<div class="bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-2xl px-3 py-2 mb-3 text-[11px] font-bold flex items-center justify-between gap-2 flex-wrap"><span>💡 Retirando na loja você economiza <strong>R$ ${pickupSavings.toFixed(2).replace('.', ',')}</strong>!</span><button type="button" onclick="setCartFulfillmentMode('pickup')" class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-extrabold">Trocar p/ Retirada</button></div>` : ''}
         ${isPickupMode && pickupSavings >= 0.01 ? `<div class="bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-2xl px-3 py-2 mb-3 text-[11px] font-bold">✅ Preço especial de Retirada na Loja aplicado (economia de R$ ${pickupSavings.toFixed(2).replace('.', ',')})!</div>` : ''}
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-extrabold text-slate-600">Itens no carrinho (${productIds.length})</span>
+          <button type="button" onclick="clearEntireCart()" class="text-[11px] font-extrabold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-xl transition">🗑️ Esvaziar carrinho</button>
+        </div>
         <div class="space-y-2 mb-4">${itemsHtml}</div>
         ${!isPickupMode && storeConfig.deliveryInfo && storeConfig.deliveryInfo.trim() ? `<div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-3 py-2 mb-3 text-[11px] font-bold">🛵 ${storeConfig.deliveryInfo.trim()}</div>` : ''}
         <div class="bg-[#E8F8FA] p-3 rounded-2xl border border-[#B5E8EF] mb-4">
