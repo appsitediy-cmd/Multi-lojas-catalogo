@@ -4,17 +4,17 @@
   "start_url": "./?loja=suricata",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#F4F9FA",
-  "theme_color": "#2EB4C7",
+  "background_color": "#EA612D",
+  "theme_color": "#EA612D",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icon-suricata-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-suricata-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

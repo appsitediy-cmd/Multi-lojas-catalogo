@@ -7,7 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link id="pwa-manifest-link" rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link id="pwa-favicon" rel="icon" type="image/png" href="icon-192.png">
+  <link id="pwa-apple-icon" rel="apple-touch-icon" href="icon-192.png">
   <title>Catálogo Online - Recanto Petshop</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
@@ -182,7 +183,7 @@
         <span class="absolute left-1.5 flex items-center justify-center w-7 h-7 rounded-xl bg-brand-primary text-white shadow-sm pointer-events-none">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </span>
-        <input type="text" id="search-input" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, 15kg...)" class="w-full bg-slate-50 border-2 border-brand-primary/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#24B7C5]">
+        <input type="search" id="search-input" name="catalog-search-query" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, 15kg...)" class="w-full bg-slate-50 border-2 border-brand-primary/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#24B7C5] cursor-text">
         <button id="search-clear-btn" type="button" onclick="clearSearchInput()" class="hidden absolute right-2 w-6 h-6 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 font-bold text-[11px] flex items-center justify-center transition" title="Limpar busca">✕</button>
       </div>
     </div>
@@ -800,7 +801,7 @@
           <div class="flex items-center gap-2">
             <div class="relative flex-1 min-w-0">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">🔎</span>
-              <input type="text" id="manager-search" oninput="clearManagerSelection(); toggleManagerSearchClear(); renderManagerProducts();" placeholder="Buscar por nome, EAN, NCM, marca, peso..." class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+              <input type="search" id="manager-search" name="manager-search-query" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" oninput="clearManagerSelection(); toggleManagerSearchClear(); renderManagerProducts();" placeholder="Buscar por nome, EAN, NCM, marca, peso..." class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] cursor-text">
               <button type="button" id="manager-search-clear" onclick="clearManagerSearchInput()" class="hidden absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-slate-700 font-black text-xs" title="Limpar busca">✕</button>
             </div>
             <button type="button" onclick="openBarcodeScanner('manager-search', true)" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1 shadow-sm" title="Ler código de barras pela câmera ou foto">
@@ -1193,15 +1194,17 @@
         <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
       </div>
       <p class="text-xs text-slate-500">Entre com o e-mail e a senha cadastrados no Supabase:</p>
-      <div>
-        <label class="block text-[11px] font-bold text-slate-700 mb-1">E-mail</label>
-        <input type="email" id="login-email" placeholder="seu@email.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#2EB4C7]">
-      </div>
-      <div>
-        <label class="block text-[11px] font-bold text-slate-700 mb-1">Senha</label>
-        <input type="password" id="login-password" onkeydown="if(event.key==='Enter') loginManager()" placeholder="Sua senha" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#2EB4C7]">
-      </div>
-      <button id="login-submit-btn" onclick="loginManager()" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Entrar no Painel Gestor</button>
+      <form onsubmit="event.preventDefault(); loginManager();" class="space-y-3" autocomplete="on">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">E-mail</label>
+          <input type="email" id="login-email" name="email" autocomplete="username" placeholder="seu@email.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#2EB4C7]">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Senha</label>
+          <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Sua senha" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#2EB4C7]">
+        </div>
+        <button id="login-submit-btn" type="submit" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Entrar no Painel Gestor</button>
+      </form>
     </div>
   </div>
 
@@ -1728,6 +1731,59 @@
       });
     }
 
+    let dynamicManifestBlobUrl = null;
+    let lastDynamicBrandSig = '';
+
+    async function syncDynamicStoreBrandingPwa() {
+      try {
+        const sig = `${storeSlug}|${storeConfig.name || ''}|${storeConfig.primaryColor || ''}|${storeConfig.logoUrl || ''}`;
+        if (sig === lastDynamicBrandSig) return;
+        lastDynamicBrandSig = sig;
+
+        if (storeConfig.name) {
+          document.title = `${storeConfig.name} • Catálogo Oficial`;
+        }
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta && storeConfig.primaryColor) {
+          themeMeta.setAttribute('content', storeConfig.primaryColor);
+        }
+
+        if (storeSlug === 'recanto') return;
+
+        const logoSrc = (storeConfig.logoUrl || '').trim();
+        if (logoSrc) {
+          const icon192 = await makeRoundIconDataUrl(logoSrc, 192);
+          const fav = document.getElementById('pwa-favicon');
+          const appIcon = document.getElementById('pwa-apple-icon');
+          if (fav && icon192) fav.setAttribute('href', icon192);
+          if (appIcon && icon192) appIcon.setAttribute('href', icon192);
+
+          // Para qualquer nova loja parceira sem manifest estático, gera o manifest PWA automaticamente
+          if (storeSlug !== 'suricata') {
+            const icon512 = await makeRoundIconDataUrl(logoSrc, 512);
+            const dynManifest = {
+              name: storeConfig.name || 'Catálogo Oficial',
+              short_name: (storeConfig.name || 'Catálogo').slice(0, 14),
+              start_url: `${location.origin}${location.pathname}?loja=${encodeURIComponent(storeSlug)}`,
+              scope: `${location.origin}${location.pathname.replace(/[^/]*$/, '')}`,
+              display: 'standalone',
+              background_color: '#F4F9FA',
+              theme_color: storeConfig.primaryColor || '#24B7C5',
+              icons: [
+                { src: icon192 || logoSrc, sizes: '192x192', type: 'image/png', purpose: 'any' },
+                { src: icon512 || icon192 || logoSrc, sizes: '512x512', type: 'image/png', purpose: 'any' }
+              ]
+            };
+            const blob = new Blob([JSON.stringify(dynManifest)], { type: 'application/manifest+json' });
+            if (dynamicManifestBlobUrl) URL.revokeObjectURL(dynamicManifestBlobUrl);
+            dynamicManifestBlobUrl = URL.createObjectURL(blob);
+            const manifestLink = document.getElementById('pwa-manifest-link');
+            if (manifestLink) manifestLink.setAttribute('href', dynamicManifestBlobUrl);
+          }
+        }
+      } catch (e) {}
+    }
+
     async function injectPWAManifest() {
       try {
         const manifestLink = document.getElementById('pwa-manifest-link');
@@ -1735,7 +1791,9 @@
           manifestLink.setAttribute('href', 'manifest-suricata.json');
         }
         if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-          navigator.serviceWorker.register('./sw.js').catch(() => {});
+          navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+            .then((reg) => { reg.update().catch(() => {}); })
+            .catch(() => {});
         }
         showPwaInstallBanner();
       } catch (e) {}
@@ -2351,6 +2409,7 @@
     }
 
     function renderStoreConfig() {
+      syncDynamicStoreBrandingPwa();
       applyThemeColors();
       try {
         localStorage.setItem('catalogo_brand_cache_' + storeSlug, JSON.stringify({
