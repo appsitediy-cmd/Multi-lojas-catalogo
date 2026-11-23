@@ -3351,21 +3351,21 @@
             </div>
             <div>
               ${hasPromoPrice ? `
-                <div class="bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
+                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" class="w-full text-left cursor-pointer hover:opacity-90 active:scale-95 transition bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
                   <div class="text-[10px] text-slate-400 line-through font-bold">De R$ ${p.price.toFixed(2).replace('.', ',')}</div>
                   <div class="flex items-center justify-between gap-1 flex-wrap">
                     <span class="text-base font-black text-[#BE185D] leading-tight">Por R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>
                     ${diffReais >= 1 ? `<span class="text-[9px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded-md">-R$ ${diffReais}</span>` : ''}
                   </div>
                   ${countdownBlock}
-                </div>
+                </button>
               ` : (isPromoNow ? `
-                <div class="bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
+                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" class="w-full text-left cursor-pointer hover:opacity-90 active:scale-95 transition bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
                   <div class="text-base font-black text-[#BE185D]">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
                   ${countdownBlock}
-                </div>
+                </button>
               ` : `
-                <div style="color: var(--brand-price-color);" class="inline-block bg-[#F0FAFB] border border-slate-200 rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
+                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" style="color: var(--brand-price-color);" class="inline-block cursor-pointer hover:opacity-85 active:scale-95 transition bg-[#F0FAFB] border border-slate-200 rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</button>
               `)}
               ${hasWholesale ? `<button type="button" onclick="addWholesalePack(${p.id})" class="w-full text-left bg-amber-50 hover:bg-amber-100 active:scale-95 border-2 border-amber-300 hover:border-amber-400 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-amber-900 mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5" title="Clique para adicionar o kit atacado ao carrinho"><span>📦 Atacado: ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold text-amber-700">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></span><span class="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">+${qty > 0 && qty < p.wholesaleQty ? (p.wholesaleQty - qty) : p.wholesaleQty}</span></button>` : ''}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
