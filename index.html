@@ -1641,6 +1641,8 @@
     let currentSubcategory = "Todos";
     let currentBrand = "Todos";
     let onlyPromo = false;
+      onlyFlashSaleFilter = false;
+      if (typeof renderFlashSaleBanner === 'function') renderFlashSaleBanner();
     let onlyMissingClients = false;
     let inputModalCallback = null;
     let confirmModalCallback = null;
@@ -1847,24 +1849,100 @@
       } catch (e) {}
     }
 
+    async function fetchWithRetry(fn, attempts = 3) {
+      let lastErr = null;
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const res = await fn();
+          if (!res || !res.error) return res;
+          lastErr = res.error;
+        } catch (err) {
+          lastErr = err;
+        }
+        if (i < attempts - 1) await new Promise(r => setTimeout(r, 700 * (i + 1)));
+      }
+      return { data: null, error: lastErr };
+    }
+
+    function getStoreCacheKey() { return 'catalogo_cache_v1_' + storeSlug; }
+
+    function saveStoreLocalCache(storeObj, prodArr) {
+      try {
+        const slimProds = (prodArr || []).slice(0, 800);
+        localStorage.setItem(getStoreCacheKey(), JSON.stringify({ ts: Date.now(), store: storeObj, products: slimProds }));
+      } catch (e) { /* quota cheia */ }
+    }
+
+    function loadStoreLocalCache() {
+      try {
+        const raw = localStorage.getItem(getStoreCacheKey());
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) { return null; }
+    }
+
+    function mapDbProducts(prodList) {
+      return (prodList || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        subcategory: p.subcategory,
+        price: parseFloat(p.price) || 0,
+        promoPrice: p.promo_price != null ? (parseFloat(p.promo_price) || null) : null,
+        pickupPrice: p.pickup_price != null ? (parseFloat(p.pickup_price) || null) : null,
+        barcode: p.barcode || '',
+        ncm: p.ncm || '',
+        stockQty: p.stock_qty != null ? (parseFloat(p.stock_qty) || 0) : null,
+        brand: p.brand,
+        weight: p.weight,
+        image: p.image_url || '',
+        promo: !!p.promo,
+        promoStart: p.promo_start || '',
+        promoEnd: p.promo_end || '',
+        promoShowEnd: !!p.promo_show_end,
+        variantGroup: (p.variant_group || '').trim(),
+        wholesaleQty: p.wholesale_qty != null ? (parseInt(p.wholesale_qty, 10) || null) : null,
+        wholesalePrice: p.wholesale_price != null ? (parseFloat(p.wholesale_price) || null) : null,
+        active: p.active !== false
+      }));
+    }
+
+    let lastCloudLoadFailed = false;
+
     async function loadStoreFromCloud() {
       if (!sb) {
         showToast("⚠️ Erro ao carregar biblioteca Supabase.");
+        document.documentElement.classList.remove('partner-loading');
+        document.getElementById('store-loading-overlay')?.classList.add('hidden');
         return;
       }
-      try {
-        const { data: sess } = await sb.auth.getSession();
-        currentUser = sess?.session?.user || null;
 
-        const { data: store, error } = await sb
-          .from('stores')
-          .select('*')
-          .eq('slug', storeSlug)
-          .maybeSingle();
+      lastCloudLoadFailed = false;
+      try {
+        // 1. Não deixa falha no getSession travar a vitrine do cliente
+        try {
+          const { data: sess } = await sb.auth.getSession();
+          currentUser = sess?.session?.user || null;
+        } catch (se) {
+          currentUser = null;
+        }
+
+        // 2. Busca loja com até 3 tentativas automáticas
+        const { data: store, error } = await fetchWithRetry(() =>
+          sb.from('stores').select('*').eq('slug', storeSlug).maybeSingle(), 3
+        );
 
         if (error) {
-          console.error(error);
-          showToast("⚠️ Erro ao conectar ao banco de dados.");
+          console.error('Erro ao buscar loja:', error);
+          const cached = loadStoreLocalCache();
+          if (cached && cached.store && Array.isArray(cached.products)) {
+            hydrateStoreState(cached.store);
+            products = cached.products;
+            showToast("📡 Internet instável — exibindo catálogo salvo no aparelho.");
+          } else {
+            lastCloudLoadFailed = true;
+            showToast("⚠️ Internet instável ao conectar. Toque em Recarregar.");
+          }
           return;
         }
 
@@ -1872,46 +1950,29 @@
           currentStoreId = null;
           currentStoreOwnerId = null;
           document.getElementById('unconfigured-banner').classList.remove('hidden');
-          renderStoreConfig();
-          renderCategoryPills();
-          renderBrandPills();
-          filterProducts();
           return;
         }
 
         document.getElementById('unconfigured-banner').classList.add('hidden');
         hydrateStoreState(store);
 
-        const { data: prodList, error: prodErr } = await sb
-          .from('products')
-          .select('*')
-          .eq('store_id', store.id)
-          .order('created_at', { ascending: false });
+        // 3. Busca todos os produtos com retry automático (suporta >1000 itens se necessário)
+        const { data: prodList, error: prodErr } = await fetchWithRetry(() =>
+          sb.from('products').select('*').eq('store_id', store.id).order('created_at', { ascending: false }).limit(2000), 3
+        );
 
-        if (!prodErr && prodList) {
-          products = prodList.map(p => ({
-            id: p.id,
-            name: p.name,
-            category: p.category,
-            subcategory: p.subcategory,
-            price: parseFloat(p.price) || 0,
-            promoPrice: p.promo_price != null ? (parseFloat(p.promo_price) || null) : null,
-            pickupPrice: p.pickup_price != null ? (parseFloat(p.pickup_price) || null) : null,
-            barcode: p.barcode || '',
-            ncm: p.ncm || '',
-            stockQty: p.stock_qty != null ? (parseFloat(p.stock_qty) || 0) : null,
-            brand: p.brand,
-            weight: p.weight,
-            image: p.image_url || '',
-            promo: !!p.promo,
-            promoStart: p.promo_start || '',
-            promoEnd: p.promo_end || '',
-            promoShowEnd: !!p.promo_show_end,
-            variantGroup: (p.variant_group || '').trim(),
-            wholesaleQty: p.wholesale_qty != null ? (parseInt(p.wholesale_qty, 10) || null) : null,
-            wholesalePrice: p.wholesale_price != null ? (parseFloat(p.wholesale_price) || null) : null,
-            active: p.active !== false
-          }));
+        if (!prodErr && Array.isArray(prodList)) {
+          products = mapDbProducts(prodList);
+          saveStoreLocalCache(store, products);
+        } else {
+          console.error('Erro ao buscar produtos:', prodErr);
+          const cached = loadStoreLocalCache();
+          if (cached && Array.isArray(cached.products) && cached.products.length > 0) {
+            products = cached.products;
+            showToast("📡 Conexão instável — exibindo produtos salvos.");
+          } else {
+            lastCloudLoadFailed = true;
+          }
         }
 
         if (currentUser && currentUser.id === store.owner_id) {
@@ -1919,21 +1980,28 @@
         }
       } catch (e) {
         console.error(e);
+        const cached = loadStoreLocalCache();
+        if (cached && cached.store && Array.isArray(cached.products)) {
+          hydrateStoreState(cached.store);
+          products = cached.products;
+        } else {
+          lastCloudLoadFailed = true;
+        }
+      } finally {
+        renderStoreConfig();
+        renderCategoryPills();
+        renderBrandPills();
+        filterProducts();
+        renderManagerCategories();
+        renderManagerBrands();
+        renderManagerWeights();
+        updateManagerDropdowns();
+        renderManagerProducts();
+        updateCustomersCountBadge();
+        injectPWAManifest();
+        document.documentElement.classList.remove('partner-loading');
+        document.getElementById('store-loading-overlay')?.classList.add('hidden');
       }
-
-      renderStoreConfig();
-      renderCategoryPills();
-      renderBrandPills();
-      filterProducts();
-      renderManagerCategories();
-      renderManagerBrands();
-      renderManagerWeights();
-      updateManagerDropdowns();
-      renderManagerProducts();
-      updateCustomersCountBadge();
-      injectPWAManifest();
-      document.documentElement.classList.remove('partner-loading');
-      document.getElementById('store-loading-overlay')?.classList.add('hidden');
     }
 
     function hydrateStoreState(store) {
@@ -3046,8 +3114,8 @@
       const hiddenSet = new Set(getHiddenClientBrands());
       const matching = products.filter(p => {
         if (p.active === false) return false;
-        const matchCat = currentCategory === "Todos" || p.category === currentCategory;
-        const matchSub = currentSubcategory === "Todos" || p.subcategory === currentSubcategory;
+        const matchCat = currentCategory === "Todos" || sameLabel(p.category, currentCategory) || (currentSubcategory === "Todos" && sameLabel(p.subcategory, currentCategory));
+        const matchSub = currentSubcategory === "Todos" || sameLabel(p.subcategory, currentSubcategory);
         const matchPromo = (!onlyPromo || isProductPromoActive(p)) && (!onlyFlashSaleFilter || !!getFlashItemForProduct(p));
         return matchCat && matchSub && matchPromo;
       });
@@ -3077,11 +3145,35 @@
       filterProducts();
     }
 
+    function normLabelKey(str) {
+      return String(str || '')
+        .replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function sameLabel(a, b) {
+      const na = normLabelKey(a);
+      const nb = normLabelKey(b);
+      if (!na || !nb) return false;
+      if (na === nb) return true;
+      const partsA = na.split(/[\/,|-]+/).map(s => s.trim()).filter(Boolean);
+      const partsB = nb.split(/[\/,|-]+/).map(s => s.trim()).filter(Boolean);
+      return partsA.some(pa => partsB.includes(pa));
+    }
+
     function selectCategory(cat) {
       onlyPromo = false;
+      onlyFlashSaleFilter = false;
       currentCategory = cat;
       currentSubcategory = "Todos";
+      currentBrand = "Todos";
+      if (typeof renderFlashSaleBanner === 'function') renderFlashSaleBanner();
       renderCategoryPills();
+      if (typeof renderSubcategoryPillsBox === 'function') renderSubcategoryPillsBox();
       renderBrandPills();
       filterProducts();
     }
@@ -3101,6 +3193,8 @@
 
     function clearAllFilters() {
       onlyPromo = false;
+      onlyFlashSaleFilter = false;
+      if (typeof renderFlashSaleBanner === 'function') renderFlashSaleBanner();
       currentCategory = "Todos";
       currentSubcategory = "Todos";
       currentBrand = "Todos";
@@ -3243,9 +3337,11 @@
       let filtered = products.filter(p => {
         if (p.active === false) return false;
         const matchQuery = smartMatchProduct(p, query);
-        const matchCat = currentCategory === "Todos" || p.category === currentCategory;
-        const matchSub = currentSubcategory === "Todos" || p.subcategory === currentSubcategory;
-        const matchBrand = currentBrand === "Todos" || p.brand === currentBrand;
+        const matchCat = currentCategory === "Todos"
+          || sameLabel(p.category, currentCategory)
+          || (currentSubcategory === "Todos" && sameLabel(p.subcategory, currentCategory));
+        const matchSub = currentSubcategory === "Todos" || sameLabel(p.subcategory, currentSubcategory);
+        const matchBrand = currentBrand === "Todos" || sameLabel(p.brand, currentBrand);
         const matchPromo = (!onlyPromo || isProductPromoActive(p)) && (!onlyFlashSaleFilter || !!getFlashItemForProduct(p));
         return matchQuery && matchCat && matchSub && matchBrand && matchPromo;
       });
@@ -4786,6 +4882,18 @@
         ? `4. Produtos Cadastrados (${products.length})`
         : `4. Produtos Cadastrados (${filtered.length} de ${products.length})`;
 
+      if (filtered.length === 0 && lastCloudLoadFailed && products.length === 0) {
+        const grid = document.getElementById('products-grid');
+        if (grid) {
+          grid.innerHTML = `<div class="col-span-full bg-white border-2 border-amber-300 rounded-3xl p-6 text-center space-y-3 shadow-sm">
+            <div class="text-3xl">📡</div>
+            <div class="text-sm font-black text-slate-800">Sinal de internet instável</div>
+            <p class="text-xs text-slate-500 font-semibold">Não conseguimos carregar os produtos agora. Toque abaixo para tentar de novo.</p>
+            <button onclick="loadStoreFromCloud()" class="bg-brand-primary text-white font-black px-5 py-2.5 rounded-2xl text-xs shadow">🔄 Recarregar Catálogo</button>
+          </div>`;
+        }
+        return;
+      }
       if (filtered.length === 0) {
         list.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum produto encontrado.</p>`;
         return;
@@ -7063,8 +7171,12 @@
     }
 
     // ====== PROMOÇÃO RELÂMPAGO ======
+    let flashDraftItems = {};
+
     function isFlashSaleRunning() {
-      return !!(flashSaleConfig && flashSaleConfig.active && flashSaleConfig.endsAt && Date.now() < Number(flashSaleConfig.endsAt));
+      if (!flashSaleConfig || !flashSaleConfig.active) return false;
+      if (flashSaleConfig.indefinite) return true;
+      return !!(flashSaleConfig.endsAt && Date.now() < Number(flashSaleConfig.endsAt));
     }
 
     function renderFlashSaleBanner() {
@@ -7079,6 +7191,8 @@
         return;
       }
       document.getElementById('client-flash-title').textContent = flashSaleConfig.title || 'OFERTA RELÂMPAGO!';
+      const clk = document.getElementById('client-flash-clock');
+      if (clk && flashSaleConfig.indefinite) clk.textContent = 'ATÉ O FIM DO ESTOQUE';
       const count = Object.keys(flashSaleConfig.items || {}).length;
       const btn = document.getElementById('btn-filter-flash');
       if (btn) btn.textContent = onlyFlashSaleFilter ? 'Mostrar todos os produtos' : `⚡ Ver só Relâmpago (${count})`;
@@ -7095,8 +7209,22 @@
       return (c / 100).toFixed(2).replace('.', ',');
     }
 
+    function toggleFlashCustomHours() {
+      const v = document.getElementById('fl-mins-inp')?.value;
+      document.getElementById('fl-custom-hours-wrap')?.classList.toggle('hidden', v !== 'custom');
+    }
+
     function openFlashSaleModal() {
       document.getElementById('fl-title-inp').value = flashSaleConfig?.title || 'RELÂMPAGO DE HOJE — SÓ 2 HORAS!';
+      const sel = document.getElementById('fl-mins-inp');
+      if (sel && flashSaleConfig?.indefinite) sel.value = 'indefinite';
+      toggleFlashCustomHours();
+      flashDraftItems = {};
+      Object.entries(flashSaleConfig?.items || {}).forEach(([k, v]) => {
+        flashDraftItems[String(k)] = { price: Number(v.price) };
+      });
+      const sInp = document.getElementById('fl-search-inp');
+      if (sInp) sInp.value = '';
       renderFlashModalProducts();
       const m = document.getElementById('flash-modal');
       m.classList.remove('hidden'); m.classList.add('flex');
@@ -7106,49 +7234,101 @@
       m.classList.add('hidden'); m.classList.remove('flex');
     }
 
+    function flashSmartMatch(p, q) {
+      const clean = String(q || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      if (!clean) return true;
+      const hay = `${p.name || ''} ${p.brand || ''} ${p.weight || ''} ${p.barcode || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return clean.split(/\s+/).every(tok => hay.includes(tok));
+    }
+
+    function computeFlashPriceForProd(p) {
+      const mode = document.getElementById('fl-calc-mode')?.value || 'pct';
+      const val = parseFloat(String(document.getElementById('fl-pct-inp')?.value || '0').replace(',', '.')) || 0;
+      const base = Number(p.price || 0);
+      if (mode === 'minus_rs') return Math.max(0.5, Math.round((base - val) * 100) / 100);
+      if (mode === 'fixed_rs') return val > 0 ? val : base;
+      const pct = Math.max(0, Math.min(90, val));
+      return Math.max(0.9, Math.floor(base * (1 - pct / 100)) + 0.9);
+    }
+
+    function onFlashCheckToggle(pid, checked) {
+      const p = products.find(x => String(x.id) === String(pid));
+      const inp = document.getElementById('fl-price-' + pid);
+      if (checked && p) {
+        const cur = inp ? parseFloat(String(inp.value || '0').replace(',', '.')) : computeFlashPriceForProd(p);
+        flashDraftItems[String(pid)] = { price: cur > 0 ? cur : computeFlashPriceForProd(p) };
+      } else {
+        delete flashDraftItems[String(pid)];
+      }
+      updateFlashSelectedBadge();
+    }
+
+    function onFlashPriceEdit(pid, el) {
+      el.value = fmtFlashMoneyMask(el.value);
+      const v = parseFloat(el.value.replace(',', '.')) || 0;
+      const chk = document.querySelector(`.fl-prod-chk[data-pid="${pid}"]`);
+      if (chk && !chk.checked) chk.checked = true;
+      flashDraftItems[String(pid)] = { price: v };
+      updateFlashSelectedBadge();
+    }
+
+    function updateFlashSelectedBadge() { const el = document.getElementById('fl-selected-count'); if (el) el.textContent = `${Object.keys(flashDraftItems || {}).length} marcado(s)`; }
     function renderFlashModalProducts() {
-      const q = (document.getElementById('fl-search-inp')?.value || '').trim().toLowerCase();
-      const itemsMap = flashSaleConfig?.items || {};
-      const list = products.filter(p => p.active !== false && (!q || (p.name || '').toLowerCase().includes(q))).slice(0, 60);
+      updateFlashSelectedBadge();
+      const q = (document.getElementById('fl-search-inp')?.value || '').trim();
+      const matched = products.filter(p => p.active !== false && flashSmartMatch(p, q));
+      // Mostra itens já selecionados primeiro quando busca está vazia
+      if (!q) matched.sort((a, b) => (flashDraftItems[String(b.id)] ? 1 : 0) - (flashDraftItems[String(a.id)] ? 1 : 0));
+      const list = matched.slice(0, 60);
+      if (list.length === 0) {
+        document.getElementById('fl-modal-list').innerHTML = `<div class="text-center py-6 text-xs font-bold text-slate-400">Nenhum produto encontrado para "${escapeHtml(q)}".</div>`;
+        return;
+      }
       document.getElementById('fl-modal-list').innerHTML = list.map(p => {
-        const ex = itemsMap[String(p.id)];
-        const defVal = ex ? Number(ex.price) : Math.max(0.9, Math.floor(Number(p.price) * 0.85) + 0.9);
+        const ex = flashDraftItems[String(p.id)];
+        const defVal = ex ? Number(ex.price) : computeFlashPriceForProd(p);
         return `
-          <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 border rounded-2xl p-2 text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 border ${ex ? 'border-rose-300 bg-rose-50/40' : 'border-slate-200'} rounded-2xl p-2 text-xs">
             <label class="flex items-center gap-2 flex-1 min-w-[150px] cursor-pointer">
-              <input type="checkbox" class="fl-prod-chk rounded" data-pid="${p.id}" ${ex ? 'checked' : ''} />
+              <input type="checkbox" class="fl-prod-chk rounded" data-pid="${p.id}" ${ex ? 'checked' : ''} onchange="onFlashCheckToggle('${p.id}', this.checked)" />
               <span class="font-bold leading-tight truncate">${escapeHtml(p.name)}<br><span class="text-[10px] text-slate-400">Normal: R$ ${formatPriceBR(p.price)}</span></span>
             </label>
-            <input type="text" inputmode="numeric" id="fl-price-${p.id}" value="${defVal.toFixed(2).replace('.', ',')}" oninput="this.value=fmtFlashMoneyMask(this.value)" class="w-20 bg-white border-2 border-rose-400 rounded-xl px-2 py-1 text-xs font-black text-right" />
+            <input type="text" inputmode="numeric" id="fl-price-${p.id}" value="${defVal.toFixed(2).replace('.', ',')}" oninput="onFlashPriceEdit('${p.id}', this)" onfocus="this.select()" class="w-24 bg-white border-2 border-rose-400 rounded-xl px-2 py-1 text-xs font-black text-right" />
           </div>`;
       }).join('');
     }
 
-    function applyFlashPctToChecked() {
-      const pct = Math.max(5, Math.min(70, parseInt(document.getElementById('fl-pct-inp')?.value || '15', 10)));
-      document.querySelectorAll('.fl-prod-chk:checked').forEach(chk => {
-        const pid = chk.dataset.pid;
+    function applyFlashCalcLive(notify) {
+      const mode = document.getElementById('fl-calc-mode')?.value || 'pct';
+      const uEl = document.getElementById('fl-calc-unit');
+      if (uEl) uEl.textContent = mode === 'pct' ? '%' : 'R$';
+      Object.keys(flashDraftItems).forEach(pid => {
         const p = products.find(x => String(x.id) === String(pid));
+        if (!p) return;
+        const v = computeFlashPriceForProd(p);
+        flashDraftItems[pid] = { price: v };
         const inp = document.getElementById('fl-price-' + pid);
-        if (p && inp) {
-          const v = Math.max(0.9, Math.floor(Number(p.price) * (1 - pct / 100)) + 0.9);
-          inp.value = v.toFixed(2).replace('.', ',');
-        }
+        if (inp) inp.value = v.toFixed(2).replace('.', ',');
       });
-      showToast(`⚡ Preços calculados com -${pct}% (final ,90)!`);
+      if (notify) showToast('⚡ Preços dos itens marcados atualizados!');
     }
 
     async function saveAndLaunchFlashSale() {
       const title = (document.getElementById('fl-title-inp')?.value || 'OFERTA RELÂMPAGO!').trim();
-      const mins = parseInt(document.getElementById('fl-mins-inp')?.value || '120', 10);
+      const durVal = document.getElementById('fl-mins-inp')?.value || '120';
+      const isIndef = durVal === 'indefinite';
+      let mins = 120;
+      if (durVal === 'custom') {
+        mins = Math.max(1, parseInt(document.getElementById('fl-custom-hours')?.value || '24', 10)) * 60;
+      } else if (!isIndef) {
+        mins = parseInt(durVal, 10) || 120;
+      }
       const items = {};
-      document.querySelectorAll('.fl-prod-chk:checked').forEach(chk => {
-        const pid = chk.dataset.pid;
-        const val = parseFloat(String(document.getElementById('fl-price-' + pid)?.value || '0').replace(',', '.'));
-        if (val > 0) items[String(pid)] = { price: val };
+      Object.entries(flashDraftItems).forEach(([pid, cfg]) => {
+        if (cfg && Number(cfg.price) > 0) items[pid] = { price: Number(cfg.price) };
       });
       if (Object.keys(items).length === 0) { showToast('⚠️ Marque pelo menos 1 produto!'); return; }
-      flashSaleConfig = { active: true, title, endsAt: Date.now() + mins * 60000, items };
+      flashSaleConfig = { active: true, title, indefinite: isIndef, endsAt: isIndef ? 0 : (Date.now() + mins * 60000), items };
       if (sb && currentStoreId) {
         const { error } = await sb.from('stores').update({ flash_sale: flashSaleConfig }).eq('id', currentStoreId);
         if (error) { showToast('⚠️ Rode o SQL supabase_acessos_e_relampago.sql primeiro!'); return; }
@@ -7160,7 +7340,8 @@
     }
 
     async function stopFlashSale() {
-      flashSaleConfig = { active: false, title: '', endsAt: 0, items: {} };
+      flashSaleConfig = { active: false, title: '', indefinite: false, endsAt: 0, items: {} };
+      flashDraftItems = {};
       if (sb && currentStoreId) await sb.from('stores').update({ flash_sale: flashSaleConfig }).eq('id', currentStoreId);
       closeFlashSaleModal();
       renderFlashSaleBanner();
@@ -7169,19 +7350,20 @@
     }
 
     function shareFlashSaleWhatsApp() {
-      const items = flashSaleConfig?.items || {};
-      const lines = Object.entries(items).map(([pid, cfg]) => {
+      const srcItems = Object.keys(flashDraftItems || {}).length ? flashDraftItems : (flashSaleConfig?.items || {});
+      const lines = Object.entries(srcItems).map(([pid, cfg]) => {
         const p = products.find(x => String(x.id) === String(pid));
         return p ? `⚡ *${p.name}*\n   De ~R$ ${formatPriceBR(p.price)}~ por *R$ ${formatPriceBR(cfg.price)}*!` : '';
       }).filter(Boolean);
       const url = `${location.origin}${location.pathname}?loja=${encodeURIComponent(storeSlug)}`;
-      const msg = `🚨 *${flashSaleConfig?.title || 'OFERTA RELÂMPAGO'}* — ${storeConfig.name}!\n\n${lines.join('\n\n')}\n\n⏳ Corre antes do relógio zerar!\n👉 ${url}`;
+      const tail = flashSaleConfig?.indefinite ? '🔥 Enquanto durar o estoque!' : '⏳ Corre antes do relógio zerar!';
+      const msg = `🚨 *${document.getElementById('fl-title-inp')?.value || flashSaleConfig?.title || 'OFERTA RELÂMPAGO'}* — ${storeConfig.name}!\n\n${lines.join('\n\n')}\n\n${tail}\n👉 ${url}`;
       navigator.clipboard?.writeText(msg);
       showToast('📋 Texto da Promoção Relâmpago copiado para colar no WhatsApp!');
     }
 
     setInterval(() => {
-      if (!flashSaleConfig?.active) return;
+      if (!flashSaleConfig?.active || flashSaleConfig.indefinite) return;
       const diff = Math.floor((Number(flashSaleConfig.endsAt || 0) - Date.now()) / 1000);
       if (diff <= 0) {
         flashSaleConfig.active = false;
@@ -7279,7 +7461,7 @@
     <div class="bg-white rounded-3xl max-w-lg w-full p-5 shadow-2xl space-y-3.5 max-h-[92vh] overflow-y-auto">
       <div class="flex items-start justify-between gap-2">
         <div>
-          <h3 class="text-sm sm:text-base font-black text-rose-700">⚡ Configurar Promoção Relâmpago</h3>
+          <h3 class="text-sm sm:text-base font-black text-rose-700 flex items-center gap-2">⚡ Configurar Promoção Relâmpago <span id="fl-selected-count" class="text-[10px] font-black bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">0 marcado(s)</span></h3>
           <p class="text-[11px] text-slate-500 font-semibold">Terminou o tempo, o preço volta ao normal automaticamente!</p>
         </div>
         <button onclick="closeFlashSaleModal()" class="text-slate-400 hover:text-slate-800 font-black text-lg px-1">✕</button>
@@ -7292,23 +7474,38 @@
         </div>
         <div>
           <label class="block text-[10px] font-extrabold text-slate-600 mb-1">Duração</label>
-          <select id="fl-mins-inp" class="w-full bg-amber-50 border-2 border-amber-400 rounded-xl px-2 py-2 text-xs font-black">
+          <select id="fl-mins-inp" onchange="toggleFlashCustomHours()" class="w-full bg-amber-50 border-2 border-amber-400 rounded-xl px-2 py-2 text-xs font-black">
             <option value="30">⚡ 30 min</option>
             <option value="60">⚡ 1 hora</option>
             <option value="120" selected>⚡ 2 horas</option>
             <option value="240">⚡ 4 horas</option>
             <option value="360">⚡ 6 horas</option>
             <option value="720">⚡ 12 horas</option>
+            <option value="1440">⚡ 24 horas</option>
+            <option value="custom">⏱️ Personalizado (h)</option>
+            <option value="indefinite">♾️ Até o fim do estoque</option>
           </select>
         </div>
       </div>
 
-      <div class="bg-rose-50 border border-rose-200 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
-        <span class="text-[11px] font-black text-rose-900">Desconto rápido (arredonda ,90):</span>
+      <div id="fl-custom-hours-wrap" class="hidden bg-amber-50 border border-amber-300 rounded-2xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
+        <span class="font-extrabold text-amber-950">⏱️ Quantas horas vai durar?</span>
         <div class="flex items-center gap-1.5">
-          <input id="fl-pct-inp" type="number" min="5" max="70" value="15" class="w-16 bg-white border-2 border-rose-400 rounded-xl px-2 py-1 text-xs font-black text-center" />
-          <span class="text-xs font-black text-rose-800">%</span>
-          <button onclick="applyFlashPctToChecked()" class="bg-rose-600 text-white font-black px-2.5 py-1.5 rounded-xl text-[11px]">Calcular</button>
+          <input id="fl-custom-hours" type="number" min="1" max="720" value="48" class="w-20 bg-white border-2 border-amber-400 rounded-xl px-2 py-1 text-xs font-black text-center" />
+          <span class="font-bold text-amber-900">hora(s)</span>
+        </div>
+      </div>
+
+      <div class="bg-rose-50 border border-rose-200 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
+        <select id="fl-calc-mode" onchange="applyFlashCalcLive()" class="bg-white border border-rose-300 rounded-xl px-2 py-1 text-[11px] font-black text-rose-900">
+          <option value="pct">% Desconto (,90)</option>
+          <option value="minus_rs">- R$ de desconto</option>
+          <option value="fixed_rs">= R$ Preço fixo</option>
+        </select>
+        <div class="flex items-center gap-1.5">
+          <input id="fl-pct-inp" type="number" min="0" step="any" value="15" oninput="applyFlashCalcLive()" class="w-20 bg-white border-2 border-rose-400 rounded-xl px-2 py-1 text-xs font-black text-center" />
+          <span id="fl-calc-unit" class="text-xs font-black text-rose-800">%</span>
+          <button onclick="applyFlashCalcLive(true)" class="bg-rose-600 text-white font-black px-2.5 py-1.5 rounded-xl text-[11px]">Aplicar</button>
         </div>
       </div>
 
