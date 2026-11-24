@@ -1641,8 +1641,12 @@
     let currentSubcategory = "Todos";
     let currentBrand = "Todos";
     let onlyPromo = false;
-      onlyFlashSaleFilter = false;
-      if (typeof renderFlashSaleBanner === 'function') renderFlashSaleBanner();
+    var flashSaleConfig = { active: false, title: '', indefinite: false, endsAt: 0, items: {} };
+    var onlyFlashSaleFilter = false;
+    var analyticsPeriod = 'today';
+    var analyticsRowsCache = [];
+    var visitAlreadyTracked = false;
+    var flashDraftItems = {};
     let onlyMissingClients = false;
     let inputModalCallback = null;
     let confirmModalCallback = null;
@@ -6991,11 +6995,7 @@
         .replace(/'/g, '&#39;');
     }
 
-    let flashSaleConfig = { active: false, title: '', endsAt: 0, items: {} };
-    let onlyFlashSaleFilter = false;
-    let analyticsPeriod = 'today';
-    let analyticsRowsCache = [];
-    let visitAlreadyTracked = false;
+    // (Variáveis globais já declaradas no topo do script para evitar TDZ)
 
     function getIgnoreDeviceKey() { return 'ignore_analytics_' + storeSlug; }
     function isDeviceIgnored() {
@@ -7171,7 +7171,7 @@
     }
 
     // ====== PROMOÇÃO RELÂMPAGO ======
-    let flashDraftItems = {};
+    // (flashDraftItems já declarado no topo)
 
     function isFlashSaleRunning() {
       if (!flashSaleConfig || !flashSaleConfig.active) return false;
