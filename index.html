@@ -6874,6 +6874,15 @@
     // 📊 ACESSOS & INSTALAÇÕES (COM EXCLUSÃO DE APARELHOS DA LOJA/EQUIPE)
     // ⚡ PROMOÇÃO RELÂMPAGO (COM CRONÔMETRO E REVERSÃO AUTOMÁTICA)
     // ========================================================================
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     let flashSaleConfig = { active: false, title: '', endsAt: 0, items: {} };
     let onlyFlashSaleFilter = false;
     let analyticsPeriod = 'today';
