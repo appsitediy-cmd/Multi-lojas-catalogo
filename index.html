@@ -3362,6 +3362,7 @@
         filtered.sort((a, b) => getEffectiveProductPrice(b) - getEffectiveProductPrice(a));
       } else if (sortBy === 'promo-first') {
         const promoRank = (p) => {
+          if (flashSaleConfig?.pinTop !== false && getFlashItemForProduct(p)) return 3;
           if (!isProductPromoActive(p)) return 0;
           const endMs = (p.promoShowEnd && p.promoEnd) ? new Date(p.promoEnd).getTime() : null;
           if (endMs && !isNaN(endMs) && endMs > Date.now()) return 2;
@@ -3486,7 +3487,7 @@
               <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square ${isPromoNow ? 'bg-pink-50/40 border-pink-100' : 'bg-slate-50 border-slate-100'} rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border group cursor-zoom-in">
                 ${isPromoNow && hasPickup
                   ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none shadow-sm">🔥</span><span>PROMO RETIRADA</span></span>`
-                  : (isPromoNow
+                  : (flashItem ? getFlashCardBadgeHtml() : isPromoNow
                     ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none shadow-sm">🔥</span><span>PROMOÇÃO</span></span>`
                     : (hasPickup ? `<span class="absolute top-1.5 left-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">🏪 RETIRADA NA LOJA</span>` : ''))}
                 ${hasWholesale ? `<span class="absolute bottom-1.5 left-1.5 z-10 ${qty >= p.wholesaleQty ? 'bg-emerald-600' : 'bg-amber-500'} text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">${qty >= p.wholesaleQty ? `✅ ${qty} UN ATACADO` : `📦 LEVE ${p.wholesaleQty}`}</span>` : ''}
@@ -7185,12 +7186,15 @@
       const badge = document.getElementById('mgr-flash-badge');
       if (badge) badge.classList.toggle('hidden', !running);
       if (!ban) return;
-      ban.classList.toggle('hidden', !running);
+      const showBan = running && flashSaleConfig.showBanner !== false;
+      ban.classList.toggle('hidden', !showBan);
       if (!running) {
         if (onlyFlashSaleFilter) { onlyFlashSaleFilter = false; filterProducts(); }
         return;
       }
-      document.getElementById('client-flash-title').textContent = flashSaleConfig.title || 'OFERTA RELÂMPAGO!';
+      const st = getFlashBadgeStyle();
+      ban.className = `mb-2.5 rounded-2xl p-3 shadow-md border-2 space-y-2 ${showBan ? '' : 'hidden'} ${st.banCls}`;
+      document.getElementById('client-flash-title').textContent = flashSaleConfig.title || st.label;
       const clk = document.getElementById('client-flash-clock');
       if (clk && flashSaleConfig.indefinite) clk.textContent = 'ATÉ O FIM DO ESTOQUE';
       const count = Object.keys(flashSaleConfig.items || {}).length;
@@ -7209,15 +7213,48 @@
       return (c / 100).toFixed(2).replace('.', ',');
     }
 
+    function getFlashBadgeStyle() {
+      const type = flashSaleConfig?.badgeType || 'relampago';
+      const customTxt = (flashSaleConfig?.badgeCustom || '').trim();
+      const map = {
+        relampago: { label: '⚡ RELÂMPAGO ⚡', cls: 'bg-slate-950 text-[#FCD40F] border border-[#FCD40F]', banCls: 'bg-slate-950 text-[#FCD40F] border-[#FCD40F]' },
+        semana:    { label: '🔥 PROMOÇÃO DA SEMANA', cls: 'bg-rose-600 text-white border border-rose-300', banCls: 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-rose-300' },
+        mes:       { label: '📅 PROMOÇÃO DO MÊS', cls: 'bg-indigo-600 text-white border border-indigo-300', banCls: 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white border-cyan-300' },
+        destaque:  { label: '⭐ DESTAQUE', cls: 'bg-amber-400 text-slate-950 border border-amber-500', banCls: 'bg-amber-400 text-slate-950 border-amber-500' },
+        custom:    { label: customTxt || '⚡ OFERTA ESPECIAL ⚡', cls: 'bg-slate-950 text-[#FCD40F] border border-[#FCD40F]', banCls: 'bg-slate-950 text-[#FCD40F] border-[#FCD40F]' }
+      };
+      return map[type] || map.relampago;
+    }
+
+    function getFlashCardBadgeHtml() {
+      const st = getFlashBadgeStyle();
+      return `<span class="absolute top-1.5 left-1.5 z-10 text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-lg shadow-md inline-flex items-center gap-1 ${st.cls}">${escapeHtml(st.label)}</span>`;
+    }
+
+    function toggleFlashCustomBadge() {
+      const v = document.getElementById('fl-badge-type')?.value;
+      document.getElementById('fl-custom-badge-wrap')?.classList.toggle('hidden', v !== 'custom');
+    }
+
     function toggleFlashCustomHours() {
       const v = document.getElementById('fl-mins-inp')?.value;
       document.getElementById('fl-custom-hours-wrap')?.classList.toggle('hidden', v !== 'custom');
+      document.getElementById('fl-datetime-wrap')?.classList.toggle('hidden', v !== 'datetime');
     }
 
     function openFlashSaleModal() {
       document.getElementById('fl-title-inp').value = flashSaleConfig?.title || 'RELÂMPAGO DE HOJE — SÓ 2 HORAS!';
       const sel = document.getElementById('fl-mins-inp');
       if (sel && flashSaleConfig?.indefinite) sel.value = 'indefinite';
+      const bSel = document.getElementById('fl-badge-type');
+      if (bSel) bSel.value = flashSaleConfig?.badgeType || 'relampago';
+      const bCus = document.getElementById('fl-badge-custom');
+      if (bCus) bCus.value = flashSaleConfig?.badgeCustom || '';
+      const pSel = document.getElementById('fl-pin-top');
+      if (pSel) pSel.value = flashSaleConfig?.pinTop === false ? 'nao' : 'sim';
+      const sSel = document.getElementById('fl-show-banner');
+      if (sSel) sSel.value = flashSaleConfig?.showBanner === false ? 'nao' : 'sim';
+      toggleFlashCustomBadge();
       toggleFlashCustomHours();
       flashDraftItems = {};
       Object.entries(flashSaleConfig?.items || {}).forEach(([k, v]) => {
@@ -7317,18 +7354,31 @@
       const title = (document.getElementById('fl-title-inp')?.value || 'OFERTA RELÂMPAGO!').trim();
       const durVal = document.getElementById('fl-mins-inp')?.value || '120';
       const isIndef = durVal === 'indefinite';
-      let mins = 120;
-      if (durVal === 'custom') {
-        mins = Math.max(1, parseInt(document.getElementById('fl-custom-hours')?.value || '24', 10)) * 60;
+      let endsAt = 0;
+      if (durVal === 'datetime') {
+        const dtStr = document.getElementById('fl-end-datetime')?.value;
+        const parsed = dtStr ? new Date(dtStr).getTime() : 0;
+        if (!parsed || isNaN(parsed) || parsed <= Date.now()) {
+          showToast('⚠️ Escolha uma data e hora futura para o término!');
+          return;
+        }
+        endsAt = parsed;
+      } else if (durVal === 'custom') {
+        const hrs = Math.max(1, parseInt(document.getElementById('fl-custom-hours')?.value || '24', 10));
+        endsAt = Date.now() + hrs * 3600000;
       } else if (!isIndef) {
-        mins = parseInt(durVal, 10) || 120;
+        endsAt = Date.now() + (parseInt(durVal, 10) || 120) * 60000;
       }
       const items = {};
       Object.entries(flashDraftItems).forEach(([pid, cfg]) => {
         if (cfg && Number(cfg.price) > 0) items[pid] = { price: Number(cfg.price) };
       });
       if (Object.keys(items).length === 0) { showToast('⚠️ Marque pelo menos 1 produto!'); return; }
-      flashSaleConfig = { active: true, title, indefinite: isIndef, endsAt: isIndef ? 0 : (Date.now() + mins * 60000), items };
+      const badgeType = document.getElementById('fl-badge-type')?.value || 'relampago';
+      const badgeCustom = (document.getElementById('fl-badge-custom')?.value || '').trim();
+      const pinTop = (document.getElementById('fl-pin-top')?.value || 'sim') === 'sim';
+      const showBanner = (document.getElementById('fl-show-banner')?.value || 'sim') === 'sim';
+      flashSaleConfig = { active: true, title, indefinite: isIndef, endsAt, badgeType, badgeCustom, pinTop, showBanner, items };
       if (sb && currentStoreId) {
         const { error } = await sb.from('stores').update({ flash_sale: flashSaleConfig }).eq('id', currentStoreId);
         if (error) { showToast('⚠️ Rode o SQL supabase_acessos_e_relampago.sql primeiro!'); return; }
@@ -7473,7 +7523,7 @@
           <input id="fl-title-inp" type="text" placeholder="Ex: RELÂMPAGO DE HOJE — SÓ 2 HORAS!" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-black" />
         </div>
         <div>
-          <label class="block text-[10px] font-extrabold text-slate-600 mb-1">Duração</label>
+          <label class="block text-[10px] font-extrabold text-slate-600 mb-1">Término / Duração</label>
           <select id="fl-mins-inp" onchange="toggleFlashCustomHours()" class="w-full bg-amber-50 border-2 border-amber-400 rounded-xl px-2 py-2 text-xs font-black">
             <option value="30">⚡ 30 min</option>
             <option value="60">⚡ 1 hora</option>
@@ -7483,6 +7533,7 @@
             <option value="720">⚡ 12 horas</option>
             <option value="1440">⚡ 24 horas</option>
             <option value="custom">⏱️ Personalizado (h)</option>
+            <option value="datetime">📅 Data e Hora exata</option>
             <option value="indefinite">♾️ Até o fim do estoque</option>
           </select>
         </div>
@@ -7494,6 +7545,43 @@
           <input id="fl-custom-hours" type="number" min="1" max="720" value="48" class="w-20 bg-white border-2 border-amber-400 rounded-xl px-2 py-1 text-xs font-black text-center" />
           <span class="font-bold text-amber-900">hora(s)</span>
         </div>
+      </div>
+
+      <div id="fl-datetime-wrap" class="hidden bg-amber-50 border border-amber-300 rounded-2xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span class="font-extrabold text-amber-950">📅 Data e hora para acabar:</span>
+        <input id="fl-end-datetime" type="datetime-local" class="bg-white border-2 border-amber-400 rounded-xl px-2.5 py-1 text-xs font-black" />
+      </div>
+
+      <!-- SELO NO CARD + FIXAR NO TOPO + FAIXA NO TOPO -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2.5 text-xs">
+        <div>
+          <label class="block text-[10px] font-extrabold text-slate-600 mb-1">Selo no card</label>
+          <select id="fl-badge-type" onchange="toggleFlashCustomBadge()" class="w-full bg-white border-2 border-slate-300 rounded-xl px-2 py-1.5 text-[11px] font-black">
+            <option value="relampago" selected>⚡ RELÂMPAGO ⚡</option>
+            <option value="semana">🔥 PROMOÇÃO DA SEMANA</option>
+            <option value="mes">📅 PROMOÇÃO DO MÊS</option>
+            <option value="destaque">⭐ DESTAQUE</option>
+            <option value="custom">✍️ Personalizado</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-extrabold text-slate-600 mb-1">📌 Fixar na tela inicial?</label>
+          <select id="fl-pin-top" class="w-full bg-amber-50 border-2 border-amber-400 rounded-xl px-2 py-1.5 text-[11px] font-black">
+            <option value="sim" selected>Sim (1º lugar)</option>
+            <option value="nao">Não (normal)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-extrabold text-slate-600 mb-1">📢 Faixa no topo?</label>
+          <select id="fl-show-banner" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-1.5 text-[11px] font-bold">
+            <option value="sim" selected>Sim</option>
+            <option value="nao">Não (só cards)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="fl-custom-badge-wrap" class="hidden">
+        <input id="fl-badge-custom" type="text" placeholder="Ex: 🔥 QUEIMA DE ESTOQUE 🔥" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-black" />
       </div>
 
       <div class="bg-rose-50 border border-rose-200 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
