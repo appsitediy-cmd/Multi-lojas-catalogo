@@ -1271,17 +1271,42 @@
         </div>
         <textarea id="bulk-textarea" rows="4" oninput="parseBulkPreview()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-[#2EB4C7]" placeholder="Cole linhas do Excel ou digite:&#10;Ração Golden 15kg&#9;119,90&#10;Areia Dinkos 4kg | 9,99 | Gatos"></textarea>
         <div class="bg-[#E8F8FA] border border-[#B5E8EF] p-3 rounded-2xl space-y-2.5">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
-              <label class="block text-[10px] font-extrabold text-[#176E7B] mb-1">Categoria padrão do lote</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-1">
+                <label for="bulk-default-cat" class="text-[10px] font-extrabold text-[#176E7B]">Categoria padrão do lote</label>
+                <button type="button" onclick="toggleBulkQuickAdd('cat')" class="bg-[#176E7B] hover:bg-[#11535D] active:scale-95 text-white text-[10px] font-black px-2 py-0.5 rounded-lg transition">+ Nova</button>
+              </div>
+              <div id="bulk-qa-cat-box" class="hidden flex gap-1 bg-white p-1 rounded-xl border-2 border-[#2EB4C7] shadow-sm">
+                <input id="bulk-qa-cat-input" type="text" placeholder="Ex: 💊 Farmácia" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmBulkQuickAdd('cat');}" class="flex-1 min-w-0 text-xs font-bold px-2 py-1 focus:outline-none text-slate-800">
+                <button type="button" onclick="confirmBulkQuickAdd('cat')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black px-2 py-1 rounded-lg">Salvar</button>
+                <button type="button" onclick="toggleBulkQuickAdd('cat', false)" class="text-slate-400 hover:text-slate-700 text-xs font-black px-1">✕</button>
+              </div>
               <select id="bulk-default-cat" onchange="applyBulkDefaults('cat', this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700"></select>
             </div>
-            <div>
-              <label class="block text-[10px] font-extrabold text-[#176E7B] mb-1">Subcategoria padrão</label>
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-1">
+                <label for="bulk-default-sub" class="text-[10px] font-extrabold text-[#176E7B]">Subcategoria padrão</label>
+                <button type="button" onclick="toggleBulkQuickAdd('sub')" class="bg-[#176E7B] hover:bg-[#11535D] active:scale-95 text-white text-[10px] font-black px-2 py-0.5 rounded-lg transition">+ Nova</button>
+              </div>
+              <div id="bulk-qa-sub-box" class="hidden flex gap-1 bg-white p-1 rounded-xl border-2 border-[#2EB4C7] shadow-sm">
+                <input id="bulk-qa-sub-input" type="text" placeholder="Ex: Antipulgas" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmBulkQuickAdd('sub');}" class="flex-1 min-w-0 text-xs font-bold px-2 py-1 focus:outline-none text-slate-800">
+                <button type="button" onclick="confirmBulkQuickAdd('sub')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black px-2 py-1 rounded-lg">Salvar</button>
+                <button type="button" onclick="toggleBulkQuickAdd('sub', false)" class="text-slate-400 hover:text-slate-700 text-xs font-black px-1">✕</button>
+              </div>
               <select id="bulk-default-sub" onchange="applyBulkDefaults('sub', this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700"></select>
+              <div id="bulk-sub-link-hint" class="text-[10px] font-semibold text-[#176E7B]/80"></div>
             </div>
-            <div>
-              <label class="block text-[10px] font-extrabold text-[#176E7B] mb-1">Marca / Fornecedor padrão</label>
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-1">
+                <label for="bulk-default-brand" class="text-[10px] font-extrabold text-[#176E7B]">Marca / Fornecedor padrão</label>
+                <button type="button" onclick="toggleBulkQuickAdd('brand')" class="bg-[#176E7B] hover:bg-[#11535D] active:scale-95 text-white text-[10px] font-black px-2 py-0.5 rounded-lg transition">+ Nova</button>
+              </div>
+              <div id="bulk-qa-brand-box" class="hidden flex gap-1 bg-white p-1 rounded-xl border-2 border-[#2EB4C7] shadow-sm">
+                <input id="bulk-qa-brand-input" type="text" placeholder="Ex: Zoetis" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmBulkQuickAdd('brand');}" class="flex-1 min-w-0 text-xs font-bold px-2 py-1 focus:outline-none text-slate-800">
+                <button type="button" onclick="confirmBulkQuickAdd('brand')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black px-2 py-1 rounded-lg">Salvar</button>
+                <button type="button" onclick="toggleBulkQuickAdd('brand', false)" class="text-slate-400 hover:text-slate-700 text-xs font-black px-1">✕</button>
+              </div>
               <select id="bulk-default-brand" onchange="applyBulkDefaults('brand', this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700"></select>
             </div>
           </div>
@@ -3467,8 +3492,8 @@
         let actionArea = '';
         if (qty === 0) {
           actionArea = `
-            <button onclick="addToCart(${p.id})" class="w-full ${isPromoNow ? 'bg-brand-accent shadow-md font-extrabold' : 'bg-brand-primary shadow font-bold'} hover:opacity-90 active:scale-95 text-white py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
-              ${isPromoNow ? `<span style="background-color: var(--brand-fire-bg);" class="w-5 h-5 rounded-full inline-flex items-center justify-center text-[11px] leading-none shadow-sm">🔥</span>` : '<span>🛒</span>'} <span>${isPromoNow ? 'Aproveitar' : 'Adicionar'}</span>
+            <button onclick="addToCart(${p.id})" class="w-full ${flashItem ? getFlashBadgeStyle().btnCls : (isPromoNow ? 'bg-brand-accent text-white shadow-md font-extrabold' : 'bg-brand-primary text-white shadow font-bold')} hover:opacity-90 active:scale-95 py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+              ${flashItem ? '<span>⚡</span>' : (isPromoNow ? `<span style="background-color: var(--brand-fire-bg);" class="w-5 h-5 rounded-full inline-flex items-center justify-center text-[11px] leading-none shadow-sm">🔥</span>` : '<span>🛒</span>')} <span>${isPromoNow ? 'Aproveitar' : 'Adicionar'}</span>
             </button>
           `;
         } else {
@@ -3482,7 +3507,7 @@
         }
 
         return `
-          <div style="border-color: ${isPromoNow ? 'var(--brand-accent)' : 'var(--brand-card-border)'};" class="bg-white rounded-2xl p-3 flex flex-col justify-between transition border-2 ${isPromoNow ? 'shadow-md hover:shadow-lg' : 'shadow-sm hover:shadow-md'}">
+          <div style="${flashItem ? '' : `border-color: ${isPromoNow ? 'var(--brand-accent)' : 'var(--brand-card-border)'};`}" class="bg-white rounded-2xl p-3 flex flex-col justify-between transition border-2 ${flashItem ? getFlashBadgeStyle().cardCls : ''} ${isPromoNow ? 'shadow-md hover:shadow-lg' : 'shadow-sm hover:shadow-md'}">
             <div>
               <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square ${isPromoNow ? 'bg-pink-50/40 border-pink-100' : 'bg-slate-50 border-slate-100'} rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border group cursor-zoom-in">
                 ${isPromoNow && hasPickup
@@ -3995,6 +4020,7 @@
         fBrand.innerHTML = `<option value="Todos">Todas Marcas</option>` + brands.map(b => `<option value="${b}">${b}</option>`).join('');
         if (prevBrand && (prevBrand === "Todos" || brands.includes(prevBrand))) fBrand.value = prevBrand;
       }
+      if (typeof syncBulkDropdowns === 'function') syncBulkDropdowns(true);
     }
 
     function updateManagerFilterSubcats() {
@@ -6068,14 +6094,126 @@
 
     let bulkRows = [];
 
-    function openBulkModal() {
+    function updateBulkSubHint() {
+      const hint = document.getElementById('bulk-sub-link-hint');
+      const dCat = document.getElementById('bulk-default-cat');
+      if (hint && dCat && dCat.value) {
+        hint.textContent = `Vinculada a: ${dCat.value}`;
+      }
+    }
+
+    function syncBulkDropdowns(preserve = true) {
       const validCats = categories.filter(c => c !== "Todos");
       const dCat = document.getElementById('bulk-default-cat');
       const dSub = document.getElementById('bulk-default-sub');
       const dBrand = document.getElementById('bulk-default-brand');
-      if (dCat) dCat.innerHTML = validCats.map(c => `<option value="${c}">${c}</option>`).join('');
-      if (dCat && dSub) updateSubcatDropdown('bulk-default-cat', 'bulk-default-sub');
-      if (dBrand) dBrand.innerHTML = brands.map(b => `<option value="${b}">${b}</option>`).join('');
+      const prevCat = preserve && dCat ? dCat.value : '';
+      const prevSub = preserve && dSub ? dSub.value : '';
+      const prevBrand = preserve && dBrand ? dBrand.value : '';
+      if (dCat) {
+        dCat.innerHTML = validCats.map(c => `<option value="${c}">${c}</option>`).join('');
+        if (prevCat && validCats.includes(prevCat)) dCat.value = prevCat;
+      }
+      if (dCat && dSub) {
+        updateSubcatDropdown('bulk-default-cat', 'bulk-default-sub');
+        const curSubs = Array.from(dSub.options).map(o => o.value);
+        if (prevSub && curSubs.includes(prevSub)) dSub.value = prevSub;
+      }
+      if (dBrand) {
+        dBrand.innerHTML = brands.map(b => `<option value="${b}">${b}</option>`).join('');
+        if (prevBrand && brands.includes(prevBrand)) dBrand.value = prevBrand;
+      }
+      updateBulkSubHint();
+    }
+
+    function toggleBulkQuickAdd(type, force) {
+      ['cat', 'sub', 'brand'].forEach(t => {
+        const b = document.getElementById(`bulk-qa-${t}-box`);
+        if (b && t !== type) b.classList.add('hidden');
+      });
+      const box = document.getElementById(`bulk-qa-${type}-box`);
+      if (!box) return;
+      const show = typeof force === 'boolean' ? force : box.classList.contains('hidden');
+      box.classList.toggle('hidden', !show);
+      if (show) {
+        const inp = document.getElementById(`bulk-qa-${type}-input`);
+        if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 30); }
+      }
+    }
+
+    async function confirmBulkQuickAdd(type) {
+      const inp = document.getElementById(`bulk-qa-${type}-input`);
+      const clean = (inp?.value || '').trim();
+      if (!clean) {
+        showToast('⚠️ Digite um nome antes de salvar.');
+        return;
+      }
+      if (type === 'cat') {
+        const existing = categories.find(c => c.toLowerCase() === clean.toLowerCase());
+        const finalVal = existing || clean;
+        if (!existing) {
+          categories.push(finalVal);
+          if (!subcategories[finalVal]) subcategories[finalVal] = ['Geral'];
+          await saveStoreMetaToCloud();
+          renderCategoryPills();
+          renderManagerCategories();
+          updateManagerDropdowns();
+          syncEditProductSelects(true);
+        }
+        syncBulkDropdowns(true);
+        const dCat = document.getElementById('bulk-default-cat');
+        if (dCat) dCat.value = finalVal;
+        applyBulkDefaults('cat', finalVal);
+        toggleBulkQuickAdd('cat', false);
+        showToast(`✅ Categoria "${finalVal}" criada e aplicada ao lote!`);
+      } else if (type === 'sub') {
+        const cat = document.getElementById('bulk-default-cat')?.value || '';
+        if (!cat) {
+          showToast('⚠️ Escolha uma categoria primeiro.');
+          return;
+        }
+        if (!subcategories[cat]) subcategories[cat] = [];
+        const existing = subcategories[cat].find(s => s.toLowerCase() === clean.toLowerCase());
+        const finalVal = existing || clean;
+        if (!existing) {
+          subcategories[cat].push(finalVal);
+          await saveStoreMetaToCloud();
+          updateSubcatDropdown('new-category', 'new-subcategory');
+          updateSubcatDropdown('edit-product-cat', 'edit-product-subcat');
+          const mSubFilter = document.getElementById('manager-subcat-filter');
+          if (mSubFilter && mSubFilter.value === cat) renderManagerSubcategories();
+          renderSubcategoryPillsBox();
+          updateManagerFilterSubcats();
+        }
+        updateSubcatDropdown('bulk-default-cat', 'bulk-default-sub');
+        const dSub = document.getElementById('bulk-default-sub');
+        if (dSub) dSub.value = finalVal;
+        applyBulkDefaults('sub', finalVal);
+        toggleBulkQuickAdd('sub', false);
+        showToast(`✅ Subcategoria "${finalVal}" criada em ${cat} e aplicada!`);
+      } else if (type === 'brand') {
+        const existing = brands.find(b => b.toLowerCase() === clean.toLowerCase());
+        const finalVal = existing || clean;
+        if (!existing) {
+          brands.push(finalVal);
+          await saveStoreMetaToCloud();
+          renderBrandPills();
+          renderManagerBrands();
+          updateManagerDropdowns();
+          syncEditProductSelects(true);
+        }
+        syncBulkDropdowns(true);
+        const dBrand = document.getElementById('bulk-default-brand');
+        if (dBrand) dBrand.value = finalVal;
+        applyBulkDefaults('brand', finalVal);
+        toggleBulkQuickAdd('brand', false);
+        showToast(`✅ Marca "${finalVal}" criada e aplicada ao lote!`);
+      }
+    }
+
+    function openBulkModal() {
+      ['cat', 'sub', 'brand'].forEach(t => toggleBulkQuickAdd(t, false));
+      syncBulkDropdowns(false);
       document.getElementById('bulk-modal').classList.remove('hidden');
       parseBulkPreview();
     }
@@ -6289,6 +6427,7 @@
     function applyBulkDefaults(field, val) {
       if (field === 'cat') {
         updateSubcatDropdown('bulk-default-cat', 'bulk-default-sub');
+        updateBulkSubHint();
         const subVal = document.getElementById('bulk-default-sub')?.value || 'Geral';
         bulkRows.forEach(r => { r.category = val; r.subcategory = subVal; });
       } else if (field === 'sub') {
@@ -7033,13 +7172,14 @@
     async function trackAnalyticsEvent(eventType, productName = '') {
       if (!sb || !currentStoreId || isDeviceIgnored() || currentUser) return;
       try {
-        await sb.from('store_analytics').insert({
+        const { error: anErr } = await sb.from('store_analytics').insert({
           store_id: currentStoreId,
           event_type: eventType,
           visitor_id: getOrCreateVisitorId(),
           platform: detectPlatform(),
           product_name: String(productName || '').slice(0, 80)
         });
+        if (anErr) console.warn('[Analytics insert]', anErr.message);
       } catch (e) { /* silencioso se SQL ainda não rodou */ }
     }
 
@@ -7143,13 +7283,18 @@
       document.getElementById('an-app-pct').textContent = `${appPct}%`;
       document.getElementById('an-app-sub').textContent = `${appOpens} via app • ${Math.max(0, visitRows.length - appOpens)} via link`;
 
-      // Gráfico 7 dias
+      // Gráfico 7 dias (horário local do aparelho / Brasília)
+      const toLocalDayKey = (dt) => {
+        const x = new Date(dt);
+        if (isNaN(x.getTime())) return '';
+        return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+      };
       const days = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now - i * 86400000);
         const lbl = i === 0 ? 'Hoje' : d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-        const key = d.toISOString().slice(0, 10);
-        const cnt = analyticsRowsCache.filter(r => (r.event_type === 'visit' || r.event_type === 'app_open') && (r.created_at || '').slice(0, 10) === key).length;
+        const key = toLocalDayKey(d);
+        const cnt = analyticsRowsCache.filter(r => (r.event_type === 'visit' || r.event_type === 'app_open') && toLocalDayKey(r.created_at) === key).length;
         days.push({ lbl, cnt, isToday: i === 0 });
       }
       const mx = Math.max(...days.map(x => x.cnt), 1);
@@ -7217,11 +7362,11 @@
       const type = flashSaleConfig?.badgeType || 'relampago';
       const customTxt = (flashSaleConfig?.badgeCustom || '').trim();
       const map = {
-        relampago: { label: '⚡ RELÂMPAGO ⚡', cls: 'bg-slate-950 text-[#FCD40F] border border-[#FCD40F]', banCls: 'bg-slate-950 text-[#FCD40F] border-[#FCD40F]' },
-        semana:    { label: '🔥 PROMOÇÃO DA SEMANA', cls: 'bg-rose-600 text-white border border-rose-300', banCls: 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-rose-300' },
-        mes:       { label: '📅 PROMOÇÃO DO MÊS', cls: 'bg-indigo-600 text-white border border-indigo-300', banCls: 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white border-cyan-300' },
-        destaque:  { label: '⭐ DESTAQUE', cls: 'bg-amber-400 text-slate-950 border border-amber-500', banCls: 'bg-amber-400 text-slate-950 border-amber-500' },
-        custom:    { label: customTxt || '⚡ OFERTA ESPECIAL ⚡', cls: 'bg-slate-950 text-[#FCD40F] border border-[#FCD40F]', banCls: 'bg-slate-950 text-[#FCD40F] border-[#FCD40F]' }
+        relampago: { label: '⚡ RELÂMPAGO ⚡', cls: 'bg-slate-950 text-[#FCD40F] border border-[#FCD40F]', cardCls: 'border-slate-950 ring-2 ring-[#FCD40F]', banCls: 'bg-slate-950 text-[#FCD40F] border-[#FCD40F]', btnCls: 'bg-slate-950 text-[#FCD40F] shadow-md font-extrabold' },
+        semana:    { label: '🔥 PROMOÇÃO DA SEMANA', cls: 'bg-rose-600 text-white border border-rose-300', cardCls: 'border-rose-500 ring-2 ring-rose-200', banCls: 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-rose-300', btnCls: 'bg-rose-600 text-white shadow-md font-extrabold' },
+        mes:       { label: '📅 PROMOÇÃO DO MÊS', cls: 'bg-indigo-600 text-white border border-indigo-300', cardCls: 'border-indigo-500 ring-2 ring-indigo-200', banCls: 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white border-cyan-300', btnCls: 'bg-indigo-600 text-white shadow-md font-extrabold' },
+        destaque:  { label: '⭐ DESTAQUE', cls: 'bg-amber-400 text-slate-950 border border-amber-500', cardCls: 'border-amber-400 ring-2 ring-amber-200', banCls: 'bg-amber-400 text-slate-950 border-amber-500', btnCls: 'bg-amber-500 text-white shadow-md font-extrabold' },
+        custom:    { label: customTxt || '⚡ OFERTA ESPECIAL ⚡', cls: 'bg-slate-950 text-[#FCD40F] border border-[#FCD40F]', cardCls: 'border-slate-950 ring-2 ring-[#FCD40F]', banCls: 'bg-slate-950 text-[#FCD40F] border-[#FCD40F]', btnCls: 'bg-slate-950 text-[#FCD40F] shadow-md font-extrabold' }
       };
       return map[type] || map.relampago;
     }
@@ -7245,7 +7390,14 @@
     function openFlashSaleModal() {
       document.getElementById('fl-title-inp').value = flashSaleConfig?.title || 'RELÂMPAGO DE HOJE — SÓ 2 HORAS!';
       const sel = document.getElementById('fl-mins-inp');
-      if (sel && flashSaleConfig?.indefinite) sel.value = 'indefinite';
+      const dtInp = document.getElementById('fl-end-datetime');
+      if (sel && flashSaleConfig?.indefinite) {
+        sel.value = 'indefinite';
+      } else if (dtInp && flashSaleConfig?.endsAt && Number(flashSaleConfig.endsAt) > Date.now()) {
+        const d = new Date(Number(flashSaleConfig.endsAt));
+        const pad = n => String(n).padStart(2, '0');
+        dtInp.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
       const bSel = document.getElementById('fl-badge-type');
       if (bSel) bSel.value = flashSaleConfig?.badgeType || 'relampago';
       const bCus = document.getElementById('fl-badge-custom');
