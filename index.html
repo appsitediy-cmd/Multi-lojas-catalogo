@@ -14,10 +14,10 @@
   <meta property="og:title" content="Recanto Petshop • Catálogo Online">
   <meta property="og:description" content="Confira nossas rações, petiscos, ofertas e peça direto pelo WhatsApp!">
   <meta property="og:image" content="https://appsitediy-cmd.github.io/Multi-lojas-catalogo/icon-512.png">
+  <link rel="preconnect" href="https://pimqhnjyahykpewbzpum.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://pimqhnjyahykpewbzpum.supabase.co">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -92,7 +92,7 @@
     <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 min-w-0 flex-1">
         <div id="header-logo-container" onclick="openLogoZoom()" title="Clique para ampliar a logo" class="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md shrink-0 border-2 border-white p-0.5 cursor-zoom-in">
-          <img id="header-logo-img" src="user_uploaded_files/ttl=63d/user_uploaded/145543.jpg" alt="Logo" class="w-full h-full object-contain rounded-full transition-transform duration-200">
+          <img id="header-logo-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Logo" decoding="async" onerror="this.onerror=null;this.src=NEUTRAL_LOGO_IMG;" class="w-full h-full object-contain rounded-full transition-transform duration-200">
         </div>
         <div class="min-w-0 flex-1">
           <h1 id="header-store-name" class="text-base sm:text-lg font-extrabold tracking-tight leading-snug break-words">Recanto Petshop</h1>
@@ -125,7 +125,7 @@
   <div id="pwa-install-banner" class="hidden max-w-6xl w-full mx-auto px-4 pt-3">
     <div class="bg-white border-2 border-brand-primary/50 rounded-2xl p-3 shadow-md flex items-center justify-between gap-2.5">
       <div class="flex items-center gap-2.5 min-w-0">
-        <img id="pwa-banner-logo" src="" alt="Logo" class="w-11 h-11 rounded-full object-contain bg-white border border-slate-200 shrink-0">
+        <img id="pwa-banner-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Logo" decoding="async" onerror="this.onerror=null;this.src=NEUTRAL_LOGO_IMG;" class="w-11 h-11 rounded-full object-contain bg-white border border-slate-200 shrink-0">
         <div class="min-w-0">
           <p id="pwa-banner-title" class="text-xs font-black text-slate-800 truncate">Instalar App da Loja</p>
           <p class="text-[11px] text-slate-500 leading-tight">Adicione à tela inicial para abrir com 1 toque</p>
@@ -1496,7 +1496,7 @@
       <button onclick="closeImageZoom()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 text-sm font-bold transition">✕</button>
       <div class="relative w-full aspect-square bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 mb-3">
         <span id="zoom-modal-promo-badge" class="hidden absolute top-2.5 left-2.5 z-10 bg-brand-accent text-white text-xs font-black pl-1 pr-2.5 py-1 rounded-xl shadow-md inline-flex items-center gap-1.5"><span class="bg-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs leading-none">🔥</span><span>PROMOÇÃO</span></span>
-        <img id="zoom-modal-img" src="" alt="Foto ampliada" class="w-full h-full object-contain p-2">
+        <img id="zoom-modal-img" src="" alt="Foto ampliada" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-full h-full object-contain p-2">
       </div>
       <p id="zoom-modal-title" class="text-xs font-bold text-slate-800 text-center line-clamp-2"></p>
     </div>
@@ -1605,7 +1605,7 @@
       </svg>`
     );
 
-    const DEFAULT_LOGO_IMG = "user_uploaded_files/ttl=63d/user_uploaded/145543.jpg";
+    const DEFAULT_LOGO_IMG = DEFAULT_PRODUCT_IMG;
     const NEUTRAL_LOGO_IMG = DEFAULT_PRODUCT_IMG;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1878,17 +1878,61 @@
       } catch (e) {}
     }
 
-    async function fetchWithRetry(fn, attempts = 3) {
+    const _loadedExtScripts = {};
+    function loadExternalScriptOnce(urls, checkFn) {
+      if (checkFn && checkFn()) return Promise.resolve(true);
+      const list = Array.isArray(urls) ? urls : [urls];
+      const key = list[0];
+      if (_loadedExtScripts[key]) return _loadedExtScripts[key];
+      _loadedExtScripts[key] = (async () => {
+        for (const u of list) {
+          try {
+            await new Promise((resolve, reject) => {
+              const s = document.createElement('script');
+              s.src = u;
+              s.async = true;
+              const timer = setTimeout(() => reject(new Error('timeout')), 12000);
+              s.onload = () => { clearTimeout(timer); resolve(true); };
+              s.onerror = () => { clearTimeout(timer); reject(new Error('load_error')); };
+              document.head.appendChild(s);
+            });
+            if (!checkFn || checkFn()) return true;
+          } catch (e) {}
+        }
+        delete _loadedExtScripts[key];
+        return !!(checkFn && checkFn());
+      })();
+      return _loadedExtScripts[key];
+    }
+
+    function ensureXlsxLoaded() {
+      return loadExternalScriptOnce([
+        'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+        'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+      ], () => !!window.XLSX);
+    }
+
+    function ensureQrScannerLoaded() {
+      return loadExternalScriptOnce([
+        'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js',
+        'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
+      ], () => !!window.Html5Qrcode);
+    }
+
+    async function fetchWithRetry(fn, attempts = 3, timeoutMs = 12000) {
       let lastErr = null;
       for (let i = 0; i < attempts; i++) {
         try {
-          const res = await fn();
+          const res = await Promise.race([
+            fn(),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('request_timeout')), timeoutMs))
+          ]);
           if (!res || !res.error) return res;
           lastErr = res.error;
         } catch (err) {
           lastErr = err;
         }
-        if (i < attempts - 1) await new Promise(r => setTimeout(r, 700 * (i + 1)));
+        if (i < attempts - 1) await new Promise(r => setTimeout(r, 600 * (i + 1)));
       }
       return { data: null, error: lastErr };
     }
@@ -1897,7 +1941,13 @@
 
     function saveStoreLocalCache(storeObj, prodArr) {
       try {
-        const slimProds = (prodArr || []).slice(0, 800);
+        // Remove base64 gigantes do cache local para nunca estourar limite do celular
+        const slimProds = (prodArr || []).slice(0, 800).map(p => {
+          if (p && typeof p.image === 'string' && p.image.startsWith('data:') && p.image.length > 12000) {
+            return { ...p, image: '' };
+          }
+          return p;
+        });
         localStorage.setItem(getStoreCacheKey(), JSON.stringify({ ts: Date.now(), store: storeObj, products: slimProds }));
       } catch (e) { /* quota cheia */ }
     }
@@ -1947,19 +1997,38 @@
       }
 
       lastCloudLoadFailed = false;
+      // 0. Abertura instantânea com cache isolado da loja (Stale-While-Revalidate)
+      let paintedFromCache = false;
       try {
-        // 1. Não deixa falha no getSession travar a vitrine do cliente
-        try {
-          const { data: sess } = await sb.auth.getSession();
-          currentUser = sess?.session?.user || null;
-        } catch (se) {
-          currentUser = null;
+        const earlyCache = loadStoreLocalCache();
+        if (earlyCache && earlyCache.store && earlyCache.store.slug === storeSlug && Array.isArray(earlyCache.products) && earlyCache.products.length > 0) {
+          hydrateStoreState(earlyCache.store);
+          products = earlyCache.products;
+          renderStoreConfig();
+          renderCategoryPills();
+          renderBrandPills();
+          filterProducts();
+          injectPWAManifest();
+          document.documentElement.classList.remove('partner-loading');
+          document.getElementById('store-loading-overlay')?.classList.add('hidden');
+          paintedFromCache = true;
         }
+      } catch (ce) {}
 
-        // 2. Busca loja com até 3 tentativas automáticas
-        const { data: store, error } = await fetchWithRetry(() =>
-          sb.from('stores').select('*').eq('slug', storeSlug).maybeSingle(), 3
-        );
+      // Trava de segurança: nunca deixar a tela branca presa por mais de 10s
+      const overlayGuard = setTimeout(() => {
+        document.documentElement.classList.remove('partner-loading');
+        document.getElementById('store-loading-overlay')?.classList.add('hidden');
+      }, 10000);
+
+      try {
+        // 1 & 2. Busca sessão e loja EM PARALELO para cortar tempo de espera pela metade
+        const [sessRes, storeRes] = await Promise.all([
+          sb.auth.getSession().catch(() => ({ data: null })),
+          fetchWithRetry(() => sb.from('stores').select('*').eq('slug', storeSlug).maybeSingle(), 3)
+        ]);
+        currentUser = sessRes?.data?.session?.user || null;
+        const { data: store, error } = storeRes;
 
         if (error) {
           console.error('Erro ao buscar loja:', error);
@@ -2028,6 +2097,7 @@
         renderManagerProducts();
         updateCustomersCountBadge();
         injectPWAManifest();
+        clearTimeout(overlayGuard);
         document.documentElement.classList.remove('partner-loading');
         document.getElementById('store-loading-overlay')?.classList.add('hidden');
       }
@@ -3517,7 +3587,7 @@
                     : (hasPickup ? `<span class="absolute top-1.5 left-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">🏪 RETIRADA NA LOJA</span>` : ''))}
                 ${hasWholesale ? `<span class="absolute bottom-1.5 left-1.5 z-10 ${qty >= p.wholesaleQty ? 'bg-emerald-600' : 'bg-amber-500'} text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">${qty >= p.wholesaleQty ? `✅ ${qty} UN ATACADO` : `📦 LEVE ${p.wholesaleQty}`}</span>` : ''}
                 ${pctOff >= 1 ? `<span class="absolute bottom-1.5 right-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow">-${pctOff}% OFF</span>` : ''}
-                <img src="${imgSrc}" alt="${p.name}" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
+                <img src="${imgSrc}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
               </div>
               <div class="flex items-center gap-1 mb-1 flex-wrap">
                 <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md">${p.category}</span>
@@ -3689,7 +3759,7 @@
           <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-1.5">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
-                <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-100 p-1 shrink-0">
+                <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-100 p-1 shrink-0">
                 <div class="min-w-0">
                   <div class="flex items-center gap-1 flex-wrap">
                     <h5 class="text-xs font-bold text-slate-800 line-clamp-1">${p.name}</h5>
@@ -4943,7 +5013,7 @@
           <div class="flex items-start gap-2.5">
             <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleManagerSelectOne(${p.id}, this.checked)" class="mt-1 w-4 h-4 accent-[#E84D9A] rounded cursor-pointer shrink-0">
             <div class="relative shrink-0">
-              <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${p.name}" class="w-11 h-11 rounded-xl object-contain bg-slate-50 border border-slate-100 p-0.5 cursor-pointer" onclick="openEditProduct(${p.id})">
+              <img src="${p.image || DEFAULT_PRODUCT_IMG}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-11 h-11 rounded-xl object-contain bg-slate-50 border border-slate-100 p-0.5 cursor-pointer" onclick="openEditProduct(${p.id})">
               ${(p.image && p.image.trim()) ? `<button type="button" onclick="removeProductPhotoDirect(${p.id})" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black flex items-center justify-center shadow" title="Excluir foto deste produto">✕</button>` : ''}
             </div>
             <div class="min-w-0 flex-1">
@@ -5787,6 +5857,10 @@
       modal.classList.remove('hidden');
 
       if (!window.Html5Qrcode) {
+        if (statusEl) statusEl.textContent = 'Carregando leitor de código de barras...';
+        await ensureQrScannerLoaded();
+      }
+      if (!window.Html5Qrcode) {
         if (statusEl) statusEl.textContent = 'Use o botão "Tirar / Escolher Foto" abaixo para ler o código.';
         return;
       }
@@ -5827,6 +5901,9 @@
         } catch (e) {}
       }
 
+      if (!window.Html5Qrcode) {
+        await ensureQrScannerLoaded();
+      }
       if (window.Html5Qrcode) {
         try {
           await stopBarcodeScanner();
@@ -6220,10 +6297,16 @@
 
     function closeBulkModal() { document.getElementById('bulk-modal').classList.add('hidden'); }
 
-    function handleBulkFileUpload(event) {
+    async function handleBulkFileUpload(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const ext = file.name.split('.').pop().toLowerCase();
+      if (ext === 'xlsx' || ext === 'xls') {
+        if (!window.XLSX) {
+          showToast('📊 Carregando leitor de Excel...');
+          await ensureXlsxLoaded();
+        }
+      }
       if ((ext === 'xlsx' || ext === 'xls') && window.XLSX) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -7114,13 +7197,18 @@
       }
     }, 30000);
 
-    window.onload = async function() {
+    async function bootCatalogApp() {
       updateCartBadge();
       await loadStoreFromCloud();
       if (urlParams.get('gestor') === '1') {
         openManagerLoginModal();
       }
-    };
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootCatalogApp);
+    } else {
+      bootCatalogApp();
+    }
   
     // ========================================================================
     // 📊 ACESSOS & INSTALAÇÕES (COM EXCLUSÃO DE APARELHOS DA LOJA/EQUIPE)
