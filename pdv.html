@@ -534,6 +534,8 @@
 
     const OFFLINE_QUEUE_KEY = `pdv_offline_queue_${storeSlug}`;
     const PRODUCTS_CACHE_KEY = `pdv_products_cache_${storeSlug}`;
+    const STORE_AUTH_CACHE_KEY = `pdv_store_auth_${storeSlug}`;
+    let pendingVoucherCode = '';
 
     function escapeHtml(str) {
       return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
@@ -608,6 +610,27 @@
 
     // AUTH & BOOT
     async function bootPdv() {
+      if (!navigator.onLine) {
+        try {
+          const cached = JSON.parse(localStorage.getItem(STORE_AUTH_CACHE_KEY) || 'null');
+          if (cached && cached.store && cached.email) {
+            currentStore = cached.store;
+            currentUser = { email: cached.email };
+            applyStoreTheme(currentStore.primary_color);
+            document.getElementById('pdv-gate').classList.add('hidden');
+            document.title = `PDV (Offline) — ${currentStore.name || storeSlug}`;
+            document.getElementById('top-store-name').textContent = currentStore.name || storeSlug;
+            document.getElementById('footer-operator').textContent = `Operador: ${currentUser.email}`;
+            try { catalog = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || '[]'); } catch (e) {}
+            document.getElementById('footer-products-count').textContent = `${catalog.length} produtos (cache offline)`;
+            updateOnlineStatusUI();
+            showToast('🟠 PDV aberto em modo Offline usando cache local!');
+            document.getElementById('main-barcode-input').focus();
+            return;
+          }
+        } catch (e) {}
+      }
+
       if (!sb) {
         showGateBlocked('Não foi possível conectar ao Supabase. Verifique a conexão.');
         return;
@@ -639,6 +662,8 @@
         showGateBlocked(`O módulo PDV não está ativado para "${st.name || storeSlug}". Ative no plano para liberar o caixa.`);
         return;
       }
+
+      try { localStorage.setItem(STORE_AUTH_CACHE_KEY, JSON.stringify({ store: st, email: currentUser.email, ts: Date.now() })); } catch (e) {}
 
       // Liberado!
       document.getElementById('pdv-gate').classList.add('hidden');
@@ -1065,7 +1090,7 @@
       }
     }
 
-    function applyPayment(method) {
+    async function applyPayment(method) {
       const total = getCupomNetTotal();
       const already = currentPayments.reduce((s, p) => s + p.amount, 0);
       const remaining = Math.max(0, +(total - already).toFixed(2));
@@ -1073,13 +1098,29 @@
         finalizeConfirmedSale();
         return;
       }
-      const val = parseFloat(document.getElementById('pay-receive-input').value) || 0;
+      let val = parseFloat(document.getElementById('pay-receive-input').value) || 0;
+      if (method === 'Vale Troca' && navigator.onLine && sb && currentStore) {
+        const code = prompt('Código do Vale-Troca (ex: VT-1234) — ou deixe vazio para lançar o valor digitado:', '');
+        if (code === null) return;
+        const cleanCode = code.trim().toUpperCase();
+        if (cleanCode) {
+          const { data: vData } = await sb.from('pdv_vouchers')
+            .select('*').eq('store_id', currentStore.id).eq('code', cleanCode).eq('used', false).maybeSingle();
+          if (!vData) {
+            showToast(`⚠️ Vale-Troca "${cleanCode}" não encontrado ou já utilizado!`);
+            return;
+          }
+          val = Math.min(remaining, parseFloat(vData.amount) || val);
+          pendingVoucherCode = cleanCode;
+          showToast(`🎟️ Vale ${cleanCode} (${brl(vData.amount)}) validado!`);
+        }
+      }
       if (val <= 0) return;
       if (method === 'Dinheiro' && val > remaining) {
         pendingSaleTroco = +(val - remaining).toFixed(2);
       }
       const applied = Math.min(val, remaining);
-      currentPayments.push({ method, amount: applied });
+      currentPayments.push({ method, amount: applied, voucher: method === 'Vale Troca' ? pendingVoucherCode : '' });
       renderPaymentState();
       const newRem = Math.max(0, +(total - currentPayments.reduce((s, p) => s + p.amount, 0)).toFixed(2));
       if (newRem <= 0.001) {
@@ -1133,6 +1174,11 @@
       if (document.getElementById('top-cpf-input')) document.getElementById('top-cpf-input').value = '';
       renderCupom();
 
+      if (pendingVoucherCode && navigator.onLine && sb && currentStore) {
+        await sb.from('pdv_vouchers').update({ used: true, used_at: new Date().toISOString() })
+          .eq('store_id', currentStore.id).eq('code', pendingVoucherCode);
+      }
+      pendingVoucherCode = '';
       const saved = await persistSale(salePayload);
       const record = {
         id: saved?.id || salePayload.local_uid,
@@ -1565,15 +1611,30 @@
       }
     }
 
-    // F12 FECHAMENTO DO DIA
+    // F12 FECHAMENTO DO DIA (INCLUINDO SANGRIAS, SUPRIMENTOS E SALDO DA GAVETA)
     async function openF12Modal() {
       await loadTodaySales();
+      let totalSangria = 0, totalSuprimento = 0, totalRefund = 0;
+      if (navigator.onLine && sb && currentStore) {
+        const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+        const { data: mvData } = await sb.from('pdv_cash_movements')
+          .select('move_type, amount')
+          .eq('store_id', currentStore.id)
+          .gte('created_at', startToday.toISOString());
+        (mvData || []).forEach(m => {
+          const val = parseFloat(m.amount) || 0;
+          if (m.move_type === 'sangria') totalSangria += val;
+          else if (m.move_type === 'suprimento' || m.move_type === 'opening') totalSuprimento += val;
+          else if (m.move_type === 'refund') totalRefund += val;
+        });
+      }
       const byMethod = { Dinheiro: 0, Crédito: 0, Débito: 0, PIX: 0, 'Vale Troca': 0 };
       let grandTotal = 0;
       salesHistory.forEach(s => {
         grandTotal += s.total;
         (s.payments || []).forEach(p => { byMethod[p.method] = (byMethod[p.method] || 0) + Number(p.amount || 0); });
       });
+      const expectedCash = Math.max(0, +(byMethod.Dinheiro + totalSuprimento - totalSangria - totalRefund).toFixed(2));
       document.getElementById('f12-body').innerHTML = `
         <div class="grid grid-cols-2 gap-2">
           <div style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="border rounded-2xl p-3 text-center">
@@ -1587,6 +1648,11 @@
         </div>
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5 font-bold">
           ${Object.entries(byMethod).map(([m, v]) => `<div class="flex justify-between"><span>${m}</span><span class="font-black text-slate-900">${brl(v)}</span></div>`).join('')}
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-1 text-[11px] font-bold text-amber-950">
+          <div class="flex justify-between"><span>➕ Suprimentos / Abertura:</span><span>${brl(totalSuprimento)}</span></div>
+          <div class="flex justify-between text-rose-700"><span>➖ Sangrias / Estornos:</span><span>- ${brl(totalSangria + totalRefund)}</span></div>
+          <div class="flex justify-between pt-1.5 border-t border-amber-300 text-xs font-black"><span>💵 Esperado em Dinheiro na Gaveta:</span><span>${brl(expectedCash)}</span></div>
         </div>`;
       openModal('modal-f12');
     }

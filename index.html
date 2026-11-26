@@ -2373,6 +2373,12 @@
         ]);
         currentUser = sessRes?.data?.session?.user || null;
       if (typeof updateModuleButtonsVisibility === 'function') updateModuleButtonsVisibility();
+      if (location.hash === '#gestor' && typeof openManagerLoginModal === 'function') {
+        setTimeout(() => {
+          openManagerLoginModal();
+          history.replaceState(null, '', location.pathname + location.search);
+        }, 180);
+      }
         const { data: store, error } = storeRes;
 
         if (error) {
