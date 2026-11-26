@@ -2372,6 +2372,7 @@
           fetchWithRetry(() => sb.from('stores').select('*').eq('slug', storeSlug).maybeSingle(), 3)
         ]);
         currentUser = sessRes?.data?.session?.user || null;
+      if (typeof updateModuleButtonsVisibility === 'function') updateModuleButtonsVisibility();
         const { data: store, error } = storeRes;
 
         if (error) {
@@ -2467,7 +2468,7 @@
         showToast('🔒 Módulo PDV não está ativado para esta loja.');
         return;
       }
-      showToast('🖥️ Módulo PDV liberado para esta loja! Assim que subirmos o pdv.html (Etapa 4B), ele abrirá direto aqui.');
+      window.location.href = `pdv.html?loja=${encodeURIComponent(storeSlug)}`;
     }
 
     function computeSaaSPlanName(m) {

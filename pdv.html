@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDV — Frente de Caixa</title>
+  <link rel="preconnect" href="https://pimqhnjyahykpewbzpum.supabase.co" crossorigin>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --pdv-primary: #334155;
+      --pdv-primary-dark: #1e293b;
+      --pdv-primary-mid: #475569;
+      --pdv-soft: #f1f5f9;
+      --pdv-border: #cbd5e1;
+    }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--pdv-soft);
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+    .scroll-slim::-webkit-scrollbar { width: 6px; }
+    .scroll-slim::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    .pay-btn {
+      background: linear-gradient(180deg, var(--pdv-primary-mid) 0%, var(--pdv-primary) 100%);
+      transition: transform 0.1s, filter 0.15s;
+    }
+    .pay-btn:hover { filter: brightness(1.08); }
+    .pay-btn:active { transform: scale(0.98); }
+    .pay-btn-primary {
+      background: linear-gradient(180deg, var(--pdv-primary) 0%, var(--pdv-primary-dark) 100%);
+    }
+    .btn-focus-ring {
+      outline: 3px solid #f59e0b;
+      outline-offset: 2px;
+      transform: scale(1.03);
+    }
+    @media print {
+      body * { visibility: hidden !important; }
+      #thermal-receipt-area, #thermal-receipt-area * { visibility: visible !important; }
+      #thermal-receipt-area {
+        display: block !important;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 78mm;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 11px;
+        line-height: 1.3;
+        color: #000;
+        background: #fff;
+        padding: 4px;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col select-none">
+
+  <!-- TELA DE LOGIN / BLOQUEIO (QUANDO NÃO LOGADO OU SEM MÓDULO PDV) -->
+  <div id="pdv-gate" class="fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="text-center space-y-1">
+        <div class="text-3xl">🖥️</div>
+        <h1 id="gate-title" class="text-lg font-black text-slate-900">Acesso ao PDV</h1>
+        <p id="gate-subtitle" class="text-xs font-semibold text-slate-500">Verificando sessão e permissões da loja...</p>
+      </div>
+
+      <form id="gate-login-form" onsubmit="handlePdvLogin(event)" class="hidden space-y-3">
+        <div>
+          <label class="block text-[11px] font-extrabold text-slate-600 mb-1">E-mail do Gestor</label>
+          <input id="gate-email" type="email" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold" placeholder="seu@email.com" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-extrabold text-slate-600 mb-1">Senha</label>
+          <input id="gate-password" type="password" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold" placeholder="••••••••" />
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs cursor-pointer">Entrar no PDV</button>
+      </form>
+
+      <div id="gate-blocked" class="hidden space-y-3 text-center">
+        <div class="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-3 text-xs font-bold" id="gate-blocked-msg">
+          Módulo PDV não está ativado para esta loja.
+        </div>
+        <button onclick="goToAppClient()" class="w-full py-2.5 rounded-xl bg-slate-900 text-white font-black text-xs cursor-pointer">Voltar para a Vitrine</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAIXA 1: TOPO FINO (VENDEDOR, CLIENTE + 3 BOTÕES FIXOS) -->
+  <div style="background-color: var(--pdv-primary-mid);" class="text-white px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+    <div class="flex flex-wrap items-center gap-3 sm:gap-4 font-semibold">
+      <span>👤 Loja: <strong id="top-store-name" class="font-black">Carregando...</strong></span>
+      <span>📍 Unidade: <strong id="top-unit-badge" class="font-black">002 Dom José</strong></span>
+      <span>👤 Cliente: <strong id="top-client-name" class="font-black">Consumidor</strong></span>
+      <label class="inline-flex items-center gap-1 bg-white/15 rounded-lg px-2 py-0.5 text-[11px]">
+        <span>🪪 CPF:</span>
+        <input id="top-cpf-input" type="text" maxlength="14" oninput="formatCpfInput(this)" placeholder="Opcional (NFC-e)" class="w-28 bg-transparent text-white placeholder:text-white/60 font-mono font-bold text-[11px] focus:outline-none" />
+      </label>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button onclick="document.getElementById('main-barcode-input').focus()" style="color: var(--pdv-primary-dark);" class="px-2.5 py-1 rounded-lg bg-white font-black text-[11px] cursor-pointer shadow-xs">🖥️ PDV</button>
+      <button onclick="goToAppClient()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] cursor-pointer">🛍️ App Cliente</button>
+      <button onclick="goToManager()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] cursor-pointer">⚙️ Painel Gestor</button>
+    </div>
+  </div>
+
+  <!-- FAIXA 2: BARRA LARGA DE BIPAGEM -->
+  <div style="background-color: var(--pdv-primary);" class="px-3 sm:px-5 py-2.5 shadow-md">
+    <div class="flex items-center gap-3">
+      <input
+        id="main-barcode-input"
+        type="text"
+        autocomplete="off"
+        placeholder="Digite o Código ou Passe o Produto"
+        onkeydown="handleMainInputKey(event)"
+        class="flex-1 bg-transparent text-white placeholder:text-white/75 text-lg sm:text-2xl font-semibold text-center focus:outline-none tracking-wide"
+      />
+      <button onclick="openPaymentScreen()" title="Ir para Recebimento (ou Enter com campo vazio)" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shrink-0 cursor-pointer shadow">
+        💰 Receber
+      </button>
+    </div>
+  </div>
+
+  <!-- ÁREA PRINCIPAL EM 2 COLUNAS -->
+  <main class="flex-1 p-2.5 sm:p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
+
+    <!-- COLUNA ESQUERDA: PEDIDOS DO APP + BARRA DE ATALHOS EMBAIXO -->
+    <aside class="lg:col-span-3 bg-white rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between overflow-hidden min-h-[420px]">
+      <div class="p-3.5 flex-1 flex flex-col min-h-0">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+          <h2 style="color: var(--pdv-primary-dark);" class="text-xs font-black flex items-center gap-1.5">📱 Pedidos do App</h2>
+          <div class="flex items-center gap-1.5">
+            <span id="orders-badge" class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black">0</span>
+            <button onclick="loadAppOrders()" title="Atualizar pedidos" class="text-xs text-slate-500 hover:text-slate-900 cursor-pointer">🔄</button>
+          </div>
+        </div>
+
+        <div id="left-orders-list" class="space-y-2 flex-1 overflow-y-auto scroll-slim pr-0.5"></div>
+      </div>
+
+      <!-- Barra inferior de ícones rápidos -->
+      <div style="background-color: var(--pdv-primary-mid);" class="text-white p-2 grid grid-cols-6 gap-1 text-center">
+        <button onclick="openF3Modal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: F3">
+          <span class="text-base leading-none">📦</span>
+          <span class="text-[9px] font-black mt-1">F3 Prod.</span>
+        </button>
+        <button onclick="openDiversos()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: N1">
+          <span class="text-base leading-none">➕</span>
+          <span class="text-[9px] font-black mt-1">N1 Div.</span>
+        </button>
+        <button onclick="openDiscountModal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: D">
+          <span class="text-base leading-none">🏷️</span>
+          <span class="text-[9px] font-black mt-1">D Desc.</span>
+        </button>
+        <button onclick="openReportModal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: R">
+          <span class="text-base leading-none">📋</span>
+          <span class="text-[9px] font-black mt-1">R Relat.</span>
+        </button>
+        <button onclick="openF12Modal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: F12">
+          <span class="text-base leading-none">📊</span>
+          <span class="text-[9px] font-black mt-1">F12 Fech.</span>
+        </button>
+        <button onclick="openTrocaModal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl bg-white/15 hover:bg-white/25 cursor-pointer" title="Troca, Devolução e Vale-Troca">
+          <span class="text-base leading-none">🔄</span>
+          <span class="text-[9px] font-black mt-1">Troca</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL (CENTRO/DIREITA): CAIXA LIVRE OU CUPOM ATIVO -->
+    <section class="lg:col-span-9 bg-white rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between overflow-hidden min-h-[420px]">
+
+      <!-- ESTADO 1: CAIXA LIVRE -->
+      <div id="state-caixa-livre" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+        <div style="color: var(--pdv-primary-dark);" class="text-5xl sm:text-7xl font-black tracking-tight">Caixa Livre</div>
+        <div id="live-clock" style="color: var(--pdv-primary-mid);" class="text-3xl sm:text-4xl font-extrabold mt-3 tabular-nums">00:00:00</div>
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-slate-500">
+          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">F3</kbd> Produtos</span>
+          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">N1</kbd> Diversos</span>
+          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">D</kbd> Desconto</span>
+          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">R</kbd> Relatório</span>
+          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">F12</kbd> Fechamento</span>
+          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">I</kbd> Imprimir Última</span>
+          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">PLU$Valor</kbd> Granel</span>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <button onclick="reprintLastSale()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🖨️ I — Imprimir Última Venda</button>
+          <button onclick="openCaixaMoveModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">💵 Sangria / Suprimento</button>
+          <button onclick="syncOfflineQueue(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🔄 Sincronizar</button>
+        </div>
+      </div>
+
+      <!-- ESTADO 2: CUPOM EM ANDAMENTO -->
+      <div id="state-cupom-aberto" class="hidden flex-1 flex flex-col justify-between">
+        <div class="p-4 flex-1 flex flex-col min-h-0">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2.5 mb-2.5 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span style="background-color: var(--pdv-primary);" class="px-2.5 py-1 rounded-lg text-white text-xs font-black">VENDA EM ANDAMENTO</span>
+              <span id="cupom-item-count" class="text-xs font-bold text-slate-500">0 itens</span>
+              <span id="cupom-mix-badge" class="hidden px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-black">🎉 Atacado Mix Ativo</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openDiscountModal()" class="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-extrabold cursor-pointer">🏷️ D — Desconto</button>
+              <button onclick="cancelCupom()" class="px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-extrabold cursor-pointer">✕ Cancelar Venda</button>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto scroll-slim">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[10px] uppercase text-slate-400">
+                  <th class="py-1.5 pr-2">#</th>
+                  <th class="py-1.5 px-2">Produto</th>
+                  <th class="py-1.5 px-2 text-center">Qtd</th>
+                  <th class="py-1.5 px-2 text-right">Unitário</th>
+                  <th class="py-1.5 px-2 text-right">Subtotal</th>
+                  <th class="py-1.5 pl-2 text-right"></th>
+                </tr>
+              </thead>
+              <tbody id="cupom-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="border-t-2 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div class="space-y-0.5 text-xs font-bold text-slate-600">
+            <div id="cupom-discount-line" class="hidden text-emerald-700 font-black"></div>
+            <div>Aperte <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-black text-slate-800">Enter</kbd> com a barra vazia ou clique em <strong>Receber</strong>.</div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="text-right">
+              <div style="color: var(--pdv-primary);" class="text-[10px] font-black uppercase">TOTAL DA VENDA</div>
+              <div id="cupom-total-big" style="color: var(--pdv-primary-dark);" class="text-3xl sm:text-4xl font-black tabular-nums">R$ 0,00</div>
+            </div>
+            <button onclick="openPaymentScreen()" class="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-md cursor-pointer active:scale-95 transition">
+              💰 RECEBER
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FAIXA FINAL: RODAPÉ FINO DE STATUS -->
+  <footer style="background-color: var(--pdv-primary-mid);" class="text-white px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold">
+    <div class="flex flex-wrap items-center gap-4">
+      <span>Caixa <strong>001</strong></span>
+      <span id="footer-online-status">🟢 <strong>Online</strong></span>
+      <span id="footer-products-count">0 produtos carregados</span>
+      <span id="footer-operator">Operador: --</span>
+    </div>
+    <div id="footer-last-sale">✓ Pronto para iniciar vendas</div>
+  </footer>
+
+  <!-- ==================== MODAL: TELA DE PAGAMENTO (F1 A F5) ==================== -->
+  <div id="modal-payment" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-2 sm:p-4">
+    <div style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="rounded-3xl max-w-4xl w-full p-4 sm:p-5 shadow-2xl border-2 grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="lg:col-span-7 space-y-3">
+        <div style="border-color: var(--pdv-primary);" class="rounded-2xl overflow-hidden border-2 bg-white shadow-sm">
+          <div style="background-color: var(--pdv-primary);" class="text-white px-4 py-2.5 flex items-center justify-between">
+            <span class="text-sm font-bold">Restante:</span>
+            <span id="pay-remaining" class="text-2xl sm:text-3xl font-black tabular-nums">R$ 0,00</span>
+          </div>
+          <div style="background-color: var(--pdv-primary-mid);" class="text-white px-4 py-1.5 grid grid-cols-2 gap-3 text-xs font-bold">
+            <div class="flex items-center justify-between">
+              <span>Acréscimo:</span>
+              <button onclick="editPayExtra()" id="pay-extra-val" class="underline cursor-pointer font-black">R$ 0,00</button>
+            </div>
+            <div class="flex items-center justify-between">
+              <span>Desconto:</span>
+              <button onclick="openDiscountModal()" id="pay-disc-val" class="underline cursor-pointer font-black">R$ 0,00</button>
+            </div>
+          </div>
+          <div class="px-4 py-2.5 flex items-center justify-between gap-3 bg-slate-50">
+            <label for="pay-receive-input" class="text-base font-bold text-slate-600">Receber:</label>
+            <input id="pay-receive-input" type="number" step="0.01" class="w-44 text-right text-2xl font-black text-slate-800 bg-white border border-slate-300 rounded-xl px-3 py-1 focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 text-white">
+          <button onclick="applyPayment('Dinheiro')" class="pay-btn pay-btn-primary rounded-xl p-4 flex items-center gap-3 text-left cursor-pointer shadow">
+            <span class="text-2xl font-black opacity-90">F1</span>
+            <div><div class="text-sm font-black">DINHEIRO</div><div class="text-[10px] opacity-80 font-bold">A VISTA</div></div>
+          </button>
+          <button onclick="applyPayment('Crédito')" class="pay-btn rounded-xl p-4 flex items-center gap-3 text-left cursor-pointer shadow">
+            <span class="text-2xl font-black opacity-90">F2</span>
+            <div><div class="text-sm font-black">CRÉDITO</div><div class="text-[10px] opacity-80 font-bold">A VISTA / PARC.</div></div>
+          </button>
+          <button onclick="applyPayment('Débito')" class="pay-btn rounded-xl p-4 flex items-center gap-3 text-left cursor-pointer shadow">
+            <span class="text-2xl font-black opacity-90">F3</span>
+            <div><div class="text-sm font-black">DÉBITO</div><div class="text-[10px] opacity-80 font-bold">A VISTA</div></div>
+          </button>
+          <button onclick="applyPayment('PIX')" class="pay-btn rounded-xl p-4 flex items-center gap-3 text-left cursor-pointer shadow">
+            <span class="text-2xl font-black opacity-90">F4</span>
+            <div><div class="text-sm font-black">PIX</div><div class="text-[10px] opacity-80 font-bold">A VISTA</div></div>
+          </button>
+          <button onclick="applyPayment('Vale Troca')" class="pay-btn rounded-xl p-4 flex items-center gap-3 text-left cursor-pointer shadow">
+            <span class="text-2xl font-black opacity-90">F5</span>
+            <div><div class="text-sm font-black">VALE TROCA</div><div class="text-[10px] opacity-80 font-bold">A VISTA</div></div>
+          </button>
+          <button onclick="closeModal('modal-payment')" class="rounded-xl p-4 bg-white hover:bg-slate-100 border-2 border-slate-300 text-slate-700 font-black text-xs flex items-center justify-center cursor-pointer">
+            ESC — Voltar ao Cupom
+          </button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 flex flex-col justify-between gap-3">
+        <div class="bg-white rounded-2xl border border-slate-300 p-3 flex-1 flex flex-col">
+          <div style="color: var(--pdv-primary-dark);" class="text-xs font-black border-b border-slate-100 pb-1.5 mb-2">Pagamentos Realizados</div>
+          <div id="pay-done-list" class="flex-1 flex flex-col justify-center items-center text-slate-400 font-bold text-sm space-y-1.5">
+            Aguardando Pagamento
+          </div>
+          <div id="pay-troco-banner" class="hidden mt-2 bg-amber-100 border border-amber-300 text-amber-950 rounded-xl px-3 py-2 text-xs font-black text-center"></div>
+          <button id="btn-confirm-close-sale" onclick="finalizeConfirmedSale()" class="hidden mt-2 w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-lg cursor-pointer animate-pulse">
+            ✅ F1 — FINALIZAR E FECHAR VENDA
+          </button>
+          <button onclick="resetPayments()" class="mt-2 w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs cursor-pointer">
+            🔄 Refazer Pagamentos
+          </button>
+        </div>
+
+        <div style="background-color: var(--pdv-primary);" class="text-white rounded-2xl p-4 space-y-1.5 text-xs shadow">
+          <div class="text-sm font-black border-b border-white/20 pb-1.5 mb-1">Resumo da Venda</div>
+          <div class="flex justify-between"><span>Valor Total:</span><strong id="sum-subtotal" class="tabular-nums">R$ 0,00</strong></div>
+          <div class="flex justify-between text-emerald-200"><span>Desconto Total:</span><strong id="sum-disc" class="tabular-nums">- R$ 0,00</strong></div>
+          <div class="flex justify-between text-amber-200"><span>Acréscimo Total:</span><strong id="sum-extra" class="tabular-nums">+ R$ 0,00</strong></div>
+          <div class="flex justify-between text-base font-black pt-2 border-t border-white/20 mt-1">
+            <span>Total Recebido:</span><span id="sum-received" class="tabular-nums">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: F3 CONSULTA DE PRODUTOS ==================== -->
+  <div id="modal-f3" class="hidden fixed inset-0 z-50 bg-slate-900/70 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">📦 F3 — Consulta de Produtos (1 clique = detalhes • 2 cliques = lançar)</h3>
+        <button onclick="closeModal('modal-f3')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <input id="f3-search" type="text" oninput="renderF3List()" placeholder="Buscar por nome, parte do nome, código de barras ou PLU..." class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3.5 py-2 text-xs font-bold focus:outline-none" />
+      <div id="f3-results" class="space-y-1.5 max-h-60 overflow-y-auto scroll-slim"></div>
+      <div id="f3-detail" style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="hidden border rounded-2xl p-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <img id="f3-det-img" src="" alt="" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-200 p-1 shrink-0 hidden" />
+          <div class="min-w-0">
+            <div id="f3-det-name" style="color: var(--pdv-primary-dark);" class="text-xs font-black truncate"></div>
+            <div id="f3-det-desc" class="text-[11px] font-semibold text-slate-600 mt-0.5"></div>
+            <div id="f3-det-stock" class="text-[11px] font-black text-emerald-800 mt-0.5"></div>
+          </div>
+        </div>
+        <button id="f3-det-add" style="background-color: var(--pdv-primary);" class="px-4 py-2 rounded-xl text-white text-xs font-black shrink-0 cursor-pointer">+ Lançar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: N1 DIVERSOS ==================== -->
+  <div id="modal-n1" class="hidden fixed inset-0 z-50 bg-slate-900/70 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">➕ N1 — Produto Diversos</h3>
+        <button onclick="closeModal('modal-n1')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">Valor (R$)</label>
+        <input id="n1-val" type="number" step="0.01" onkeydown="if(event.key==='Enter') confirmDiversos();" placeholder="Ex: 15.00" class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-black" />
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">Descrição (opcional)</label>
+        <input id="n1-desc" type="text" value="DIVERSOS" onkeydown="if(event.key==='Enter') confirmDiversos();" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold" />
+      </div>
+      <button onclick="confirmDiversos()" style="background-color: var(--pdv-primary);" class="w-full py-2.5 rounded-xl text-white font-black text-xs cursor-pointer">Enter — Lançar no Cupom</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: D DESCONTO ==================== -->
+  <div id="modal-disc" class="hidden fixed inset-0 z-50 bg-slate-900/70 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">🏷️ D — Aplicar Desconto</h3>
+        <button onclick="closeModal('modal-disc')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="disc-mode-rs" onclick="setDiscMode('rs')" style="background-color: var(--pdv-primary);" class="py-2 rounded-xl text-white text-xs font-black cursor-pointer">R$ (Reais)</button>
+        <button id="disc-mode-pct" onclick="setDiscMode('pct')" class="py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-black cursor-pointer">% (Porcentagem)</button>
+      </div>
+      <input id="disc-input" type="number" step="0.01" onkeydown="if(event.key==='Enter') confirmDiscount();" placeholder="Digite o valor do desconto..." class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-black" />
+      <button onclick="confirmDiscount()" class="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-black text-xs cursor-pointer">Aplicar Desconto</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: R RELATÓRIO DE VENDAS (CLICÁVEL P/ EDITAR) ==================== -->
+  <div id="modal-report" class="hidden fixed inset-0 z-50 bg-slate-900/70 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <div>
+          <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">📋 R — Relatório de Vendas de Hoje</h3>
+          <p class="text-[11px] font-semibold text-slate-500">Clique em qualquer venda para ver itens, trocar forma de pagamento ou reabrir no caixa.</p>
+        </div>
+        <button onclick="closeModal('modal-report')" class="font-black text-slate-400 cursor-pointer text-lg">✕</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <div id="report-list" class="md:col-span-6 space-y-2 max-h-80 overflow-y-auto scroll-slim pr-1"></div>
+        <div id="report-detail" style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="md:col-span-6 border rounded-2xl p-3.5 flex flex-col justify-between min-h-[240px]">
+          <div class="flex-1 flex items-center justify-center text-center text-xs font-bold text-slate-400">
+            👈 Clique em uma venda ao lado para abrir e editar
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: F12 FECHAMENTO DO DIA ==================== -->
+  <div id="modal-f12" class="hidden fixed inset-0 z-50 bg-slate-900/70 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">📊 F12 — Fechamento do Dia</h3>
+        <button onclick="closeModal('modal-f12')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <div id="f12-body" class="space-y-2 text-xs"></div>
+      <button onclick="closeModal('modal-f12')" style="background-color: var(--pdv-primary);" class="w-full py-2.5 rounded-xl text-white font-black text-xs cursor-pointer">Fechar Resumo</button>
+    </div>
+  </div>
+
+  <!-- ==================== POP-UP PÓS-VENDA: IMPRIMIR CUPOM? (COMEÇA EM NÃO!) ==================== -->
+  <div id="modal-print-popup" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4 border-2 border-slate-200">
+      <div class="text-center space-y-1">
+        <div class="text-3xl">✅</div>
+        <h2 id="print-popup-title" class="text-base font-black text-slate-900">Venda Finalizada</h2>
+        <p class="text-xs font-bold text-slate-500">Imprimir cupom? Use <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded font-black text-slate-800">←</kbd> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded font-black text-slate-800">→</kbd> e <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded font-black text-slate-800">Enter</kbd></p>
+      </div>
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="text-[11px] font-extrabold text-slate-700">🪪 CPF na nota (opcional)</label>
+          <span id="popup-doc-type" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">🧾 Cupom Comum</span>
+        </div>
+        <input id="popup-cpf-input" type="text" maxlength="14" oninput="formatCpfInput(this); updatePopupCpfBadge();" placeholder="Vazio = cupom comum | CPF = marca p/ NFC-e" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold" />
+      </div>
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        <button id="btn-print-no" onclick="confirmPrintChoice(false)" class="py-3.5 rounded-2xl bg-slate-900 text-white font-black text-sm cursor-pointer transition">✕ NÃO</button>
+        <button id="btn-print-yes" onclick="confirmPrintChoice(true)" class="py-3.5 rounded-2xl bg-emerald-600 text-white font-black text-sm cursor-pointer transition">🖨️ SIM, IMPRIMIR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: TROCA / DEVOLUÇÃO / VALE-TROCA ==================== -->
+  <div id="modal-troca" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">🔄 Troca / Devolução</h3>
+        <button onclick="closeModal('modal-troca')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-2.5 text-xs">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">Buscar produto devolvido</label>
+          <input id="tr-search" type="text" oninput="renderTrocaProductOptions()" placeholder="Digite nome, EAN ou PLU..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 font-bold mb-1.5" />
+          <select id="tr-prod" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Qtd devolvida</label>
+            <input id="tr-qty" type="number" step="any" min="0.001" value="1" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-black" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Cliente (opcional)</label>
+            <input id="tr-client" type="text" placeholder="Consumidor" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+        </div>
+        <label class="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-xl p-2.5 font-bold text-rose-800 cursor-pointer">
+          <input id="tr-damaged" type="checkbox" class="w-4 h-4 accent-rose-600 rounded" />
+          <span>Produto aberto / avariado (NÃO devolver ao estoque)</span>
+        </label>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="confirmTroca('vale')" class="py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs cursor-pointer">🎟️ Gerar Vale-Troca</button>
+        <button onclick="confirmTroca('refund')" class="py-2.5 rounded-xl bg-slate-900 text-white font-black text-xs cursor-pointer">💵 Estornar Dinheiro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: SANGRIA / SUPRIMENTO ==================== -->
+  <div id="modal-caixa-move" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">💵 Sangria / Suprimento</h3>
+        <button onclick="closeModal('modal-caixa-move')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <button id="mv-btn-sangria" onclick="setCashMoveType('sangria')" class="py-2 rounded-xl bg-rose-600 text-white font-black cursor-pointer">➖ Sangria</button>
+        <button id="mv-btn-suprimento" onclick="setCashMoveType('suprimento')" class="py-2 rounded-xl bg-slate-100 text-slate-700 font-black cursor-pointer">➕ Suprimento</button>
+      </div>
+      <input id="mv-val" type="number" step="0.01" placeholder="Valor (R$)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-lg font-black" />
+      <input id="mv-note" type="text" placeholder="Motivo (ex: Troco, pagamento fornecedor)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold" />
+      <button onclick="confirmCashMove()" style="background-color: var(--pdv-primary);" class="w-full py-2.5 rounded-xl text-white font-black text-xs cursor-pointer">Salvar Movimentação</button>
+    </div>
+  </div>
+
+  <!-- ÁREA OCULTA DE IMPRESSÃO TÉRMICA (80mm/58mm) -->
+  <div id="thermal-receipt-area" class="hidden"></div>
+
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white px-4 py-2.5 rounded-2xl text-xs font-extrabold shadow-xl"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://pimqhnjyahykpewbzpum.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Zrf-FIwgM87vZTbN8ybmcA_UUTAi2eQ';
+    const SUPER_ADMIN_EMAILS = ['leonardomoura@gmail.com'];
+    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const storeSlug = (urlParams.get('loja') || localStorage.getItem('pdv_last_slug') || 'recanto').trim().toLowerCase();
+    try { localStorage.setItem('pdv_last_slug', storeSlug); } catch (e) {}
+
+    let currentUser = null;
+    let currentStore = null;
+    let catalog = [];
+    let appOrders = [];
+    let salesHistory = [];
+    let selectedSaleIdx = null;
+    let cupom = [];
+    let activeAppOrderId = null;
+    let discountAmount = 0;
+    let extraAmount = 0;
+    let discMode = 'rs';
+    let currentPayments = [];
+    let pendingSaleTroco = 0;
+    let printPopupSelectedYes = false;
+    let lastCompletedSale = null;
+    let cashMoveType = 'sangria';
+
+    const OFFLINE_QUEUE_KEY = `pdv_offline_queue_${storeSlug}`;
+    const PRODUCTS_CACHE_KEY = `pdv_products_cache_${storeSlug}`;
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+    function brl(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
+
+    function darkenHex(hex, amt) {
+      const h = String(hex || '#334155').replace('#', '');
+      if (h.length !== 6) return '#1e293b';
+      const n = parseInt(h, 16);
+      const r = Math.max(0, (n >> 16) - amt);
+      const g = Math.max(0, ((n >> 8) & 255) - amt);
+      const b = Math.max(0, (n & 255) - amt);
+      return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+    function lightenHex(hex, amt) {
+      const h = String(hex || '#334155').replace('#', '');
+      if (h.length !== 6) return '#475569';
+      const n = parseInt(h, 16);
+      const r = Math.min(255, (n >> 16) + amt);
+      const g = Math.min(255, ((n >> 8) & 255) + amt);
+      const b = Math.min(255, (n & 255) + amt);
+      return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function applyStoreTheme(primaryHex) {
+      const p = (primaryHex && /^#[0-9a-fA-F]{6}$/.test(primaryHex)) ? primaryHex : '#334155';
+      const root = document.documentElement.style;
+      // Garante alto contraste para texto branco nos botões mesmo com cores claras da loja
+      root.setProperty('--pdv-primary', darkenHex(p, 18));
+      root.setProperty('--pdv-primary-dark', darkenHex(p, 42));
+      root.setProperty('--pdv-primary-mid', darkenHex(p, 6));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(window._tt);
+      window._tt = setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+
+    function goToAppClient() {
+      window.location.href = `index.html?loja=${encodeURIComponent(storeSlug)}`;
+    }
+    function goToManager() {
+      window.location.href = `index.html?loja=${encodeURIComponent(storeSlug)}#gestor`;
+    }
+
+    function updateOnlineStatusUI() {
+      const q = getOfflineQueue();
+      const el = document.getElementById('footer-online-status');
+      if (!navigator.onLine) {
+        el.innerHTML = `🟠 <strong>Offline (${q.length} na fila)</strong>`;
+      } else if (q.length > 0) {
+        el.innerHTML = `🟡 <strong>Online (${q.length} pendente${q.length > 1 ? 's' : ''})</strong>`;
+      } else {
+        el.innerHTML = `🟢 <strong>Online (Sincronizado)</strong>`;
+      }
+    }
+
+    window.addEventListener('online', () => { updateOnlineStatusUI(); syncOfflineQueue(false); });
+    window.addEventListener('offline', () => { updateOnlineStatusUI(); showToast('🟠 Sem internet — vendas continuam salvando na fila local!'); });
+
+    function getOfflineQueue() {
+      try { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); } catch (e) { return []; }
+    }
+    function saveOfflineQueue(arr) {
+      try { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(arr)); } catch (e) {}
+      updateOnlineStatusUI();
+    }
+
+    // AUTH & BOOT
+    async function bootPdv() {
+      if (!sb) {
+        showGateBlocked('Não foi possível conectar ao Supabase. Verifique a conexão.');
+        return;
+      }
+      const { data: sessData } = await sb.auth.getSession();
+      currentUser = sessData?.session?.user || null;
+      if (!currentUser) {
+        showGateLogin('Faça login com a conta de Gestor desta loja para abrir o caixa.');
+        return;
+      }
+
+      const { data: st, error: stErr } = await sb.from('stores').select('*').eq('slug', storeSlug).maybeSingle();
+      if (stErr || !st) {
+        showGateBlocked(`Loja "${storeSlug}" não encontrada no sistema.`);
+        return;
+      }
+      currentStore = st;
+      applyStoreTheme(st.primary_color);
+
+      const isSuper = SUPER_ADMIN_EMAILS.includes(String(currentUser.email || '').toLowerCase().trim());
+      const isOwner = st.owner_id === currentUser.id;
+      const pdvEnabled = !!(st.modules && st.modules.pdv === true);
+
+      if (!isOwner && !isSuper) {
+        showGateLogin(`A conta ${currentUser.email} não é dona da loja "${st.name || storeSlug}". Entre com a conta correta.`);
+        return;
+      }
+      if (!pdvEnabled && !isSuper) {
+        showGateBlocked(`O módulo PDV não está ativado para "${st.name || storeSlug}". Ative no plano para liberar o caixa.`);
+        return;
+      }
+
+      // Liberado!
+      document.getElementById('pdv-gate').classList.add('hidden');
+      document.title = `PDV — ${st.name || storeSlug}`;
+      document.getElementById('top-store-name').textContent = st.name || storeSlug;
+      document.getElementById('footer-operator').textContent = `Operador: ${currentUser.email}`;
+
+      await Promise.all([loadCatalog(), loadAppOrders(), loadTodaySales()]);
+      await syncOfflineQueue(false);
+      updateOnlineStatusUI();
+      document.getElementById('main-barcode-input').focus();
+    }
+
+    function showGateLogin(msg) {
+      document.getElementById('pdv-gate').classList.remove('hidden');
+      document.getElementById('gate-subtitle').textContent = msg;
+      document.getElementById('gate-login-form').classList.remove('hidden');
+      document.getElementById('gate-blocked').classList.add('hidden');
+    }
+
+    function showGateBlocked(msg) {
+      document.getElementById('pdv-gate').classList.remove('hidden');
+      document.getElementById('gate-title').textContent = '🔒 Acesso Bloqueado';
+      document.getElementById('gate-subtitle').textContent = '';
+      document.getElementById('gate-login-form').classList.add('hidden');
+      document.getElementById('gate-blocked').classList.remove('hidden');
+      document.getElementById('gate-blocked-msg').textContent = msg;
+    }
+
+    async function handlePdvLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('gate-email').value.trim();
+      const password = document.getElementById('gate-password').value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) { showToast('⚠️ Login inválido: ' + error.message); return; }
+      bootPdv();
+    }
+
+    async function loadCatalog() {
+      if (!currentStore) return;
+      try {
+        const { data, error } = await sb.from('products').select('*').eq('store_id', currentStore.id).order('name');
+        if (!error && Array.isArray(data)) {
+          catalog = data.map(p => ({
+            id: p.id,
+            name: p.name || '',
+            plu: String(p.internal_code || '').trim(),
+            ean: String(p.barcode || '').trim(),
+            extraEans: Array.isArray(p.extra_barcodes) ? p.extra_barcodes.map(x => typeof x === 'string' ? x : (x.code || '')).filter(Boolean) : [],
+            price: parseFloat(p.price) || 0,
+            promoPrice: (p.promo && p.promo_price && parseFloat(p.promo_price) > 0) ? parseFloat(p.promo_price) : null,
+            unit: (p.unit_type || 'UN').toUpperCase(),
+            stock: p.stock_qty != null ? parseFloat(p.stock_qty) : null,
+            whQty: p.wholesale_qty ? parseInt(p.wholesale_qty, 10) : null,
+            whPrice: p.wholesale_price ? parseFloat(p.wholesale_price) : null,
+            whGroup: String(p.wholesale_group || '').trim(),
+            image: p.image_url || ''
+          }));
+          try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(catalog)); } catch (e) {}
+        }
+      } catch (e) {
+        try { catalog = JSON.parse(localStorage.getItem(PRODUCTS_CACHE_KEY) || '[]'); } catch (e2) {}
+      }
+      document.getElementById('footer-products-count').textContent = `${catalog.length} produtos carregados`;
+    }
+
+    async function loadAppOrders() {
+      if (!currentStore || !navigator.onLine) return;
+      const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+      const { data } = await sb.from('customer_orders')
+        .select('*')
+        .eq('store_id', currentStore.id)
+        .gte('created_at', startToday.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(30);
+      appOrders = Array.isArray(data) ? data : [];
+      renderAppOrders();
+    }
+
+    async function loadTodaySales() {
+      if (!currentStore || !navigator.onLine) return;
+      const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+      const { data, error } = await sb.from('pdv_sales')
+        .select('*')
+        .eq('store_id', currentStore.id)
+        .eq('status', 'completed')
+        .gte('created_at', startToday.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (error) {
+        console.warn('[pdv_sales]', error.message);
+        return;
+      }
+      salesHistory = (data || []).map(s => ({
+        id: s.id,
+        time: new Date(s.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        client: s.client_name || 'Consumidor',
+        items: Array.isArray(s.items) ? s.items : [],
+        payments: Array.isArray(s.payments) ? s.payments : [],
+        total: parseFloat(s.total) || 0,
+        discount: parseFloat(s.discount_amount) || 0,
+        extra: parseFloat(s.extra_amount) || 0
+      }));
+    }
+
+    // MODAIS & ATALHOS GLOBAIS
+    function isAnyModalOpen() {
+      return !document.getElementById('pdv-gate').classList.contains('hidden') ||
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move']
+          .some(id => !document.getElementById(id).classList.contains('hidden'));
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById(id).classList.add('flex');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).classList.remove('flex');
+      document.getElementById('main-barcode-input')?.focus();
+    }
+
+    setInterval(() => {
+      document.getElementById('live-clock').textContent = new Date().toLocaleTimeString('pt-BR');
+    }, 1000);
+    document.getElementById('live-clock').textContent = new Date().toLocaleTimeString('pt-BR');
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('pdv-gate').classList.contains('hidden')) return;
+      const popOpen = !document.getElementById('modal-print-popup').classList.contains('hidden');
+      if (popOpen) {
+        const inCpf = document.activeElement?.id === 'popup-cpf-input';
+        if (e.key === 'ArrowRight' && !inCpf) { e.preventDefault(); printPopupSelectedYes = true; updatePrintFocusVisual(); return; }
+        if (e.key === 'ArrowLeft' && !inCpf) { e.preventDefault(); printPopupSelectedYes = false; updatePrintFocusVisual(); return; }
+        if (e.key === 'Enter') { e.preventDefault(); confirmPrintChoice(printPopupSelectedYes); return; }
+        if (e.key === 'Escape') { e.preventDefault(); confirmPrintChoice(false); return; }
+        return;
+      }
+      const payOpen = !document.getElementById('modal-payment').classList.contains('hidden');
+      if (e.key === 'Escape') {
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move'].forEach(closeModal);
+        return;
+      }
+      if (payOpen) {
+        const readyToClose = !document.getElementById('btn-confirm-close-sale').classList.contains('hidden');
+        if (readyToClose && (e.key === 'F1' || e.key === 'Enter')) {
+          e.preventDefault();
+          finalizeConfirmedSale();
+          return;
+        }
+        if (e.key === 'F1') { e.preventDefault(); applyPayment('Dinheiro'); }
+        else if (e.key === 'F2') { e.preventDefault(); applyPayment('Crédito'); }
+        else if (e.key === 'F3') { e.preventDefault(); applyPayment('Débito'); }
+        else if (e.key === 'F4') { e.preventDefault(); applyPayment('PIX'); }
+        else if (e.key === 'F5') { e.preventDefault(); applyPayment('Vale Troca'); }
+        return;
+      }
+      if (e.key === 'F3') { e.preventDefault(); openF3Modal(); return; }
+      if (e.key === 'F12') { e.preventDefault(); openF12Modal(); return; }
+
+      if (!isAnyModalOpen()) {
+        const mainInp = document.getElementById('main-barcode-input');
+        const activeEl = document.activeElement;
+        const typingElsewhere = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && activeEl.id !== 'main-barcode-input';
+        if (!typingElsewhere) {
+          const curVal = mainInp.value.trim();
+          if (!curVal && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            if (e.key.toLowerCase() === 'd') { e.preventDefault(); openDiscountModal(); return; }
+            if (e.key.toLowerCase() === 'r') { e.preventDefault(); openReportModal(); return; }
+            if (e.key.toLowerCase() === 'i') { e.preventDefault(); reprintLastSale(); return; }
+          }
+          if (activeEl !== mainInp && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              mainInp.focus();
+              handleMainInputKey(e);
+              return;
+            }
+            if (e.key.length === 1) mainInp.focus();
+          }
+        }
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (isAnyModalOpen()) return;
+      const tag = e.target?.tagName;
+      if (!['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(tag)) {
+        document.getElementById('main-barcode-input')?.focus();
+      }
+    });
+
+    function handleMainInputKey(e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const raw = document.getElementById('main-barcode-input').value.trim();
+      if (!raw) {
+        if (cupom.length > 0) openPaymentScreen();
+        return;
+      }
+      runCommand(raw);
+      document.getElementById('main-barcode-input').value = '';
+    }
+
+    function findCatalogProductByCode(code) {
+      const c = String(code || '').trim();
+      const low = c.toLowerCase();
+      return catalog.find(p => p.ean === c || (p.plu && p.plu.toLowerCase() === low) || p.extraEans.includes(c))
+        || catalog.find(p => p.name.toLowerCase().includes(low));
+    }
+
+    function runCommand(raw) {
+      const low = raw.toLowerCase().trim();
+      if (low === 'n1' || low === '1') { openDiversos(); return; }
+      if (low === 'd') { openDiscountModal(); return; }
+      if (low === 'r') { openReportModal(); return; }
+
+      // Granel por valor: PLU$Valor (ex: 42$15)
+      const mVal = raw.match(/^([a-zA-Z0-9]+)\$(\d+(?:[.,]\d+)?)$/);
+      if (mVal) {
+        const p = findCatalogProductByCode(mVal[1]);
+        const reais = parseFloat(mVal[2].replace(',', '.'));
+        const basePrice = p ? (p.promoPrice || p.price) : 0;
+        if (p && reais > 0 && basePrice > 0) {
+          const kg = +(reais / basePrice).toFixed(3);
+          cupom.push({
+            product_id: p.id, name: `${p.name} (${kg.toFixed(3)} ${p.unit})`,
+            qty: kg, base_unit: basePrice, unit_price: basePrice, subtotal: reais,
+            unit_type: p.unit, custom_total: reais, is_diversos: false
+          });
+          renderCupom();
+          showToast(`⚖️ Granel lançado: ${brl(reais)} (${kg.toFixed(3)} ${p.unit})`);
+          return;
+        }
+      }
+
+      // Multiplicação: 3*789...
+      let mult = 1, code = raw;
+      const mMul = raw.match(/^(\d+(?:[.,]\d+)?)\*(.+)$/);
+      if (mMul) { mult = parseFloat(mMul[1].replace(',', '.')) || 1; code = mMul[2].trim(); }
+
+      const prod = findCatalogProductByCode(code);
+      if (prod) {
+        addToCupom(prod, mult);
+      } else {
+        showToast('⚠️ Produto não encontrado. Aperte F3 para buscar por nome.');
+      }
+    }
+
+    function addToCupom(prod, qty = 1) {
+      const baseUnit = prod.promoPrice || prod.price;
+      const existing = cupom.find(c => c.product_id === prod.id && c.custom_total == null);
+      if (existing) existing.qty = +(existing.qty + qty).toFixed(3);
+      else cupom.push({
+        product_id: prod.id, name: prod.name, qty,
+        base_unit: baseUnit, unit_price: baseUnit, subtotal: baseUnit * qty,
+        unit_type: prod.unit, whQty: prod.whQty, whPrice: prod.whPrice, whGroup: prod.whGroup,
+        is_diversos: false
+      });
+      recalcCupomPricing();
+      renderCupom();
+    }
+
+    function recalcCupomPricing() {
+      const groupTotals = {};
+      cupom.forEach(c => {
+        if (c.whGroup) {
+          const k = c.whGroup.toLowerCase();
+          groupTotals[k] = (groupTotals[k] || 0) + Number(c.qty || 0);
+        }
+      });
+      let anyMix = false;
+      cupom.forEach(c => {
+        if (c.custom_total != null) { c.subtotal = c.custom_total; return; }
+        c.unit_price = c.base_unit;
+        c.is_mix = false;
+        if (c.whQty && c.whQty >= 2 && c.whPrice && c.whPrice > 0) {
+          const wUnit = c.whPrice / c.whQty;
+          const effQty = c.whGroup ? (groupTotals[c.whGroup.toLowerCase()] || c.qty) : c.qty;
+          if (wUnit < c.base_unit && effQty >= c.whQty) {
+            c.unit_price = wUnit;
+            c.is_mix = !!c.whGroup;
+            if (c.is_mix) anyMix = true;
+          }
+        }
+        c.subtotal = +(c.unit_price * c.qty).toFixed(2);
+      });
+      document.getElementById('cupom-mix-badge').classList.toggle('hidden', !anyMix);
+    }
+
+    function getCupomSubtotal() { return cupom.reduce((s, x) => s + Number(x.subtotal || 0), 0); }
+    function getCupomNetTotal() { return Math.max(0, +(getCupomSubtotal() - discountAmount + extraAmount).toFixed(2)); }
+
+    function renderCupom() {
+      recalcCupomPricing();
+      const hasItems = cupom.length > 0;
+      document.getElementById('state-caixa-livre').classList.toggle('hidden', hasItems);
+      document.getElementById('state-cupom-aberto').classList.toggle('hidden', !hasItems);
+      if (!hasItems) return;
+
+      document.getElementById('cupom-item-count').textContent = `${cupom.length} ${cupom.length === 1 ? 'item' : 'itens'}`;
+      document.getElementById('cupom-tbody').innerHTML = cupom.map((it, idx) => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-2 pr-2 font-bold text-slate-400">${idx + 1}</td>
+          <td class="py-2 px-2 font-extrabold text-slate-800">${escapeHtml(it.name)}${it.is_mix ? ' <span class="text-[10px] text-emerald-700 font-black">(Mix)</span>' : ''}</td>
+          <td class="py-2 px-2 text-center font-black">${it.qty}</td>
+          <td class="py-2 px-2 text-right font-semibold text-slate-600">${brl(it.unit_price)}</td>
+          <td style="color: var(--pdv-primary-dark);" class="py-2 px-2 text-right font-black">${brl(it.subtotal)}</td>
+          <td class="py-2 pl-2 text-right"><button onclick="cupom.splice(${idx},1); renderCupom();" class="text-rose-500 font-black cursor-pointer">✕</button></td>
+        </tr>`).join('');
+
+      const dl = document.getElementById('cupom-discount-line');
+      if (discountAmount > 0) {
+        dl.textContent = `🏷️ Desconto aplicado: - ${brl(discountAmount)}`;
+        dl.classList.remove('hidden');
+      } else {
+        dl.classList.add('hidden');
+      }
+      document.getElementById('cupom-total-big').textContent = brl(getCupomNetTotal());
+    }
+
+    function cancelCupom() {
+      cupom = []; discountAmount = 0; extraAmount = 0; currentPayments = []; activeAppOrderId = null;
+      document.getElementById('top-client-name').textContent = 'Consumidor';
+      renderCupom();
+      showToast('🗑️ Venda cancelada — Caixa Livre.');
+    }
+
+    // PEDIDOS DO APP
+    function renderAppOrders() {
+      const el = document.getElementById('left-orders-list');
+      document.getElementById('orders-badge').textContent = String(appOrders.length);
+      if (!appOrders.length) {
+        const logoHtml = currentStore?.logo_url
+          ? `<img src="${escapeHtml(currentStore.logo_url)}" alt="" class="w-20 h-20 object-contain rounded-2xl border border-slate-200 bg-white p-1" />`
+          : `<div style="background-color: var(--pdv-soft); color: var(--pdv-primary-dark);" class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-black">PDV</div>`;
+        el.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center py-8 text-slate-400 space-y-2">${logoHtml}<div class="text-xs font-bold">Nenhum pedido do App hoje</div></div>`;
+        return;
+      }
+      el.innerHTML = appOrders.map((o, i) => `
+        <div style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="border rounded-2xl p-2.5 space-y-1.5">
+          <div style="color: var(--pdv-primary-dark);" class="flex items-center justify-between text-xs font-black">
+            <span class="truncate">${escapeHtml(o.customer_name || 'Cliente App')}</span>
+            <span class="shrink-0">${brl(o.total)}</span>
+          </div>
+          <div class="text-[10px] font-semibold text-slate-500">${new Date(o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+          <button onclick="pullAppOrder(${i})" style="background-color: var(--pdv-primary);" class="w-full py-1.5 rounded-xl text-white text-[11px] font-black cursor-pointer">📥 Puxar p/ Caixa</button>
+        </div>`).join('');
+    }
+
+    function pullAppOrder(idx) {
+      const ord = appOrders[idx];
+      if (!ord) return;
+      activeAppOrderId = ord.id || null;
+      document.getElementById('top-client-name').textContent = ord.customer_name || 'Cliente App';
+      const itemsArr = Array.isArray(ord.items) ? ord.items : [];
+      itemsArr.forEach(it => {
+        const match = catalog.find(p => String(p.id) === String(it.id) || p.name.toLowerCase() === String(it.name || '').toLowerCase());
+        if (match) addToCupom(match, Number(it.qty) || 1);
+        else cupom.push({
+          product_id: null, name: it.name || 'Item App', qty: Number(it.qty) || 1,
+          base_unit: Number(it.price) || 0, unit_price: Number(it.price) || 0,
+          subtotal: (Number(it.price) || 0) * (Number(it.qty) || 1), is_diversos: true
+        });
+      });
+      renderCupom();
+      showToast(`📥 Pedido de ${ord.customer_name || 'Cliente'} carregado no caixa!`);
+    }
+
+    // PAGAMENTO + SALVAMENTO REAL NO SUPABASE (COM FILA OFFLINE)
+    function openPaymentScreen() {
+      if (!cupom.length) { showToast('⚠️ Passe pelo menos 1 produto antes de receber.'); return; }
+      currentPayments = [];
+      renderPaymentState();
+      openModal('modal-payment');
+      setTimeout(() => document.getElementById('pay-receive-input').select(), 60);
+    }
+
+    function formatCpfInput(el) {
+      let d = String(el.value || '').replace(/\D/g, '').slice(0, 11);
+      if (d.length > 9) d = `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+      else if (d.length > 6) d = `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
+      else if (d.length > 3) d = `${d.slice(0,3)}.${d.slice(3)}`;
+      el.value = d;
+    }
+
+    function renderPaymentState() {
+      const total = getCupomNetTotal();
+      const received = currentPayments.reduce((s, p) => s + p.amount, 0);
+      const remaining = Math.max(0, +(total - received).toFixed(2));
+      const isPaidFull = remaining <= 0.001 && currentPayments.length > 0;
+
+      document.getElementById('pay-remaining').textContent = brl(remaining);
+      document.getElementById('pay-disc-val').textContent = brl(discountAmount);
+      document.getElementById('pay-extra-val').textContent = brl(extraAmount);
+      document.getElementById('pay-receive-input').value = remaining.toFixed(2);
+
+      document.getElementById('sum-subtotal').textContent = brl(getCupomSubtotal());
+      document.getElementById('sum-disc').textContent = '- ' + brl(discountAmount);
+      document.getElementById('sum-extra').textContent = '+ ' + brl(extraAmount);
+      document.getElementById('sum-received').textContent = brl(received);
+
+      const trocoEl = document.getElementById('pay-troco-banner');
+      if (pendingSaleTroco > 0) {
+        trocoEl.textContent = `💵 TROCO PARA O CLIENTE: ${brl(pendingSaleTroco)}`;
+        trocoEl.classList.remove('hidden');
+      } else {
+        trocoEl.classList.add('hidden');
+      }
+
+      document.getElementById('btn-confirm-close-sale').classList.toggle('hidden', !isPaidFull);
+
+      const box = document.getElementById('pay-done-list');
+      if (!currentPayments.length) {
+        box.className = 'flex-1 flex flex-col justify-center items-center text-slate-400 font-bold text-sm';
+        box.innerHTML = 'Aguardando Pagamento';
+      } else {
+        box.className = 'flex-1 flex flex-col justify-start space-y-1.5 text-xs';
+        box.innerHTML = currentPayments.map(p => `
+          <div class="w-full bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex justify-between font-black text-emerald-900">
+            <span>${escapeHtml(p.method)}</span><span>${brl(p.amount)}</span>
+          </div>`).join('');
+      }
+    }
+
+    function applyPayment(method) {
+      const total = getCupomNetTotal();
+      const already = currentPayments.reduce((s, p) => s + p.amount, 0);
+      const remaining = Math.max(0, +(total - already).toFixed(2));
+      if (remaining <= 0.001) {
+        finalizeConfirmedSale();
+        return;
+      }
+      const val = parseFloat(document.getElementById('pay-receive-input').value) || 0;
+      if (val <= 0) return;
+      if (method === 'Dinheiro' && val > remaining) {
+        pendingSaleTroco = +(val - remaining).toFixed(2);
+      }
+      const applied = Math.min(val, remaining);
+      currentPayments.push({ method, amount: applied });
+      renderPaymentState();
+      const newRem = Math.max(0, +(total - currentPayments.reduce((s, p) => s + p.amount, 0)).toFixed(2));
+      if (newRem <= 0.001) {
+        showToast(`✅ Pago! Aperte F1 novamente (ou Enter) para fechar a venda.`);
+      } else {
+        showToast(`➕ ${brl(applied)} lançado em ${method} — falta ${brl(newRem)}.`);
+      }
+    }
+
+    async function finalizeConfirmedSale() {
+      const total = getCupomNetTotal();
+      const received = currentPayments.reduce((s, p) => s + p.amount, 0);
+      if (received + 0.001 < total) {
+        showToast('⚠️ Ainda falta valor para completar o pagamento.');
+        return;
+      }
+      const cpfRaw = (document.getElementById('top-cpf-input')?.value || '').trim();
+      const isFiscal = cpfRaw.replace(/\D/g, '').length === 11;
+
+      const salePayload = {
+        store_id: currentStore.id,
+        unit_code: '002',
+        client_name: document.getElementById('top-client-name').textContent || 'Consumidor',
+        customer_cpf: cpfRaw,
+        fiscal_requested: isFiscal,
+        operator_email: currentUser?.email || '',
+        items: cupom.map(x => ({ product_id: x.product_id || null, name: x.name, qty: x.qty, unit_price: x.unit_price, subtotal: x.subtotal, unit_type: x.unit_type || 'UN', is_diversos: !!x.is_diversos })),
+        payments: currentPayments.slice(),
+        subtotal: getCupomSubtotal(),
+        discount_amount: discountAmount,
+        extra_amount: extraAmount,
+        total,
+        status: 'completed',
+        origin: activeAppOrderId ? 'app_order' : 'pdv',
+        app_order_id: activeAppOrderId,
+        local_uid: `pdv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      };
+
+      salePayload.items.forEach(it => {
+        if (it.product_id) {
+          const p = catalog.find(x => x.id === it.product_id);
+          if (p && p.stock != null) p.stock = Math.max(0, +(p.stock - it.qty).toFixed(3));
+        }
+      });
+
+      const trocoFinal = pendingSaleTroco;
+      const nowStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      closeModal('modal-payment');
+      cupom = []; discountAmount = 0; extraAmount = 0; currentPayments = []; pendingSaleTroco = 0; activeAppOrderId = null;
+      document.getElementById('top-client-name').textContent = 'Consumidor';
+      if (document.getElementById('top-cpf-input')) document.getElementById('top-cpf-input').value = '';
+      renderCupom();
+
+      const saved = await persistSale(salePayload);
+      const record = {
+        id: saved?.id || salePayload.local_uid,
+        time: nowStr,
+        dateTime: new Date().toLocaleString('pt-BR'),
+        client: salePayload.client_name,
+        cpf: cpfRaw,
+        fiscal: isFiscal,
+        items: salePayload.items,
+        payments: salePayload.payments,
+        total: salePayload.total,
+        discount: salePayload.discount_amount,
+        extra: salePayload.extra_amount,
+        troco: trocoFinal
+      };
+      salesHistory.unshift(record);
+      lastCompletedSale = record;
+      document.getElementById('footer-last-sale').textContent = `✓ Recebimento Concluído às ${nowStr} (${brl(total)})`;
+      openPostSalePrintPopup(record);
+    }
+
+    function openPostSalePrintPopup(saleRec) {
+      printPopupSelectedYes = false; // SEMPRE COMEÇA EM NÃO
+      document.getElementById('print-popup-title').textContent = `Venda Finalizada — ${brl(saleRec.total)}${saleRec.troco > 0 ? ` (Troco ${brl(saleRec.troco)})` : ''}`;
+      document.getElementById('popup-cpf-input').value = saleRec.cpf || '';
+      updatePopupCpfBadge();
+      openModal('modal-print-popup');
+      updatePrintFocusVisual();
+    }
+
+    function updatePopupCpfBadge() {
+      const val = (document.getElementById('popup-cpf-input')?.value || '').trim();
+      const isNfe = val.replace(/\D/g, '').length === 11;
+      const b = document.getElementById('popup-doc-type');
+      if (!b) return;
+      b.className = isNfe
+        ? 'text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800'
+        : 'text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-700';
+      b.textContent = isNfe ? '🏛️ Vira NFC-e (CPF)' : '🧾 Cupom Comum';
+    }
+
+    function updatePrintFocusVisual() {
+      document.getElementById('btn-print-no')?.classList.toggle('btn-focus-ring', !printPopupSelectedYes);
+      document.getElementById('btn-print-yes')?.classList.toggle('btn-focus-ring', printPopupSelectedYes);
+    }
+
+    async function confirmPrintChoice(shouldPrint) {
+      const cpfVal = (document.getElementById('popup-cpf-input')?.value || '').trim();
+      const isNfe = cpfVal.replace(/\D/g, '').length === 11;
+      if (lastCompletedSale && cpfVal !== (lastCompletedSale.cpf || '')) {
+        lastCompletedSale.cpf = cpfVal;
+        lastCompletedSale.fiscal = isNfe;
+        if (typeof lastCompletedSale.id === 'number' && navigator.onLine) {
+          await sb.from('pdv_sales').update({ customer_cpf: cpfVal, fiscal_requested: isNfe }).eq('id', lastCompletedSale.id);
+        }
+      }
+      closeModal('modal-print-popup');
+      if (shouldPrint && lastCompletedSale) {
+        printThermalReceipt(lastCompletedSale);
+      } else {
+        showToast('✅ Venda fechada! Aperte I se precisar imprimir depois.');
+      }
+    }
+
+    function reprintLastSale() {
+      const target = lastCompletedSale || salesHistory[0];
+      if (!target) { showToast('⚠️ Nenhuma venda realizada ainda hoje para imprimir.'); return; }
+      printThermalReceipt(target);
+    }
+
+    function printThermalReceipt(sale) {
+      const isNfe = String(sale.cpf || '').replace(/\D/g, '').length === 11;
+      const storeTitle = (currentStore?.name || storeSlug).toUpperCase();
+      document.getElementById('thermal-receipt-area').innerHTML = `
+        <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+          <div style="font-weight:900; font-size:13px;">${escapeHtml(storeTitle)}</div>
+          <div style="font-size:10px;">${isNfe ? 'DOCUMENTO AUXILIAR NFC-e (COM CPF)' : 'COMPROVANTE DE VENDA'}</div>
+          <div style="font-size:10px;">${escapeHtml(sale.dateTime || sale.time || '')}</div>
+        </div>
+        ${isNfe ? `<div style="border-bottom:1px dashed #000; padding-bottom:4px; margin-bottom:6px; font-weight:700;">CPF CONSUMIDOR: ${escapeHtml(sale.cpf)}</div>` : ''}
+        <div style="border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+          ${(sale.items || []).map((it, idx) => `
+            <div style="margin-bottom:4px;">
+              <div style="font-weight:700;">${idx + 1}. ${escapeHtml(it.name)}</div>
+              <div style="display:flex; justify-content:space-between;">
+                <span>${it.qty} x ${brl(it.unit_price)}</span>
+                <strong>${brl(it.subtotal)}</strong>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+          ${sale.discount > 0 ? `<div style="display:flex; justify-content:space-between;"><span>DESCONTO:</span><span>- ${brl(sale.discount)}</span></div>` : ''}
+          <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:900;"><span>TOTAL:</span><span>${brl(sale.total)}</span></div>
+          ${(sale.payments || []).map(p => `<div style="display:flex; justify-content:space-between;"><span>PGTO (${escapeHtml(p.method).toUpperCase()}):</span><span>${brl(p.amount)}</span></div>`).join('')}
+          ${sale.troco > 0 ? `<div style="display:flex; justify-content:space-between;"><span>TROCO:</span><span>${brl(sale.troco)}</span></div>` : ''}
+        </div>
+        <div style="text-align:center; font-size:10px;">Obrigado pela preferencia!</div>
+      `;
+      window.print();
+    }
+
+    // TROCA / DEVOLUÇÃO / VALE-TROCA
+    function openTrocaModal() {
+      document.getElementById('tr-search').value = '';
+      document.getElementById('tr-qty').value = '1';
+      document.getElementById('tr-client').value = '';
+      document.getElementById('tr-damaged').checked = false;
+      renderTrocaProductOptions();
+      openModal('modal-troca');
+    }
+
+    function renderTrocaProductOptions() {
+      const q = (document.getElementById('tr-search')?.value || '').trim().toLowerCase();
+      const list = catalog.filter(p => !q || p.name.toLowerCase().includes(q) || p.ean.includes(q) || p.plu.toLowerCase() === q).slice(0, 50);
+      document.getElementById('tr-prod').innerHTML = list.map(p => `<option value="${p.id}">${escapeHtml(p.name)} — ${brl(p.promoPrice || p.price)}</option>`).join('');
+    }
+
+    async function confirmTroca(mode) {
+      const prodId = Number(document.getElementById('tr-prod')?.value || 0);
+      const prod = catalog.find(x => x.id === prodId);
+      const qty = parseFloat(document.getElementById('tr-qty')?.value) || 1;
+      const client = (document.getElementById('tr-client')?.value || '').trim() || 'Consumidor';
+      const damaged = !!document.getElementById('tr-damaged')?.checked;
+      if (!prod || qty <= 0) return;
+
+      const amount = +((prod.promoPrice || prod.price) * qty).toFixed(2);
+      if (!damaged && navigator.onLine) {
+        await sb.rpc('pdv_adjust_stock', { p_product_id: prod.id, p_delta: Math.abs(qty) });
+        await loadCatalog();
+      }
+      if (mode === 'vale') {
+        const code = 'VT-' + Math.floor(1000 + Math.random() * 9000);
+        if (navigator.onLine) {
+          await sb.from('pdv_vouchers').insert({ store_id: currentStore.id, code, client_name: client, product_name: prod.name, amount, damaged });
+        }
+        closeModal('modal-troca');
+        showToast(`🎟️ Vale-Troca ${code} (${brl(amount)}) criado! ${damaged ? 'Avariado (não voltou ao estoque)' : 'Devolvido ao estoque'}.`);
+      } else {
+        if (navigator.onLine) {
+          await sb.from('pdv_cash_movements').insert({ store_id: currentStore.id, unit_code: '002', move_type: 'refund', amount, note: `Estorno troca: ${qty}x ${prod.name}`, operator_email: currentUser?.email || '' });
+        }
+        closeModal('modal-troca');
+        showToast(`💵 Estorno de ${brl(amount)} registrado no caixa!`);
+      }
+    }
+
+    // SANGRIA / SUPRIMENTO
+    function openCaixaMoveModal() {
+      document.getElementById('mv-val').value = '';
+      document.getElementById('mv-note').value = '';
+      setCashMoveType('sangria');
+      openModal('modal-caixa-move');
+      setTimeout(() => document.getElementById('mv-val').focus(), 60);
+    }
+
+    function setCashMoveType(t) {
+      cashMoveType = t;
+      document.getElementById('mv-btn-sangria').className = t === 'sangria' ? 'py-2 rounded-xl bg-rose-600 text-white font-black cursor-pointer' : 'py-2 rounded-xl bg-slate-100 text-slate-700 font-black cursor-pointer';
+      document.getElementById('mv-btn-suprimento').className = t === 'suprimento' ? 'py-2 rounded-xl bg-emerald-600 text-white font-black cursor-pointer' : 'py-2 rounded-xl bg-slate-100 text-slate-700 font-black cursor-pointer';
+    }
+
+    async function confirmCashMove() {
+      const amount = parseFloat(document.getElementById('mv-val')?.value) || 0;
+      const note = (document.getElementById('mv-note')?.value || '').trim();
+      if (amount <= 0) return;
+      if (navigator.onLine) {
+        const { error } = await sb.from('pdv_cash_movements').insert({
+          store_id: currentStore.id, unit_code: '002', move_type: cashMoveType, amount, note, operator_email: currentUser?.email || ''
+        });
+        if (error) { showToast('⚠️ Erro: rode o SQL da Etapa 4C no Supabase.'); return; }
+      }
+      closeModal('modal-caixa-move');
+      showToast(`✅ ${cashMoveType === 'sangria' ? 'Sangria' : 'Suprimento'} de ${brl(amount)} registrado!`);
+    }
+
+    async function persistSale(salePayload) {
+      if (!navigator.onLine) {
+        const q = getOfflineQueue(); q.push(salePayload); saveOfflineQueue(q);
+        return null;
+      }
+      try {
+        let { data, error } = await sb.from('pdv_sales').insert(salePayload).select('id').single();
+        if (error && String(error.message || '').includes('customer_cpf')) {
+          const fallbackPayload = { ...salePayload };
+          delete fallbackPayload.customer_cpf;
+          delete fallbackPayload.fiscal_requested;
+          const retry = await sb.from('pdv_sales').insert(fallbackPayload).select('id').single();
+          data = retry.data; error = retry.error;
+        }
+        if (error) throw error;
+        for (const it of salePayload.items) {
+          if (it.product_id && Number(it.qty) > 0) {
+            await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: -Math.abs(Number(it.qty)) });
+          }
+        }
+        return data;
+      } catch (e) {
+        console.warn('[Offline fallback]', e);
+        const q = getOfflineQueue(); q.push(salePayload); saveOfflineQueue(q);
+        showToast('🟠 Venda salva na fila local e será sincronizada assim que o banco responder.');
+        return null;
+      }
+    }
+
+    async function syncOfflineQueue(showFeedback) {
+      if (!navigator.onLine || !sb || !currentStore) {
+        if (showFeedback) showToast('🟠 Sem conexão no momento.');
+        return;
+      }
+      const q = getOfflineQueue();
+      const remaining = [];
+      let synced = 0;
+      for (const sale of q) {
+        try {
+          const { error } = await sb.from('pdv_sales').upsert(sale, { onConflict: 'store_id,local_uid', ignoreDuplicates: true });
+          if (error) throw error;
+          for (const it of (sale.items || [])) {
+            if (it.product_id && Number(it.qty) > 0) {
+              await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: -Math.abs(Number(it.qty)) });
+            }
+          }
+          synced++;
+        } catch (e) {
+          remaining.push(sale);
+        }
+      }
+      saveOfflineQueue(remaining);
+      if (showFeedback) {
+        await Promise.all([loadCatalog(), loadAppOrders(), loadTodaySales()]);
+        showToast(synced ? `🟢 ${synced} venda(s) sincronizada(s) e catálogo atualizado!` : '🟢 Catálogo e vendas sincronizados!');
+      } else if (synced > 0) {
+        showToast(`🟢 ${synced} venda(s) offline sincronizada(s) com o Supabase!`);
+      }
+    }
+
+    function resetPayments() { currentPayments = []; pendingSaleTroco = 0; renderPaymentState(); showToast('🔄 Pagamentos zerados.'); }
+    function editPayExtra() {
+      const v = prompt('Informe o acréscimo em R$:', extraAmount.toFixed(2));
+      if (v !== null) { extraAmount = Math.max(0, parseFloat(v.replace(',', '.')) || 0); renderPaymentState(); }
+    }
+
+    // F3 CONSULTA
+    function openF3Modal() {
+      document.getElementById('f3-search').value = '';
+      document.getElementById('f3-detail').classList.add('hidden');
+      renderF3List();
+      openModal('modal-f3');
+      setTimeout(() => document.getElementById('f3-search').focus(), 60);
+    }
+
+    function renderF3List() {
+      const q = document.getElementById('f3-search').value.trim().toLowerCase();
+      const list = catalog.filter(p => !q || p.name.toLowerCase().includes(q) || p.plu.toLowerCase() === q || p.ean.includes(q) || p.extraEans.some(x => x.includes(q))).slice(0, 60);
+      document.getElementById('f3-results').innerHTML = list.length ? list.map(p => `
+        <div onclick="showF3Detail(${p.id})" ondblclick="addToCupom(catalog.find(x=>x.id===${p.id}),1); closeModal('modal-f3');" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between cursor-pointer">
+          <div class="min-w-0 pr-2">
+            <div class="text-xs font-black text-slate-800 truncate">${p.plu ? `[${escapeHtml(p.plu)}] ` : ''}${escapeHtml(p.name)}</div>
+            <div class="text-[10px] font-semibold text-slate-500">${p.ean ? `EAN: ${escapeHtml(p.ean)} • ` : ''}Est: ${p.stock != null ? `${p.stock} ${p.unit}` : 'Livre'}</div>
+          </div>
+          <span style="color: var(--pdv-primary-dark);" class="text-xs font-black shrink-0">${brl(p.promoPrice || p.price)}</span>
+        </div>`).join('') : '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum produto encontrado.</div>';
+    }
+
+    function showF3Detail(id) {
+      const p = catalog.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('f3-detail').classList.remove('hidden');
+      const img = document.getElementById('f3-det-img');
+      if (p.image) { img.src = p.image; img.classList.remove('hidden'); } else { img.classList.add('hidden'); }
+      document.getElementById('f3-det-name').textContent = `${p.plu ? `[PLU ${p.plu}] ` : ''}${p.name} — ${brl(p.promoPrice || p.price)}`;
+      document.getElementById('f3-det-desc').textContent = `${p.ean ? `EAN: ${p.ean} • ` : ''}Unidade: ${p.unit}${p.whQty ? ` • Atacado ${p.whQty}x por ${brl(p.whPrice)}` : ''}`;
+      document.getElementById('f3-det-stock').textContent = `Estoque atual (002 Dom José): ${p.stock != null ? `${p.stock} ${p.unit}` : 'Sem controle numérico'}`;
+      document.getElementById('f3-det-add').onclick = () => { addToCupom(p, 1); closeModal('modal-f3'); };
+    }
+
+    // N1 DIVERSOS
+    function openDiversos() {
+      document.getElementById('n1-val').value = '';
+      document.getElementById('n1-desc').value = 'DIVERSOS';
+      openModal('modal-n1');
+      setTimeout(() => document.getElementById('n1-val').focus(), 60);
+    }
+
+    function confirmDiversos() {
+      const val = parseFloat(document.getElementById('n1-val').value) || 0;
+      if (val <= 0) return;
+      const desc = document.getElementById('n1-desc').value.trim() || 'DIVERSOS';
+      cupom.push({ product_id: null, name: `N1 • ${desc}`, qty: 1, base_unit: val, unit_price: val, subtotal: val, is_diversos: true });
+      closeModal('modal-n1');
+      renderCupom();
+      showToast(`➕ Diversos (${brl(val)}) lançado!`);
+    }
+
+    // D DESCONTO
+    function setDiscMode(m) {
+      discMode = m;
+      const b1 = document.getElementById('disc-mode-rs');
+      const b2 = document.getElementById('disc-mode-pct');
+      b1.style.backgroundColor = m === 'rs' ? 'var(--pdv-primary)' : '';
+      b1.className = m === 'rs' ? 'py-2 rounded-xl text-white text-xs font-black cursor-pointer' : 'py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-black cursor-pointer';
+      b2.style.backgroundColor = m === 'pct' ? 'var(--pdv-primary)' : '';
+      b2.className = m === 'pct' ? 'py-2 rounded-xl text-white text-xs font-black cursor-pointer' : 'py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-black cursor-pointer';
+    }
+
+    function openDiscountModal() {
+      if (!cupom.length) { showToast('⚠️ Abra uma venda antes de aplicar desconto.'); return; }
+      document.getElementById('disc-input').value = '';
+      openModal('modal-disc');
+      setTimeout(() => document.getElementById('disc-input').focus(), 60);
+    }
+
+    function confirmDiscount() {
+      const v = parseFloat(document.getElementById('disc-input').value) || 0;
+      const sub = getCupomSubtotal();
+      discountAmount = discMode === 'pct' ? +(sub * Math.min(100, v) / 100).toFixed(2) : Math.min(sub, Math.max(0, v));
+      closeModal('modal-disc');
+      renderCupom();
+      if (!document.getElementById('modal-payment').classList.contains('hidden')) renderPaymentState();
+      showToast(`🏷️ Desconto de ${brl(discountAmount)} aplicado!`);
+    }
+
+    // R RELATÓRIO (CLICÁVEL P/ EDITAR)
+    async function openReportModal() {
+      await loadTodaySales();
+      selectedSaleIdx = salesHistory.length ? 0 : null;
+      renderReportModal();
+      openModal('modal-report');
+    }
+
+    function renderReportModal() {
+      const listEl = document.getElementById('report-list');
+      const detEl = document.getElementById('report-detail');
+      if (!salesHistory.length) {
+        listEl.innerHTML = '<div class="text-xs text-slate-400 font-bold text-center py-8">Nenhuma venda registrada hoje.</div>';
+        detEl.innerHTML = '<div class="flex-1 flex items-center justify-center text-xs font-bold text-slate-400">Sem vendas para exibir.</div>';
+        return;
+      }
+      listEl.innerHTML = salesHistory.map((s, i) => `
+        <div onclick="selectedSaleIdx=${i}; renderReportModal();" style="${selectedSaleIdx === i ? 'background-color: var(--pdv-primary); color: white;' : ''}" class="border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 text-xs cursor-pointer transition ${selectedSaleIdx === i ? 'border-transparent shadow' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800'}">
+          <div>
+            <div class="font-black">#${salesHistory.length - i} • ${s.time} — ${escapeHtml(s.client)}</div>
+            <div class="text-[10px] font-bold ${selectedSaleIdx === i ? 'opacity-80' : 'text-slate-500'}">${s.payments.map(p => `${escapeHtml(p.method)}: ${brl(p.amount)}`).join(' + ')}</div>
+          </div>
+          <span class="font-black text-sm shrink-0">${brl(s.total)}</span>
+        </div>`).join('');
+
+      if (selectedSaleIdx === null || !salesHistory[selectedSaleIdx]) return;
+      const s = salesHistory[selectedSaleIdx];
+      detEl.innerHTML = `
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <div>
+              <div style="color: var(--pdv-primary-dark);" class="text-xs font-black">Venda #${salesHistory.length - selectedSaleIdx} • ${s.time}</div>
+              <div class="text-[11px] font-bold text-slate-600">Cliente: ${escapeHtml(s.client)}</div>
+            </div>
+            <span style="color: var(--pdv-primary-dark);" class="text-base font-black">${brl(s.total)}</span>
+          </div>
+          <div class="space-y-1 max-h-36 overflow-y-auto scroll-slim">
+            ${s.items.map(it => `
+              <div class="bg-white rounded-lg px-2.5 py-1.5 flex justify-between text-[11px] font-bold border border-slate-200">
+                <span class="truncate pr-2">${it.qty}x ${escapeHtml(it.name)}</span>
+                <span class="font-black text-slate-800 shrink-0">${brl(it.subtotal)}</span>
+              </div>`).join('')}
+          </div>
+          <div class="bg-white rounded-xl p-2.5 border border-slate-200 space-y-1.5">
+            <div class="text-[10px] font-extrabold text-slate-500 uppercase">Trocar forma de pagamento (1 clique):</div>
+            <div class="flex flex-wrap gap-1">
+              ${['Dinheiro', 'Crédito', 'Débito', 'PIX', 'Vale Troca'].map(m => {
+                const active = s.payments.length === 1 && s.payments[0].method === m;
+                return `<button onclick="quickChangeSalePayment(${selectedSaleIdx}, '${m}')" class="px-2 py-1 rounded-lg text-[10px] font-black cursor-pointer ${active ? 'bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">${m}</button>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 pt-3 mt-2 border-t border-slate-200">
+          <button onclick="reopenSaleInCaixa(${selectedSaleIdx})" style="background-color: var(--pdv-primary);" class="py-2 rounded-xl text-white text-[11px] font-black cursor-pointer">✏️ Reabrir p/ Editar</button>
+          <button onclick="cancelRecordedSale(${selectedSaleIdx})" class="py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black cursor-pointer">🗑️ Cancelar Venda</button>
+        </div>`;
+    }
+
+    async function quickChangeSalePayment(idx, newMethod) {
+      const s = salesHistory[idx];
+      if (!s) return;
+      const newPays = [{ method: newMethod, amount: s.total }];
+      if (typeof s.id === 'number' && navigator.onLine) {
+        const { error } = await sb.from('pdv_sales').update({ payments: newPays }).eq('id', s.id);
+        if (error) { showToast('⚠️ Erro ao atualizar pagamento: ' + error.message); return; }
+      }
+      s.payments = newPays;
+      renderReportModal();
+      showToast(`💳 Pagamento atualizado para ${newMethod} no Supabase!`);
+    }
+
+    async function reopenSaleInCaixa(idx) {
+      const s = salesHistory[idx];
+      if (!s) return;
+      await cancelSaleBackend(s);
+      salesHistory.splice(idx, 1);
+      cupom = s.items.map(x => ({
+        product_id: x.product_id || null, name: x.name, qty: x.qty,
+        base_unit: x.unit_price, unit_price: x.unit_price, subtotal: x.subtotal,
+        unit_type: x.unit_type || 'UN', is_diversos: !!x.is_diversos
+      }));
+      discountAmount = s.discount || 0; extraAmount = s.extra || 0;
+      document.getElementById('top-client-name').textContent = s.client;
+      closeModal('modal-report');
+      renderCupom();
+      showToast('✏️ Venda reaberta no caixa e estoque estornado temporariamente!');
+    }
+
+    async function cancelRecordedSale(idx) {
+      const s = salesHistory[idx];
+      if (!s || !confirm(`Cancelar a venda de ${brl(s.total)} e devolver os itens ao estoque?`)) return;
+      await cancelSaleBackend(s);
+      salesHistory.splice(idx, 1);
+      selectedSaleIdx = salesHistory.length ? 0 : null;
+      renderReportModal();
+      showToast(`🗑️ Venda de ${brl(s.total)} cancelada e estoque devolvido!`);
+    }
+
+    async function cancelSaleBackend(s) {
+      if (typeof s.id === 'number' && navigator.onLine) {
+        await sb.from('pdv_sales').update({ status: 'cancelled' }).eq('id', s.id);
+        for (const it of (s.items || [])) {
+          if (it.product_id && Number(it.qty) > 0) {
+            await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: Math.abs(Number(it.qty)) });
+          }
+        }
+        await loadCatalog();
+      }
+    }
+
+    // F12 FECHAMENTO DO DIA
+    async function openF12Modal() {
+      await loadTodaySales();
+      const byMethod = { Dinheiro: 0, Crédito: 0, Débito: 0, PIX: 0, 'Vale Troca': 0 };
+      let grandTotal = 0;
+      salesHistory.forEach(s => {
+        grandTotal += s.total;
+        (s.payments || []).forEach(p => { byMethod[p.method] = (byMethod[p.method] || 0) + Number(p.amount || 0); });
+      });
+      document.getElementById('f12-body').innerHTML = `
+        <div class="grid grid-cols-2 gap-2">
+          <div style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="border rounded-2xl p-3 text-center">
+            <div class="text-[10px] font-bold text-slate-500">ATENDIMENTOS HOJE</div>
+            <div style="color: var(--pdv-primary-dark);" class="text-2xl font-black">${salesHistory.length}</div>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
+            <div class="text-[10px] font-bold text-emerald-700">FATURAMENTO TOTAL</div>
+            <div class="text-2xl font-black text-emerald-900">${brl(grandTotal)}</div>
+          </div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5 font-bold">
+          ${Object.entries(byMethod).map(([m, v]) => `<div class="flex justify-between"><span>${m}</span><span class="font-black text-slate-900">${brl(v)}</span></div>`).join('')}
+        </div>`;
+      openModal('modal-f12');
+    }
+
+    bootPdv();
+  </script>
+</body>
+</html>
