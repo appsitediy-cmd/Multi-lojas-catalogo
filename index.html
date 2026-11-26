@@ -1087,9 +1087,12 @@
   <!-- MODAL DE EDIÇÃO DE PRODUTO COMPLETA -->
   <div id="edit-product-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="bg-slate-800 text-white p-4 flex items-center justify-between">
-        <h3 class="font-black text-sm flex items-center gap-2"><span>📂</span> Editar Produto Completo</h3>
-        <button onclick="closeEditProductModal()" class="w-7 h-7 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white text-xs font-bold">✕</button>
+      <div class="bg-slate-800 text-white p-3.5 sm:px-4 flex items-center justify-between gap-2">
+        <h3 class="font-black text-sm flex items-center gap-2 truncate"><span>📂</span> Editar Produto Completo</h3>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="saveEditedProduct()" class="bg-brand-primary hover:opacity-90 active:scale-95 text-white font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-sm transition">💾 Salvar</button>
+          <button type="button" onclick="closeEditProductModal()" class="w-7 h-7 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white text-xs font-bold">✕</button>
+        </div>
       </div>
       <div class="p-4 overflow-y-auto flex-grow space-y-3">
         <input type="hidden" id="edit-product-id">
@@ -3477,6 +3480,7 @@
 
     function selectCardVariant(groupKey, prodId) {
       selectedVariantByGroup[groupKey] = prodId;
+      try { const _vp = products.find(x => String(x.id) === String(prodId)); if (_vp) trackAnalyticsEvent('product_click', _vp.name); } catch(e) {}
       filterProducts();
     }
 
@@ -3997,6 +4001,7 @@
     function addWholesalePack(productId) {
       const p = products.find(prod => prod.id == productId);
       if (!p || !hasValidWholesale(p)) return;
+      try { trackAnalyticsEvent('product_click', p.name); } catch(e) {}
       const current = cart[productId] || 0;
       const addQty = (current > 0 && current < p.wholesaleQty) ? (p.wholesaleQty - current) : p.wholesaleQty;
       cart[productId] = current + addQty;
@@ -4920,6 +4925,7 @@
     function openImageZoom(productId) {
       const p = products.find(prod => prod.id == productId);
       if (!p) return;
+      try { trackAnalyticsEvent('product_click', p.name); } catch(e) {}
       document.getElementById('zoom-modal-img').src = p.image || DEFAULT_PRODUCT_IMG;
       document.getElementById('zoom-modal-title').textContent = p.name;
       const badge = document.getElementById('zoom-modal-promo-badge');
@@ -7989,7 +7995,23 @@
       if (vEl) vEl.textContent = '...';
       if (!sb || !currentStoreId) return;
       let q = sb.from('store_analytics').select('event_type,visitor_id,platform,product_name,created_at').eq('store_id', currentStoreId).order('created_at', { ascending: false });
-      if (analyticsPeriod === '30d') {
+      const cWrap = document.getElementById('an-custom-date-wrap');
+      if (cWrap) cWrap.classList.toggle('hidden', analyticsPeriod !== 'custom');
+      const dFromEl = document.getElementById('an-date-from');
+      const dToEl = document.getElementById('an-date-to');
+      if (dFromEl && !dFromEl.value) {
+        const d7 = new Date(Date.now() - 6 * 86400000);
+        dFromEl.value = `${d7.getFullYear()}-${String(d7.getMonth()+1).padStart(2,'0')}-${String(d7.getDate()).padStart(2,'0')}`;
+      }
+      if (dToEl && !dToEl.value) {
+        const dt = new Date();
+        dToEl.value = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      }
+      if (analyticsPeriod === 'custom' && dFromEl?.value && dToEl?.value) {
+        const fromIso = new Date(dFromEl.value + 'T00:00:00').toISOString();
+        const toIso = new Date(dToEl.value + 'T23:59:59.999').toISOString();
+        q = q.gte('created_at', fromIso).lte('created_at', toIso).limit(10000);
+      } else if (analyticsPeriod === '30d') {
         q = q.gte('created_at', new Date(Date.now() - 31 * 86400000).toISOString()).limit(10000);
       } else if (analyticsPeriod === '7d' || analyticsPeriod === 'today') {
         q = q.gte('created_at', new Date(Date.now() - 8 * 86400000).toISOString()).limit(5000);
@@ -8017,15 +8039,24 @@
     }
 
     function renderAnalyticsModal() {
-      ['today', '7d', '30d', 'all'].forEach(k => {
+      ['today', '7d', '30d', 'all', 'custom'].forEach(k => {
         const b = document.getElementById('an-p-' + k);
         if (b) { b.className = k === analyticsPeriod ? 'px-2 py-1 rounded-lg bg-white shadow-xs' : 'px-2 py-1 rounded-lg text-slate-500'; b.style.color = k === analyticsPeriod ? 'var(--brand-primary-dark)' : ''; }
       });
       const now = Date.now();
       const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
-      const cutMap = { today: startToday.getTime(), '7d': now - 7*86400000, '30d': now - 30*86400000, all: 0 };
-      const cut = cutMap[analyticsPeriod] || 0;
-      const rows = analyticsRowsCache.filter(r => new Date(r.created_at).getTime() >= cut);
+      let rows = analyticsRowsCache;
+      if (analyticsPeriod === 'custom') {
+        const fVal = document.getElementById('an-date-from')?.value;
+        const tVal = document.getElementById('an-date-to')?.value;
+        const fMs = fVal ? new Date(fVal + 'T00:00:00').getTime() : 0;
+        const tMs = tVal ? new Date(tVal + 'T23:59:59.999').getTime() : Infinity;
+        rows = analyticsRowsCache.filter(r => { const ts = new Date(r.created_at).getTime(); return ts >= fMs && ts <= tMs; });
+      } else {
+        const cutMap = { today: startToday.getTime(), '7d': now - 7*86400000, '30d': now - 30*86400000, all: 0 };
+        const cut = cutMap[analyticsPeriod] || 0;
+        rows = analyticsRowsCache.filter(r => new Date(r.created_at).getTime() >= cut);
+      }
 
       const visitRows = rows.filter(r => r.event_type === 'visit' || r.event_type === 'app_open');
       const uniqueSet = new Set(visitRows.map(r => r.visitor_id).filter(Boolean));
@@ -8068,15 +8099,27 @@
           <span class="text-[9px] font-bold text-slate-500">${d.lbl}</span>
         </div>`).join('');
 
-      // Top produtos clicados
+      // Top produtos clicados (ranking completo maior -> menor com barra visual)
       const pCounts = {};
       rows.filter(r => r.event_type === 'product_click' && r.product_name).forEach(r => { pCounts[r.product_name] = (pCounts[r.product_name] || 0) + 1; });
-      const top = Object.entries(pCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      document.getElementById('an-top-prods').innerHTML = top.length ? top.map(([nm, c], i) => `
-        <div class="flex justify-between bg-white border rounded-xl px-2 py-1.5 font-bold">
-          <span class="truncate">${i + 1}. ${escapeHtml(nm)}</span>
-          <span style="color: var(--brand-primary-dark);" class="font-black ml-1 shrink-0">${c}</span>
-        </div>`).join('') : '<div class="text-slate-400 font-bold text-center py-4">Sem cliques ainda neste período.</div>';
+      const top = Object.entries(pCounts).sort((a, b) => b[1] - a[1]).slice(0, 30);
+      const totalClicks = Object.values(pCounts).reduce((s, v) => s + v, 0);
+      const maxClicks = top.length ? top[0][1] : 1;
+      const totLbl = document.getElementById('an-top-total');
+      if (totLbl) totLbl.textContent = `${totalClicks} ${totalClicks === 1 ? 'clique' : 'cliques'}`;
+      document.getElementById('an-top-prods').innerHTML = top.length ? top.map(([nm, c], i) => {
+        const w = Math.max(8, Math.round((c / maxClicks) * 100));
+        return `
+        <div class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 space-y-1">
+          <div class="flex items-center justify-between gap-2 font-bold">
+            <span class="truncate text-slate-800"><span style="color: var(--brand-primary-dark);" class="font-black mr-1">${i + 1}º</span>${escapeHtml(nm)}</span>
+            <span style="color: var(--brand-primary-dark);" class="font-black shrink-0">${c} ${c === 1 ? 'clique' : 'cliques'}</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div style="width:${w}%; background-color: var(--brand-primary);" class="h-full rounded-full"></div>
+          </div>
+        </div>`;
+      }).join('') : '<div class="text-slate-400 font-bold text-center py-4">Sem cliques ainda neste período.</div>';
     }
 
     // ====== PROMOÇÃO RELÂMPAGO ======
@@ -8402,21 +8445,31 @@
 
   <!-- MODAL: 📊 ACESSOS, CLIQUES & INSTALAÇÕES DO APP -->
   <div id="analytics-modal" class="fixed inset-0 z-50 bg-slate-900/60 hidden items-center justify-center p-3">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
       <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div>
           <h3 class="text-sm sm:text-base font-black text-slate-900">📊 Acessos &amp; Instalações do App</h3>
           <p class="text-[11px] text-slate-500 font-semibold">Dados exclusivos desta loja em tempo real</p>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="flex gap-1 bg-slate-100 p-1 rounded-xl text-[10px] font-extrabold">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <div class="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl text-[10px] font-extrabold">
             <button id="an-p-today" onclick="setAnalyticsPeriod('today')" class="px-2 py-1 rounded-lg">Hoje</button>
             <button id="an-p-7d" onclick="setAnalyticsPeriod('7d')" class="px-2 py-1 rounded-lg">7 dias</button>
             <button id="an-p-30d" onclick="setAnalyticsPeriod('30d')" class="px-2 py-1 rounded-lg">30 dias</button>
             <button id="an-p-all" onclick="setAnalyticsPeriod('all')" class="px-2 py-1 rounded-lg">Total</button>
+            <button id="an-p-custom" onclick="setAnalyticsPeriod('custom')" class="px-2 py-1 rounded-lg">📅 Data</button>
           </div>
+          <button onclick="openAnalyticsModal()" title="Atualizar agora" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs px-2 py-1.5 rounded-xl">🔄</button>
           <button onclick="closeAnalyticsModal()" class="text-slate-400 hover:text-slate-800 font-black text-lg px-1">✕</button>
         </div>
+      </div>
+
+      <div id="an-custom-date-wrap" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="font-extrabold text-slate-700 text-[11px]">De: <input id="an-date-from" type="date" onchange="openAnalyticsModal()" class="ml-1 bg-white border border-slate-300 rounded-xl px-2 py-1 text-xs font-bold text-slate-800"></label>
+          <label class="font-extrabold text-slate-700 text-[11px]">Até: <input id="an-date-to" type="date" onchange="openAnalyticsModal()" class="ml-1 bg-white border border-slate-300 rounded-xl px-2 py-1 text-xs font-bold text-slate-800"></label>
+        </div>
+        <button type="button" onclick="openAnalyticsModal()" class="bg-slate-900 text-white text-[11px] font-black px-3 py-1.5 rounded-xl">Aplicar</button>
       </div>
 
       <div id="analytics-sql-warn" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-3 text-xs font-bold text-amber-950">
@@ -8447,13 +8500,16 @@
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-        <div class="sm:col-span-7 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+        <div class="sm:col-span-5 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
           <div class="text-xs font-black text-slate-700">📊 Visitas nos últimos 7 dias</div>
-          <div id="an-bars-7d" class="grid grid-cols-7 gap-1.5 items-end h-28 pt-3"></div>
+          <div id="an-bars-7d" class="grid grid-cols-7 gap-1.5 items-end h-32 pt-3"></div>
         </div>
-        <div class="sm:col-span-5 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5">
-          <div class="text-xs font-black text-slate-700">🔥 Produtos mais clicados</div>
-          <div id="an-top-prods" class="space-y-1 text-[11px]"></div>
+        <div class="sm:col-span-7 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs font-black text-slate-700">🔥 Produtos mais clicados (Maior → Menor)</div>
+            <span id="an-top-total" class="text-[10px] font-black text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">0 cliques</span>
+          </div>
+          <div id="an-top-prods" class="space-y-1.5 text-[11px] max-h-56 overflow-y-auto pr-1"></div>
         </div>
       </div>
 
