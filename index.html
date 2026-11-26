@@ -133,19 +133,14 @@
     </div>
   </header>
 
-  <!-- BANNER INSTALAR APP (PWA) -->
-  <div id="pwa-install-banner" class="hidden max-w-6xl w-full mx-auto px-4 pt-3">
-    <div class="bg-white border-2 border-brand-primary/50 rounded-2xl p-3 shadow-md flex items-center justify-between gap-2.5">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <img id="pwa-banner-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Logo" decoding="async" onerror="this.onerror=null;this.src=NEUTRAL_LOGO_IMG;" class="w-11 h-11 rounded-full object-contain bg-white border border-slate-200 shrink-0">
-        <div class="min-w-0">
-          <p id="pwa-banner-title" class="text-xs font-black text-slate-800 truncate">Instalar App da Loja</p>
-          <p class="text-[11px] text-slate-500 leading-tight">Adicione à tela inicial para abrir com 1 toque</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button onclick="triggerPwaInstall()" class="bg-brand-primary hover:opacity-90 active:scale-95 text-white font-extrabold px-3 py-2 rounded-xl text-xs shadow transition">📲 Instalar</button>
-        <button onclick="dismissPwaBanner()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center" title="Continuar no navegador">✕</button>
+  <!-- BANNER INSTALAR APP (PWA — PÍLULA COMPACTA DE ALTO DESTAQUE) -->
+  <div id="pwa-install-banner" class="hidden max-w-6xl w-full mx-auto px-4 pt-2.5">
+    <div class="flex justify-center">
+      <div class="inline-flex items-center gap-2 bg-slate-950 text-white pl-2 pr-1.5 py-1.5 rounded-full shadow-lg border border-[#FCD40F]/80 max-w-full">
+        <img id="pwa-banner-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Logo" decoding="async" onerror="this.onerror=null;this.src=NEUTRAL_LOGO_IMG;" class="w-6 h-6 rounded-full object-contain bg-white border border-white/30 shrink-0">
+        <span id="pwa-banner-title" class="text-[11px] sm:text-xs font-extrabold text-slate-100 truncate">Baixe nosso App</span>
+        <button onclick="triggerPwaInstall()" class="bg-[#FCD40F] hover:bg-amber-300 active:scale-95 text-slate-950 font-black px-3 py-1 rounded-full text-[11px] shadow-xs transition shrink-0">📲 Instalar</button>
+        <button onclick="dismissPwaBanner()" class="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-[10px] flex items-center justify-center shrink-0" title="Fechar">✕</button>
       </div>
     </div>
   </div>
@@ -809,7 +804,7 @@
             <div class="flex flex-wrap items-center gap-1.5">
               <label for="new-adv-picker" class="text-[10px] font-black text-slate-700 shrink-0">⚙️ Mais opções:</label>
               <select id="new-adv-picker" onchange="toggleProdAdvSection('new', this.value)" class="flex-1 min-w-[180px] bg-slate-900 text-[#FCD40F] font-black text-[11px] rounded-xl px-2.5 py-1.5 cursor-pointer focus:outline-none">
-                <option value="none">— Manter ficha limpa (nenhuma aberta) —</option>
+                <option value="none">Selecione uma opção avançada...</option>
                 <option value="cost">🔐 Preço de Custo, Markup &amp; Margem (privado)</option>
                 <option value="eans">🏷️ Códigos de Barras Extras (várias cores/lotes)</option>
                 <option value="frac">🔗 Fracionamento / Granel (Pai ↔ Filho)</option>
@@ -1293,7 +1288,7 @@
             <div class="flex flex-wrap items-center gap-1.5">
               <label for="edit-adv-picker" class="text-[10px] font-black text-slate-700 shrink-0">⚙️ Mais opções:</label>
               <select id="edit-adv-picker" onchange="toggleProdAdvSection('edit', this.value)" class="flex-1 min-w-[180px] bg-slate-900 text-[#FCD40F] font-black text-[11px] rounded-xl px-2.5 py-1.5 cursor-pointer focus:outline-none">
-                <option value="none">— Manter ficha limpa (nenhuma aberta) —</option>
+                <option value="none">Selecione uma opção avançada...</option>
                 <option value="cost">🔐 Preço de Custo, Markup &amp; Margem (privado)</option>
                 <option value="eans">🏷️ Códigos de Barras Extras (várias cores/lotes)</option>
                 <option value="frac">🔗 Fracionamento / Granel (Pai ↔ Filho)</option>
@@ -7920,15 +7915,15 @@
       return `${isIOS ? 'ios' : (isAndroid ? 'android' : 'desktop')}_${isStandalone ? 'app' : 'web'}`;
     }
 
-    // Link mágico ?equipe=1 para ignorar celular da esposa / funcionários / balcão
+    // Link ?equipe=1 para excluir dispositivos internos e da equipe dos relatórios
     (function checkTeamIgnoreParam() {
       const eq = urlParams.get('equipe');
       if (eq === '1') {
         try { localStorage.setItem(getIgnoreDeviceKey(), '1'); } catch(e) {}
-        setTimeout(() => showToast('🙈 Este aparelho foi marcado como Equipe e não conta nos acessos!'), 700);
+        setTimeout(() => showToast('🔒 Dispositivo registrado como Equipe (acessos não contabilizados).'), 700);
       } else if (eq === '0') {
         try { localStorage.removeItem(getIgnoreDeviceKey()); } catch(e) {}
-        setTimeout(() => showToast('👀 Este aparelho voltou a contar nos acessos.'), 700);
+        setTimeout(() => showToast('📊 Dispositivo reativado para contagem de acessos.'), 700);
       }
     })();
 
@@ -7972,13 +7967,13 @@
         if (checked) localStorage.setItem(getIgnoreDeviceKey(), '1');
         else localStorage.removeItem(getIgnoreDeviceKey());
       } catch(e) {}
-      showToast(checked ? '🙈 Este aparelho não será contado nos acessos.' : '👀 Este aparelho voltará a contar.');
+      showToast(checked ? '🔒 Este dispositivo não será contabilizado nos relatórios.' : '📊 Este dispositivo voltará a ser contabilizado.');
     }
 
     function copyIgnoreTeamLink() {
       const base = `${location.origin}${location.pathname}?loja=${encodeURIComponent(storeSlug)}&equipe=1`;
       navigator.clipboard?.writeText(base);
-      showToast('📋 Link copiado! Mande no WhatsApp da esposa/equipe para abrir 1 vez.');
+      showToast('📋 Link copiado! Envie para os dispositivos da equipe abrirem uma vez.');
     }
 
     async function openAnalyticsModal() {
@@ -8438,7 +8433,7 @@
           <div id="an-inst-split" class="text-[10px] font-bold text-emerald-700">Android + iPhone</div>
         </div>
         <div class="bg-amber-50 border border-amber-300 rounded-2xl p-3">
-          <div class="text-[10px] font-extrabold text-amber-900">💬 Pedidos Zap</div>
+          <div class="text-[10px] font-extrabold text-amber-900">💬 Pedidos WhatsApp</div>
           <div id="an-orders" class="text-xl font-black text-amber-950 mt-0.5">0</div>
           <div id="an-conv" class="text-[10px] font-bold text-amber-800">0% conversão</div>
         </div>
@@ -8460,17 +8455,17 @@
         </div>
       </div>
 
-      <!-- IGNORAR APARELHOS DA EQUIPE / ESPOSA / LOJA -->
+      <!-- EXCLUIR DISPOSITIVOS INTERNOS / EQUIPE -->
       <div class="bg-slate-900 text-white rounded-2xl p-3.5 space-y-2">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="text-xs font-black text-[#FCD40F]">🙈 Não contar celulares da loja, seu ou da esposa</div>
+          <div class="text-xs font-black text-[#FCD40F]">🔒 Excluir acessos da equipe e dispositivos internos</div>
           <label class="flex items-center gap-1.5 text-[11px] font-extrabold cursor-pointer bg-white/10 px-2.5 py-1 rounded-xl">
             <input id="an-ignore-this" type="checkbox" onchange="toggleIgnoreThisDevice(this.checked)" class="rounded" />
-            <span>Ignorar este aparelho</span>
+            <span>Ignorar este dispositivo</span>
           </label>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
-          <span>Mande este link no WhatsApp da esposa/equipe (abre 1 vez e nunca mais conta):</span>
+          <span>Envie este link para os aparelhos da equipe (basta abrir 1 vez para não contabilizar nos relatórios):</span>
           <button onclick="copyIgnoreTeamLink()" class="bg-[#FCD40F] text-slate-950 font-black px-3 py-1 rounded-xl text-[11px] shrink-0">📋 Copiar link p/ Equipe</button>
         </div>
       </div>
@@ -8591,7 +8586,7 @@
 
       <div class="flex flex-wrap gap-2 pt-1">
         <button onclick="stopFlashSale()" class="bg-slate-100 hover:bg-rose-50 text-rose-700 font-black px-3 py-2.5 rounded-2xl text-xs">Encerrar</button>
-        <button onclick="shareFlashSaleWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-3 py-2.5 rounded-2xl text-xs">📲 Copiar Zap</button>
+        <button onclick="shareFlashSaleWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-3 py-2.5 rounded-2xl text-xs">📲 Copiar WhatsApp</button>
         <button onclick="saveAndLaunchFlashSale()" class="flex-1 bg-gradient-to-r from-amber-500 to-rose-600 text-white font-black py-2.5 rounded-2xl text-xs shadow">⚡ Ativar Relâmpago</button>
       </div>
     </div>

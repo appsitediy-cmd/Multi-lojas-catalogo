@@ -1,4 +1,4 @@
-const CACHE_NAME = 'multiloja-catalogo-v11';
+const CACHE_NAME = 'multiloja-catalogo-v13';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
