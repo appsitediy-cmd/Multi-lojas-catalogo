@@ -263,6 +263,12 @@
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
+          <button id="btn-open-superadmin-modal" onclick="openSuperAdminModal()" class="hidden bg-slate-900 hover:bg-slate-800 text-[#FCD40F] font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1 shadow-sm transition" title="Controle de Módulos SaaS por Loja">
+            👑 Módulos
+          </button>
+          <button id="btn-open-pdv-module" onclick="openPdvModule()" class="hidden bg-cyan-600 hover:bg-cyan-700 text-white font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1 shadow-sm transition" title="Abrir Frente de Caixa (PDV)">
+            🖥️ PDV
+          </button>
           <button id="btn-open-flash-modal" onclick="openFlashSaleModal()" class="bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-95 text-white font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1 shadow-sm transition">
             ⚡ Relâmpago <span id="mgr-flash-badge" class="hidden bg-white/25 px-1.5 py-0.5 rounded-full text-[9px]">ON</span>
           </button>
@@ -525,6 +531,12 @@
             </div>
           </div>
         </div>
+        <div class="mb-3 bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5">
+          <label class="flex items-start gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="config-auto-pause-zero" class="mt-0.5 w-4 h-4 accent-emerald-600 rounded shrink-0">
+            <span class="text-[11px] font-bold text-emerald-950 leading-snug">📦 Pausar automaticamente na vitrine quando o estoque zerar (0) e reativar ao dar entrada <span class="font-normal text-emerald-800">(respeita pausas manuais e ignora itens sem estoque preenchido)</span></span>
+          </label>
+        </div>
         <button onclick="saveStoreConfig()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs shadow transition">Salvar Dados da Loja</button>
         </div>
       </div>
@@ -770,9 +782,15 @@
               </select>
             </div>
           </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-600 mb-1">Saldo / Estoque <span class="text-slate-400 font-normal">(só Gestor)</span></label>
-            <input type="number" step="any" min="0" id="new-stock" placeholder="Ex: 10" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400">
+          <div class="grid grid-cols-2 gap-1.5">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-1">Saldo / Estoque</label>
+              <input type="number" step="any" min="0" id="new-stock" placeholder="Ex: 10" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-amber-800 mb-1">🔔 Estoque Mín.</label>
+              <input type="number" step="any" min="0" id="new-min-stock" placeholder="Ex: 4" class="w-full bg-amber-50/60 border border-amber-300 rounded-lg px-2 py-1.5 text-xs font-bold text-amber-950 focus:outline-none focus:border-amber-500">
+            </div>
           </div>
         </div>
         <div class="mb-3 bg-white p-2.5 rounded-xl border border-slate-200 space-y-2">
@@ -808,7 +826,6 @@
                 <option value="cost">🔐 Preço de Custo, Markup &amp; Margem (privado)</option>
                 <option value="eans">🏷️ Códigos de Barras Extras (várias cores/lotes)</option>
                 <option value="frac">🔗 Fracionamento / Granel (Pai ↔ Filho)</option>
-                <option value="stock">📦 Estoque Mínimo &amp; Grupo Atacado Mix</option>
                 <option value="fiscal">🧾 Dados Fiscais (CFOP, CSOSN) &amp; Validade</option>
                 <option value="vis">👁️ Visibilidade (App Cliente / Só PDV / Serviço)</option>
               </select>
@@ -863,18 +880,6 @@
                   <label class="block text-[9px] font-bold text-slate-500 mb-0.5">Fator (ex: 15, 10.1, 4)</label>
                   <input id="new-conv-factor" type="number" step="any" min="0" placeholder="Ex: 15" oninput="renderProdAdvPills('new')" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-black text-slate-800">
                 </div>
-              </div>
-            </div>
-
-            <!-- Estoque Mínimo & Grupo Atacado Mix -->
-            <div id="new-sec-stock" class="hidden bg-slate-50 border border-slate-300 rounded-xl p-2.5 grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[9px] font-bold text-slate-500 mb-0.5">📉 Estoque Mínimo (alerta)</label>
-                <input id="new-min-stock" type="number" step="any" min="0" placeholder="Ex: 4" oninput="renderProdAdvPills('new')" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-black">
-              </div>
-              <div>
-                <label class="block text-[9px] font-bold text-slate-500 mb-0.5">🔀 Grupo Atacado Mix (sabores)</label>
-                <input id="new-wholesale-group" type="text" placeholder="Ex: Whiskas 85g" oninput="renderProdAdvPills('new')" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold">
               </div>
             </div>
 
@@ -960,6 +965,21 @@
               </div>
             </div>
             <p id="new-wholesale-preview" class="text-[10px] font-bold text-amber-800 hidden"></p>
+            <div class="pt-2 border-t border-amber-200 space-y-2">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="new-mix-enabled" onchange="toggleWholesaleMixPicker('new')" class="w-4 h-4 accent-emerald-600 rounded">
+                <span class="text-[11px] font-extrabold text-emerald-900">🎨 Permitir misturar com outros sabores/produtos (Atacado Mix)</span>
+              </label>
+              <div id="new-mix-wrap" class="hidden bg-white border border-emerald-200 rounded-xl p-2.5 space-y-2">
+                <div class="text-[10px] font-bold text-slate-500">Sabores vinculados (ao salvar, a regra de atacado sincroniza em todos):</div>
+                <div id="new-mix-chips" class="flex flex-wrap gap-1"></div>
+                <div class="relative">
+                  <input type="text" id="new-mix-search" oninput="renderWholesaleMixPicker('new')" placeholder="🔍 Buscar outro sabor/produto para misturar..." class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-2.5 pr-7 py-1.5 text-[11px] font-semibold text-slate-800 focus:outline-none focus:border-emerald-500">
+                  <button type="button" id="new-mix-search-clear" onclick="document.getElementById('new-mix-search').value=''; renderWholesaleMixPicker('new');" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-[11px] font-black">✕</button>
+                </div>
+                <div id="new-mix-candidates" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
+              </div>
+            </div>
           </div>
         </div>
         <button onclick="addProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-extrabold py-3 rounded-2xl text-xs shadow transition">Cadastrar Produto na Nuvem</button>
@@ -1259,9 +1279,15 @@
               </select>
             </div>
           </div>
-          <div>
-            <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Estoque / Saldo</label>
-            <input type="number" step="any" min="0" id="edit-product-stock" placeholder="0" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+          <div class="grid grid-cols-2 gap-1.5">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Estoque / Saldo</label>
+              <input type="number" step="any" min="0" id="edit-product-stock" placeholder="0" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-amber-800 mb-0.5">🔔 Estoque Mín.</label>
+              <input type="number" step="any" min="0" id="edit-min-stock" placeholder="Ex: 4" class="w-full bg-amber-50/60 border border-amber-300 rounded-lg px-2 py-1.5 text-xs font-bold text-amber-950">
+            </div>
           </div>
         </div>
         <div class="mb-3 bg-white p-2.5 rounded-xl border border-slate-200 space-y-2">
@@ -1297,7 +1323,6 @@
                 <option value="cost">🔐 Preço de Custo, Markup &amp; Margem (privado)</option>
                 <option value="eans">🏷️ Códigos de Barras Extras (várias cores/lotes)</option>
                 <option value="frac">🔗 Fracionamento / Granel (Pai ↔ Filho)</option>
-                <option value="stock">📦 Estoque Mínimo &amp; Grupo Atacado Mix</option>
                 <option value="fiscal">🧾 Dados Fiscais (CFOP, CSOSN) &amp; Validade</option>
                 <option value="vis">👁️ Visibilidade (App Cliente / Só PDV / Serviço)</option>
               </select>
@@ -1352,18 +1377,6 @@
                   <label class="block text-[9px] font-bold text-slate-500 mb-0.5">Fator (ex: 15, 10.1, 4)</label>
                   <input id="edit-conv-factor" type="number" step="any" min="0" placeholder="Ex: 15" oninput="renderProdAdvPills('edit')" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-black text-slate-800">
                 </div>
-              </div>
-            </div>
-
-            <!-- Estoque Mínimo & Grupo Atacado Mix -->
-            <div id="edit-sec-stock" class="hidden bg-slate-50 border border-slate-300 rounded-xl p-2.5 grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[9px] font-bold text-slate-500 mb-0.5">📉 Estoque Mínimo (alerta)</label>
-                <input id="edit-min-stock" type="number" step="any" min="0" placeholder="Ex: 4" oninput="renderProdAdvPills('edit')" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-black">
-              </div>
-              <div>
-                <label class="block text-[9px] font-bold text-slate-500 mb-0.5">🔀 Grupo Atacado Mix (sabores)</label>
-                <input id="edit-wholesale-group" type="text" placeholder="Ex: Whiskas 85g" oninput="renderProdAdvPills('edit')" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold">
               </div>
             </div>
 
@@ -1476,6 +1489,21 @@
               </div>
             </div>
             <p id="edit-wholesale-preview" class="text-[10px] font-bold text-amber-800 hidden"></p>
+            <div class="pt-2 border-t border-amber-200 space-y-2">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="edit-mix-enabled" onchange="toggleWholesaleMixPicker('edit')" class="w-4 h-4 accent-emerald-600 rounded">
+                <span class="text-[11px] font-extrabold text-emerald-900">🎨 Permitir misturar com outros sabores/produtos (Atacado Mix)</span>
+              </label>
+              <div id="edit-mix-wrap" class="hidden bg-white border border-emerald-200 rounded-xl p-2.5 space-y-2">
+                <div class="text-[10px] font-bold text-slate-500">Sabores vinculados (ao salvar, a regra de atacado sincroniza em todos):</div>
+                <div id="edit-mix-chips" class="flex flex-wrap gap-1"></div>
+                <div class="relative">
+                  <input type="text" id="edit-mix-search" oninput="renderWholesaleMixPicker('edit')" placeholder="🔍 Buscar outro sabor/produto para misturar..." class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-2.5 pr-7 py-1.5 text-[11px] font-semibold text-slate-800 focus:outline-none focus:border-emerald-500">
+                  <button type="button" id="edit-mix-search-clear" onclick="document.getElementById('edit-mix-search').value=''; renderWholesaleMixPicker('edit');" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-[11px] font-black">✕</button>
+                </div>
+                <div id="edit-mix-candidates" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
+              </div>
+            </div>
           </div>
         </div>
         <button onclick="saveEditedProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Salvar Alterações do Produto</button>
@@ -2297,7 +2325,8 @@
         csosn: (p.csosn || '').trim(),
         expiryDate: p.expiry_date || '',
         isService: !!p.is_service,
-        wholesaleGroup: (p.wholesale_group || '').trim()
+        wholesaleGroup: (p.wholesale_group || '').trim(),
+        autoPausedZeroStock: !!p.auto_paused_zero_stock
       }));
     }
 
@@ -2418,9 +2447,120 @@
       }
     }
 
+    const SUPER_ADMIN_EMAILS = ['leonardomoura@gmail.com'];
+    let currentStorePlan = 'vitrine';
+    let currentStoreModules = { catalog: true, pdv: false, grooming: false, ai_invoice: false };
+
+    function isSuperAdminUser() {
+      return !!(currentUser && currentUser.email && SUPER_ADMIN_EMAILS.includes(String(currentUser.email).toLowerCase().trim()));
+    }
+
+    function updateModuleButtonsVisibility() {
+      const pdvBtn = document.getElementById('btn-open-pdv-module');
+      if (pdvBtn) pdvBtn.classList.toggle('hidden', !(currentStoreModules && currentStoreModules.pdv === true));
+      const saBtn = document.getElementById('btn-open-superadmin-modal');
+      if (saBtn) saBtn.classList.toggle('hidden', !isSuperAdminUser());
+    }
+
+    function openPdvModule() {
+      if (!currentStoreModules || currentStoreModules.pdv !== true) {
+        showToast('🔒 Módulo PDV não está ativado para esta loja.');
+        return;
+      }
+      showToast('🖥️ Módulo PDV liberado para esta loja! Assim que subirmos o pdv.html (Etapa 4B), ele abrirá direto aqui.');
+    }
+
+    function computeSaaSPlanName(m) {
+      if (m.pdv && m.grooming && m.ai_invoice) return 'master';
+      if (m.pdv && m.grooming) return 'plus';
+      if (m.pdv) return 'pdv';
+      return 'vitrine';
+    }
+
+    async function openSuperAdminModal() {
+      if (!isSuperAdminUser() || !sb) return;
+      const m = document.getElementById('superadmin-modules-modal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+      const warn = document.getElementById('superadmin-sql-warn');
+      if (warn) warn.classList.add('hidden');
+      const box = document.getElementById('superadmin-stores-list');
+      box.innerHTML = '<div class="text-center py-6 text-slate-400 font-bold">Carregando lojas...</div>';
+      const { data, error } = await sb.rpc('super_admin_list_stores');
+      if (error || !Array.isArray(data)) {
+        if (warn) warn.classList.remove('hidden');
+        box.innerHTML = '<div class="text-center py-4 text-rose-600 font-bold">Não foi possível listar as lojas. Rode o SQL da Etapa 4 no Supabase.</div>';
+        return;
+      }
+      window._superAdminStoresCache = data;
+      renderSuperAdminStoresList();
+    }
+
+    function closeSuperAdminModal() {
+      const m = document.getElementById('superadmin-modules-modal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    function renderSuperAdminStoresList() {
+      const box = document.getElementById('superadmin-stores-list');
+      const list = window._superAdminStoresCache || [];
+      if (!list.length) { box.innerHTML = '<div class="text-center py-4 text-slate-400 font-bold">Nenhuma loja cadastrada.</div>'; return; }
+      box.innerHTML = list.map((s, idx) => {
+        const mods = Object.assign({ catalog: true, pdv: false, grooming: false, ai_invoice: false }, s.modules || {});
+        const mkBtn = (key, lbl) => {
+          const on = !!mods[key];
+          return `<button type="button" onclick="toggleStoreModuleSuperAdmin(${idx}, '${key}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-black border transition ${on ? 'bg-emerald-600 border-emerald-700 text-white' : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'}">${on ? '✅ ' : '⬜ '}${lbl}</button>`;
+        };
+        return `
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div class="font-black text-slate-900">${escapeHtml(s.name || s.slug)} <span class="text-[10px] font-mono text-slate-500 ml-1">/${escapeHtml(s.slug)}/</span></div>
+              <div class="text-[10px] font-bold text-slate-500 uppercase">Plano: ${escapeHtml(s.plan || 'vitrine')}</div>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              ${mkBtn('pdv', '🖥️ PDV')}
+              ${mkBtn('grooming', '🛁 Banho & Tosa')}
+              ${mkBtn('ai_invoice', '📸 Nota IA')}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function toggleStoreModuleSuperAdmin(idx, modKey) {
+      const list = window._superAdminStoresCache || [];
+      const s = list[idx];
+      if (!s || !sb) return;
+      const mods = Object.assign({ catalog: true, pdv: false, grooming: false, ai_invoice: false }, s.modules || {});
+      mods[modKey] = !mods[modKey];
+      const newPlan = computeSaaSPlanName(mods);
+      const { error } = await sb.rpc('super_admin_set_store_modules', {
+        p_store_id: s.id,
+        p_plan: newPlan,
+        p_modules: mods
+      });
+      if (error) {
+        showToast('⚠️ Erro ao atualizar módulo: ' + (error.message || 'verifique permissões.'));
+        return;
+      }
+      s.modules = mods;
+      s.plan = newPlan;
+      if (s.id === currentStoreId) {
+        currentStoreModules = mods;
+        currentStorePlan = newPlan;
+        updateModuleButtonsVisibility();
+      }
+      renderSuperAdminStoresList();
+      showToast(`✅ ${s.name || s.slug}: ${modKey.toUpperCase()} ${mods[modKey] ? 'ATIVADO' : 'DESATIVADO'}!`);
+    }
+
     function hydrateStoreState(store, opts = {}) {
       currentStoreId = store.id;
       currentStoreOwnerId = store.owner_id;
+      currentStorePlan = store.plan || 'vitrine';
+      currentStoreModules = Object.assign(
+        { catalog: true, pdv: false, grooming: false, ai_invoice: false },
+        (store.modules && typeof store.modules === 'object') ? store.modules : {}
+      );
+      updateModuleButtonsVisibility();
       if (store.flash_sale && typeof store.flash_sale === 'object') {
         flashSaleConfig = store.flash_sale;
       } else {
@@ -2469,6 +2609,7 @@
         pixKey: store.pix_key || "",
         logo: store.logo_url || getDefaultStoreLogo(),
         logoZoom: store.logo_zoom || 100,
+        autoPauseZeroStock: !!store.auto_pause_zero_stock,
         primaryColor: store.primary_color || (isRecantoStore ? "#2EB4C7" : "#334155"),
         accentColor: (() => {
           const baseP = store.primary_color || (isRecantoStore ? "#2EB4C7" : "#334155");
@@ -2532,6 +2673,7 @@
           pix_key: storeConfig.pixKey,
           logo_url: (storeConfig.logo === DEFAULT_LOGO_IMG || storeConfig.logo === NEUTRAL_LOGO_IMG) ? '' : storeConfig.logo,
           logo_zoom: storeConfig.logoZoom,
+          auto_pause_zero_stock: !!storeConfig.autoPauseZeroStock,
           primary_color: storeConfig.primaryColor,
           accent_color: storeConfig.accentColor,
           categories,
@@ -3078,6 +3220,7 @@
       storeConfig.primaryColor = document.getElementById('config-primary-color').value || "#2EB4C7";
       storeConfig.accentColor = document.getElementById('config-accent-color').value || "#E84D9A";
       storeConfig.logoZoom = parseInt(document.getElementById('config-logo-zoom').value, 10) || 100;
+      storeConfig.autoPauseZeroStock = !!document.getElementById('config-auto-pause-zero')?.checked;
       const customLogo = document.getElementById('config-store-logo').value.trim();
       storeConfig.logo = customLogo || getDefaultStoreLogo();
       const ok = await saveStoreMetaToCloud();
@@ -3170,6 +3313,8 @@
       }
 
       document.getElementById('manager-user-email').textContent = `Logado como: ${currentUser.email}`;
+      if (document.getElementById('config-auto-pause-zero')) document.getElementById('config-auto-pause-zero').checked = !!storeConfig.autoPauseZeroStock;
+      updateModuleButtonsVisibility();
       await loadCustomerOrdersFromCloud();
       renderStoreConfig();
       renderManagerCategories();
@@ -3188,6 +3333,7 @@
     async function logoutManager() {
       if (sb) await sb.auth.signOut();
       currentUser = null;
+      updateModuleButtonsVisibility();
       customerOrders = [];
       updateCustomersCountBadge();
       switchToClient();
@@ -5125,8 +5271,7 @@
       if (cost > 0) pills.push({ sec: 'cost', txt: `🔐 Custo R$ ${cost.toFixed(2).replace('.', ',')}` });
       if ((draftExtraEans[prefix] || []).length) pills.push({ sec: 'eans', txt: `🏷️ +${draftExtraEans[prefix].length} EAN(s)` });
       if (document.getElementById(`${prefix}-parent-id`)?.value) pills.push({ sec: 'frac', txt: `🔗 Vinculado a Pai` });
-      if (document.getElementById(`${prefix}-min-stock`)?.value) pills.push({ sec: 'stock', txt: `📉 Mín: ${document.getElementById(`${prefix}-min-stock`).value}` });
-      if (document.getElementById(`${prefix}-wholesale-group`)?.value?.trim()) pills.push({ sec: 'stock', txt: `🔀 Mix: ${document.getElementById(`${prefix}-wholesale-group`).value.trim()}` });
+
       if (document.getElementById(`${prefix}-expiry-date`)?.value) pills.push({ sec: 'fiscal', txt: `📅 Validade` });
       if (document.getElementById(`${prefix}-show-catalog`) && !document.getElementById(`${prefix}-show-catalog`).checked) pills.push({ sec: 'vis', txt: `🖥️ Só PDV` });
       if (document.getElementById(`${prefix}-is-service`)?.checked) pills.push({ sec: 'vis', txt: `🛠️ Serviço` });
@@ -5143,7 +5288,7 @@
       const conversionFactor = convRaw !== '' && convRaw != null ? (parseFloat(convRaw) || null) : null;
       const minRaw = document.getElementById(`${prefix}-min-stock`)?.value;
       const minStock = minRaw !== '' && minRaw != null ? (parseFloat(minRaw) || null) : null;
-      const wholesaleGroup = (document.getElementById(`${prefix}-wholesale-group`)?.value || '').trim();
+      const wholesaleGroup = ''; // gerenciado pelo bloco Preço de Atacado Mix
       const cfop = (document.getElementById(`${prefix}-cfop`)?.value || '').trim();
       const csosn = (document.getElementById(`${prefix}-csosn`)?.value || '').trim();
       const expiryDate = document.getElementById(`${prefix}-expiry-date`)?.value || null;
@@ -5178,6 +5323,134 @@
         }
       };
     }
+
+    // ====== ATACADO MIX COM BUSCADOR DE SABORES (SINCRONIZAÇÃO EM MÃO DUPLA) ======
+    const draftMixLinkedIds = { new: new Set(), edit: new Set() };
+    let currentEditMixProductId = null;
+
+    function toggleWholesaleMixPicker(prefix) {
+      const enabled = !!document.getElementById(`${prefix}-mix-enabled`)?.checked;
+      const wrap = document.getElementById(`${prefix}-mix-wrap`);
+      if (wrap) wrap.classList.toggle('hidden', !enabled);
+      if (enabled) renderWholesaleMixPicker(prefix);
+    }
+
+    function toggleWholesaleMixItem(prefix, otherId) {
+      const numId = Number(otherId);
+      if (draftMixLinkedIds[prefix].has(numId)) draftMixLinkedIds[prefix].delete(numId);
+      else draftMixLinkedIds[prefix].add(numId);
+      renderWholesaleMixPicker(prefix);
+    }
+
+    function renderWholesaleMixPicker(prefix) {
+      const chipsEl = document.getElementById(`${prefix}-mix-chips`);
+      const candEl = document.getElementById(`${prefix}-mix-candidates`);
+      const searchEl = document.getElementById(`${prefix}-mix-search`);
+      const clearEl = document.getElementById(`${prefix}-mix-search-clear`);
+      if (!chipsEl || !candEl) return;
+
+      const curId = prefix === 'edit' ? Number(document.getElementById('edit-product-id')?.value || currentEditMixProductId || 0) : 0;
+      const curName = (document.getElementById(prefix === 'edit' ? 'edit-product-name' : 'new-name')?.value || 'Este produto').trim();
+      const q = (searchEl?.value || '').trim().toLowerCase();
+      if (clearEl) clearEl.classList.toggle('hidden', !q);
+
+      const selSet = draftMixLinkedIds[prefix];
+      const chips = [`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-600 text-white text-[10px] font-black">★ ${escapeHtml(curName)}</span>`];
+      selSet.forEach(oid => {
+        const o = products.find(x => Number(x.id) === Number(oid));
+        if (!o) return;
+        chips.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 text-[10px] font-extrabold">${escapeHtml(o.name)}<button type="button" onclick="toggleWholesaleMixItem('${prefix}', ${o.id})" class="text-emerald-700 hover:text-rose-600 font-black ml-0.5">✕</button></span>`);
+      });
+      chipsEl.innerHTML = chips.join('');
+
+      const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const baseWords = norm(curName).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !['unitario','unidade','sache','racao','para','caes','gatos'].includes(w)).slice(0, 3);
+      const allWords = norm(curName).split(/[^a-z0-9]+/).filter(w => w.length >= 3).slice(0, 4);
+
+      const candidates = products
+        .filter(o => Number(o.id) !== curId)
+        .map(o => {
+          const n = norm(o.name);
+          const strongHits = baseWords.filter(w => n.includes(w)).length;
+          const softHits = allWords.filter(w => n.includes(w)).length;
+          return { prod: o, score: strongHits * 3 + softHits, isSimilar: strongHits >= 1 || softHits >= 2 };
+        })
+        .filter(x => !q || norm(x.prod.name).includes(norm(q)) || String(x.prod.barcode || '').includes(q))
+        .sort((a, b) => (selSet.has(Number(b.prod.id)) ? 1 : 0) - (selSet.has(Number(a.prod.id)) ? 1 : 0) || b.score - a.score || a.prod.name.localeCompare(b.prod.name, 'pt-BR'))
+        .slice(0, 40);
+
+      candEl.innerHTML = candidates.length ? candidates.map(({ prod: o, isSimilar }) => {
+        const checked = selSet.has(Number(o.id));
+        return `<label class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg border cursor-pointer transition ${checked ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 hover:bg-slate-100 border-slate-200'}">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleWholesaleMixItem('${prefix}', ${o.id})" class="w-3.5 h-3.5 accent-emerald-600 rounded shrink-0">
+            <span class="text-[11px] font-bold text-slate-800 truncate">${escapeHtml(o.name)}</span>
+            ${isSimilar && !q ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 shrink-0">Parecido</span>' : ''}
+          </div>
+          <span class="text-[10px] font-extrabold text-slate-500 shrink-0">R$ ${o.price.toFixed(2).replace('.', ',')}</span>
+        </label>`;
+      }).join('') : '<div class="text-[10px] text-slate-400 font-bold text-center py-2">Nenhum outro produto encontrado.</div>';
+    }
+
+    function computeCleanMixGroupName(namesList) {
+      const cleaned = namesList.map(n => String(n || '').trim().toUpperCase().split(/\s+/).filter(Boolean));
+      if (!cleaned.length) return 'Atacado Mix';
+      const common = cleaned[0].filter(tok => tok.length >= 2 && cleaned.every(arr => arr.includes(tok)));
+      const label = common.slice(0, 4).join(' ').trim();
+      return label.length >= 3 ? label.slice(0, 50) : (namesList[0] || 'Atacado Mix').trim().slice(0, 40);
+    }
+
+    async function syncWholesaleMixAfterSave(prefix, savedProd, oldGroupName) {
+      if (!sb || !savedProd) return;
+      const whOn = !!document.getElementById(`${prefix}-wholesale-enabled`)?.checked && hasValidWholesale(savedProd);
+      const mixOn = whOn && !!document.getElementById(`${prefix}-mix-enabled`)?.checked;
+      const linkedIds = Array.from(draftMixLinkedIds[prefix] || []).map(Number).filter(id => id !== Number(savedProd.id));
+      const oldKey = String(oldGroupName || '').trim().toLowerCase();
+
+      if (mixOn && linkedIds.length > 0) {
+        const linkedProds = linkedIds.map(id => products.find(x => Number(x.id) === id)).filter(Boolean);
+        const groupName = computeCleanMixGroupName([savedProd.name, ...linkedProds.map(x => x.name)]);
+
+        const allIds = [Number(savedProd.id), ...linkedIds];
+        await sb.from('products').update({
+          wholesale_group: groupName,
+          wholesale_qty: savedProd.wholesaleQty,
+          wholesale_price: savedProd.wholesalePrice
+        }).in('id', allIds);
+
+        allIds.forEach(aid => {
+          const item = products.find(x => Number(x.id) === aid);
+          if (item) {
+            item.wholesaleGroup = groupName;
+            item.wholesaleQty = savedProd.wholesaleQty;
+            item.wholesalePrice = savedProd.wholesalePrice;
+          }
+        });
+
+        if (oldKey) {
+          const removed = products.filter(x => Number(x.id) !== Number(savedProd.id) && !linkedIds.includes(Number(x.id)) && String(x.wholesaleGroup || '').trim().toLowerCase() === oldKey);
+          if (removed.length > 0) {
+            const remIds = removed.map(x => x.id);
+            await sb.from('products').update({ wholesale_group: null }).in('id', remIds);
+            removed.forEach(x => { x.wholesaleGroup = ''; });
+          }
+        }
+        return;
+      }
+
+      if (oldKey || savedProd.wholesaleGroup) {
+        await sb.from('products').update({ wholesale_group: null }).eq('id', savedProd.id);
+        savedProd.wholesaleGroup = '';
+        if (oldKey) {
+          const remaining = products.filter(x => Number(x.id) !== Number(savedProd.id) && String(x.wholesaleGroup || '').trim().toLowerCase() === oldKey);
+          if (remaining.length === 1) {
+            await sb.from('products').update({ wholesale_group: null }).eq('id', remaining[0].id);
+            remaining[0].wholesaleGroup = '';
+          }
+        }
+      }
+    }
+
 
     function resetNewStage2Fields() {
       ['new-internal-code','new-cost-price','new-conv-factor','new-min-stock','new-wholesale-group','new-cfop','new-csosn','new-expiry-date','new-extra-ean-code','new-extra-ean-tag'].forEach(id => {
@@ -5291,7 +5564,8 @@
         .single();
 
       if (error || !data) {
-        showToast("⚠️ Erro ao cadastrar! Rode o SQL de variant_group, wholesale_qty e wholesale_price no Supabase.");
+        console.error('[AddProduct]', error);
+        showToast("⚠️ Erro ao cadastrar: " + (error?.message || 'verifique os campos no Supabase.'));
         return;
       }
 
@@ -5320,6 +5594,10 @@
         ...st2.local
       });
       await saveProductCostToCloud(data.id, 'new');
+      await syncWholesaleMixAfterSave('new', products[0], '');
+      draftMixLinkedIds.new = new Set();
+      if (document.getElementById('new-mix-enabled')) document.getElementById('new-mix-enabled').checked = false;
+      toggleWholesaleMixPicker('new');
       resetNewStage2Fields();
 
       if (newVariantGroupKey) {
@@ -5677,7 +5955,7 @@
             <div class="min-w-0 flex-1">
               <h4 class="text-xs font-bold text-slate-800 leading-snug break-words">${p.weight && p.weight !== 'Sem peso/medida' ? `<span class="inline-block bg-[#F4FCEB] text-[#4D7C0F] border border-[#7CB342]/40 text-[10px] font-black px-1.5 py-0.5 rounded-md mr-1 align-middle">${p.weight}</span>` : ''}${isActive ? '' : '<span class="text-amber-700 font-black">[Pausado]</span> '}${p.name}</h4>
               <p class="text-[11px] text-brand-primary font-black mt-0.5">
-                Normal: R$ ${p.price.toFixed(2).replace('.', ',')}${hasPromoPrice ? ` • <span class="text-[#E84D9A]">Promo: R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidPickupPrice(p) ? ` • <span class="text-emerald-700">🏪 Retirada: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidWholesale(p) ? ` • <span class="text-amber-700">📦 Atacado: ${p.wholesaleQty}x R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}</span>` : ''}${p.variantGroup ? ` • <span class="text-indigo-700">🧩 Variação</span>` : ''}
+                Normal: R$ ${p.price.toFixed(2).replace('.', ',')}${hasPromoPrice ? ` • <span class="text-[#E84D9A]">Promo: R$ ${p.promoPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidPickupPrice(p) ? ` • <span class="text-emerald-700">🏪 Retirada: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</span>` : ''}${hasValidWholesale(p) ? (() => { const mCnt = p.wholesaleGroup ? products.filter(x => String(x.wholesaleGroup || '').trim().toLowerCase() === p.wholesaleGroup.trim().toLowerCase()).length : 0; return ` • <span class="${mCnt >= 2 ? 'text-emerald-700' : 'text-amber-700'}">${mCnt >= 2 ? `🎨 Mix (${mCnt} sabores)` : '📦 Atacado'}: ${p.wholesaleQty}x R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}</span>`; })() : ''}${p.variantGroup ? ` • <span class="text-indigo-700">🧩 Variação</span>` : ''}
                 <span class="text-slate-500 font-medium"> • ${p.category} / ${p.subcategory}</span>
               </p>
               ${(p.internalCode || p.barcode || p.ncm || p.stockQty !== null || (p.unitType && p.unitType !== 'UN') || (p.extraBarcodes && p.extraBarcodes.length)) ? `<p class="text-[10px] text-slate-500 font-semibold mt-0.5">${[p.internalCode ? `Cód: ${escapeHtml(p.internalCode)}` : '', (p.unitType && p.unitType !== 'UN') ? p.unitType : '', p.barcode ? `EAN: ${p.barcode}` : '', (p.extraBarcodes && p.extraBarcodes.length) ? `+${p.extraBarcodes.length} EAN` : '', p.ncm ? `NCM: ${p.ncm}` : '', (p.stockQty !== null && p.stockQty !== undefined) ? `Est: ${p.stockQty}` : ''].filter(Boolean).join(' • ')}</p>` : ''}
@@ -5813,7 +6091,19 @@
       if (document.getElementById('edit-parent-id')) document.getElementById('edit-parent-id').value = p.parentProductId ? String(p.parentProductId) : '';
       if (document.getElementById('edit-conv-factor')) document.getElementById('edit-conv-factor').value = p.conversionFactor != null ? p.conversionFactor : '';
       if (document.getElementById('edit-min-stock')) document.getElementById('edit-min-stock').value = p.minStock != null ? p.minStock : '';
-      if (document.getElementById('edit-wholesale-group')) document.getElementById('edit-wholesale-group').value = p.wholesaleGroup || '';
+      currentEditMixProductId = Number(p.id);
+      draftMixLinkedIds.edit = new Set();
+      if (p.wholesaleGroup) {
+        const gKey = p.wholesaleGroup.trim().toLowerCase();
+        products.forEach(o => {
+          if (Number(o.id) !== Number(p.id) && String(o.wholesaleGroup || '').trim().toLowerCase() === gKey) {
+            draftMixLinkedIds.edit.add(Number(o.id));
+          }
+        });
+      }
+      if (document.getElementById('edit-mix-enabled')) document.getElementById('edit-mix-enabled').checked = draftMixLinkedIds.edit.size > 0;
+      if (document.getElementById('edit-mix-search')) document.getElementById('edit-mix-search').value = '';
+      toggleWholesaleMixPicker('edit');
       if (document.getElementById('edit-cfop')) document.getElementById('edit-cfop').value = p.cfop || '';
       if (document.getElementById('edit-csosn')) document.getElementById('edit-csosn').value = p.csosn || '';
       if (document.getElementById('edit-expiry-date')) document.getElementById('edit-expiry-date').value = p.expiryDate || '';
@@ -6388,8 +6678,19 @@
       if (st2Edit.error) { showToast(st2Edit.error); return; }
       Object.assign(updated, st2Edit.db);
 
+      const oldMixGroupBeforeSave = p.wholesaleGroup || '';
+      delete updated.wholesale_group;
+      if (storeConfig.autoPauseZeroStock && editStock !== null && editStock !== undefined) {
+        if (Number(editStock) <= 0 && p.active !== false) {
+          updated.active = false;
+          updated.auto_paused_zero_stock = true;
+        } else if (Number(editStock) > 0 && p.active === false && p.autoPausedZeroStock) {
+          updated.active = true;
+          updated.auto_paused_zero_stock = false;
+        }
+      }
       const { error } = await sb.from('products').update(updated).eq('id', id);
-      if (error) { showToast("⚠️ Rode o SQL supabase_etapa2_ficha_completa.sql no Supabase!"); return; }
+      if (error) { console.error('[SaveEdit]', error); showToast("⚠️ Erro ao salvar: " + (error.message || 'verifique o SQL no Supabase.')); return; }
       await saveProductCostToCloud(id, 'edit');
 
       Object.assign(p, {
@@ -6411,8 +6712,12 @@
         promoShowEnd: !!updated.promo_show_end,
         wholesaleQty: updated.wholesale_qty,
         wholesalePrice: updated.wholesale_price,
-        ...st2Edit.local
+        ...st2Edit.local,
+        wholesaleGroup: oldMixGroupBeforeSave,
+        active: updated.active !== undefined ? updated.active : p.active,
+        autoPausedZeroStock: updated.auto_paused_zero_stock !== undefined ? updated.auto_paused_zero_stock : !!p.autoPausedZeroStock
       });
+      await syncWholesaleMixAfterSave('edit', p, oldMixGroupBeforeSave);
 
       filterProducts();
       renderManagerProducts();
@@ -7438,7 +7743,8 @@
       selected.forEach(r => {
         const origIdx = bulkRows.indexOf(r);
         const dup = findDuplicateProduct(r.name, r.barcode);
-        const shouldPause = pauseAllImported || (pauseZeroStock && r.stockQty !== null && r.stockQty !== undefined && Number(r.stockQty) <= 0);
+        const autoZero = !!storeConfig.autoPauseZeroStock && r.stockQty !== null && r.stockQty !== undefined && Number(r.stockQty) <= 0;
+        const shouldPause = pauseAllImported || ((pauseZeroStock || !!storeConfig.autoPauseZeroStock) && r.stockQty !== null && r.stockQty !== undefined && Number(r.stockQty) <= 0);
         if (dup) {
           if (dupMode === 'update') {
             toUpdate.push({ id: dup.match.id, row: r, origIdx, shouldPause });
@@ -7468,6 +7774,7 @@
             parent_product_id: (r.parentLink && r.parentLink.type === 'existing') ? r.parentLink.id : null,
             conversion_factor: (r.parentLink && r.parentLink.kg) ? r.parentLink.kg : null,
             active: shouldPause ? false : true,
+            auto_paused_zero_stock: (!pauseAllImported && autoZero) ? true : false,
             brand: r.brand || "Sem Marca",
             weight: r.weight || "Sem peso/medida",
             image_url: "",
@@ -7562,8 +7869,17 @@
         } else if (r.parentLink && r.parentLink.type === 'batch') {
           deferredParentLinks.push({ childId: item.id, parentBatchIdx: r.parentLink.batchIdx, kg: r.parentLink.kg });
         }
-        if (pauseZeroStock && r.stockQty !== null && r.stockQty !== undefined) {
-          patch.active = !item.shouldPause;
+        const localBefore = products.find(p => p.id === item.id);
+        if ((pauseZeroStock || storeConfig.autoPauseZeroStock) && r.stockQty !== null && r.stockQty !== undefined) {
+          if (Number(r.stockQty) <= 0) {
+            if (!localBefore || localBefore.active !== false) {
+              patch.active = false;
+              patch.auto_paused_zero_stock = true;
+            }
+          } else if (Number(r.stockQty) > 0 && localBefore && localBefore.active === false && localBefore.autoPausedZeroStock) {
+            patch.active = true;
+            patch.auto_paused_zero_stock = false;
+          }
         }
         const { error: upErr } = await sb.from('products').update(patch).eq('id', item.id);
         if (!upErr) {
@@ -7586,6 +7902,7 @@
             if (patch.show_in_catalog === false) local.showInCatalog = false;
             if (patch.parent_product_id) { local.parentProductId = patch.parent_product_id; local.conversionFactor = patch.conversion_factor; }
             if (patch.active !== undefined) local.active = patch.active;
+            if (patch.auto_paused_zero_stock !== undefined) local.autoPausedZeroStock = patch.auto_paused_zero_stock;
           }
         }
       }
@@ -8776,6 +9093,25 @@
     }, 1000);
 
   </script>
+
+  <!-- MODAL: 👑 PAINEL SUPER ADMIN (CONTROLE DE MÓDULOS SAAS POR LOJA) -->
+  <div id="superadmin-modules-modal" class="fixed inset-0 z-50 bg-slate-900/70 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-sm sm:text-base font-black text-slate-900">👑 Painel Super Admin — Módulos por Loja</h3>
+          <p class="text-[11px] text-slate-500 font-semibold">Ligue ou desligue módulos em 1 clique. Lojistas comuns não conseguem alterar o próprio plano.</p>
+        </div>
+        <button onclick="closeSuperAdminModal()" class="text-slate-400 hover:text-slate-800 font-black text-lg px-1">✕</button>
+      </div>
+      <div id="superadmin-sql-warn" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-3 text-xs font-bold text-amber-950">
+        ⚠️ Rode o arquivo <code>supabase_etapa4_modulos_e_estoque.sql</code> uma vez no Supabase → SQL Editor para ativar o controle de módulos.
+      </div>
+      <div id="superadmin-stores-list" class="space-y-2.5 text-xs">
+        <div class="text-center py-6 text-slate-400 font-bold">Carregando lojas...</div>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: 📊 ACESSOS, CLIQUES & INSTALAÇÕES DO APP -->
   <div id="analytics-modal" class="fixed inset-0 z-50 bg-slate-900/60 hidden items-center justify-center p-3">
