@@ -1011,6 +1011,8 @@
               <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="in_catalog" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>🛍️ Na Vitrine</span></label>
               <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="pdv_only" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>🖥️ Só PDV</span></label>
               <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="no_photo" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>📷 Sem Foto</span></label>
+              <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="no_barcode" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>🏷️ Sem EAN</span></label>
+              <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="no_plu" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>🔢 Sem PLU</span></label>
               <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="active" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>✅ Só Ativos</span></label>
               <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="paused" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>⏸️ Só Pausados</span></label>
               <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="promo_active" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>🔥 Promo Ativa</span></label>
@@ -1047,7 +1049,7 @@
             </button>
           </div>
         </div>
-        <div id="manager-product-list" class="grid grid-cols-1 lg:grid-cols-2 gap-2.5 max-h-[70vh] overflow-y-auto pr-1 items-start"></div>
+        <div id="manager-product-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 max-h-[82vh] overflow-y-auto pr-1 items-start"></div>
         </div>
       </div>
     </div>
@@ -2220,7 +2222,7 @@
       ], () => !!window.Html5Qrcode);
     }
 
-    async function fetchWithRetry(fn, attempts = 3, timeoutMs = 12000) {
+    async function fetchWithRetry(fn, attempts = 3, timeoutMs = 25000) {
       let lastErr = null;
       for (let i = 0; i < attempts; i++) {
         try {
@@ -2242,15 +2244,12 @@
 
     function saveStoreLocalCache(storeObj, prodArr) {
       try {
-        // Remove base64 gigantes do cache local para nunca estourar limite do celular
-        const slimProds = (prodArr || []).slice(0, 800).map(p => {
-          if (p && typeof p.image === 'string' && p.image.startsWith('data:') && p.image.length > 12000) {
-            return { ...p, image: '' };
-          }
-          return p;
-        });
+        const slimProds = (prodArr || []).slice(0, 800);
         localStorage.setItem(getStoreCacheKey(), JSON.stringify({ ts: Date.now(), store: storeObj, products: slimProds }));
-      } catch (e) { /* quota cheia */ }
+      } catch (e) {
+        // Se estourar o limite do navegador, remove o cache antigo em vez de salvar produtos sem foto
+        try { localStorage.removeItem(getStoreCacheKey()); } catch (e2) {}
+      }
     }
 
     function loadStoreLocalCache() {
@@ -4473,6 +4472,8 @@
       in_catalog: '🛍️ Na Vitrine',
       pdv_only: '🖥️ Só PDV',
       no_photo: '📷 Sem Foto',
+      no_barcode: '🏷️ Sem EAN',
+      no_plu: '🔢 Sem PLU',
       active: '✅ Ativos',
       paused: '⏸️ Pausados',
       promo_active: '🔥 Promo Ativa',
@@ -5398,6 +5399,8 @@
         if (managerStatusFilters.has('in_catalog') && (p.showInCatalog === false || p.active === false)) matchSt = false;
         if (matchSt && managerStatusFilters.has('pdv_only') && p.showInCatalog !== false) matchSt = false;
         if (matchSt && managerStatusFilters.has('no_photo') && (p.image && p.image.trim())) matchSt = false;
+        if (matchSt && managerStatusFilters.has('no_barcode') && ((p.barcode && p.barcode.trim()) || (p.extraBarcodes && p.extraBarcodes.length > 0))) matchSt = false;
+        if (matchSt && managerStatusFilters.has('no_plu') && (p.internalCode && p.internalCode.trim())) matchSt = false;
         if (matchSt && managerStatusFilters.has('active') && p.active === false) matchSt = false;
         if (matchSt && managerStatusFilters.has('paused') && p.active !== false) matchSt = false;
         if (matchSt && managerStatusFilters.has('promo_active') && getProductPromoState(p) !== 'active') matchSt = false;
@@ -5665,11 +5668,10 @@
               </div>
             </div>
           ` : ''}
-          <div class="grid grid-cols-5 gap-1 pt-1.5 border-t border-slate-100">
-            <button onclick="toggleProductActive(${p.id})" class="py-1.5 px-1 rounded-xl text-[10px] font-extrabold transition ${isActive ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-slate-300 hover:bg-slate-400 text-slate-700'}" title="${isActive ? 'Pausar produto' : 'Reativar produto'}">${isActive ? '✅ Ativo' : '⏸️ Pausado'}</button>
-            <button onclick="toggleProductShowInCatalog(${p.id})" class="py-1.5 px-1 rounded-xl text-[10px] font-extrabold transition ${p.showInCatalog !== false ? 'bg-sky-100 hover:bg-sky-200 text-sky-900' : 'bg-slate-800 hover:bg-slate-700 text-[#FCD40F]'}" title="${p.showInCatalog !== false ? 'Visível no App Cliente (clique para deixar Só PDV)' : 'Oculto na Vitrine / Só PDV (clique para mostrar no App Cliente)'}">${p.showInCatalog !== false ? '🛍️ Vitrine' : '🖥️ Só PDV'}</button>
+          <div class="grid grid-cols-4 gap-1.5 pt-1.5 border-t border-slate-100">
+            <button onclick="toggleProductActive(${p.id})" class="py-1.5 px-1 rounded-xl text-[11px] font-extrabold transition ${isActive ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-slate-300 hover:bg-slate-400 text-slate-700'}" title="${isActive ? 'Pausar produto' : 'Reativar produto'}">${isActive ? '✅ Ativo' : '⏸️ Pausado'}</button>
             <button onclick="toggleProductPromo(${p.id})" class="py-1.5 px-1 rounded-xl text-xs font-bold transition ${isPromoOrSched ? 'bg-brand-accent text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}" title="Ligar/Desligar Promoção">🔥</button>
-            <button onclick="openEditProduct(${p.id})" class="bg-[#FEFCE8] hover:bg-[#FEF08A] text-[#855E00] py-1.5 px-1 rounded-xl text-[10px] font-bold transition" title="Editar Completo">📂 Editar</button>
+            <button onclick="openEditProduct(${p.id})" class="bg-[#FEFCE8] hover:bg-[#FEF08A] text-[#855E00] py-1.5 px-1 rounded-xl text-[11px] font-bold transition" title="Editar Completo">📂 Editar</button>
             <button onclick="deleteProduct(${p.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 py-1.5 px-1 rounded-xl text-xs font-bold transition" title="Excluir">🗑️</button>
           </div>
         </div>
