@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#2EB4C7">
+  <meta name="theme-color" content="#FFFFFF">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link id="pwa-manifest-link" rel="manifest" href="manifest.json">
-  <link id="pwa-favicon" rel="icon" type="image/png" href="icon-192.png">
-  <link id="pwa-apple-icon" rel="apple-touch-icon" href="icon-192.png">
-  <title>Recanto Petshop • Catálogo Online</title>
+  <link id="pwa-manifest-link" rel="manifest">
+  <link id="pwa-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E">
+  <link id="pwa-apple-icon" rel="apple-touch-icon">
+  <title>Catálogo Online</title>
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Recanto Petshop • Catálogo Online">
-  <meta property="og:description" content="Confira nossas rações, petiscos, ofertas e peça direto pelo WhatsApp!">
-  <meta property="og:image" content="https://appsitediy-cmd.github.io/Multi-lojas-catalogo/icon-512.png">
+  <meta property="og:title" content="Catálogo Online">
+  <meta property="og:description" content="Confira nossos produtos, ofertas e peça direto pelo WhatsApp!">
   <link rel="preconnect" href="https://pimqhnjyahykpewbzpum.supabase.co" crossorigin>
   <link rel="dns-prefetch" href="https://pimqhnjyahykpewbzpum.supabase.co">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
@@ -21,13 +20,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --brand-primary: #24B7C5;
-      --brand-primary-dark: #1A8E99;
-      --brand-accent: #E94793;
-      --brand-header-bg: #24B7C5;
+      --brand-primary: #334155;
+      --brand-primary-dark: #1E293B;
+      --brand-primary-soft: #F1F5F9;
+      --brand-primary-border: #CBD5E1;
+      --brand-accent: #334155;
+      --brand-accent-dark: #1E293B;
+      --brand-accent-soft: #F1F5F9;
+      --brand-accent-border: #CBD5E1;
+      --brand-header-bg: #334155;
       --brand-stripe: #FCD40F;
-      --brand-card-border: #24B7C5;
-      --brand-price-color: #1A8E99;
+      --brand-card-border: #CBD5E1;
+      --brand-price-color: #1E293B;
       --brand-page-bg: #F4F9FA;
       --brand-fire-bg: #FFFFFF;
       --brand-wa-bg: #FFFFFF;
@@ -56,7 +60,15 @@
           if (c.primaryDark) document.documentElement.style.setProperty('--brand-primary-dark', c.primaryDark);
           if (c.accentColor) document.documentElement.style.setProperty('--brand-accent', c.accentColor);
         }
-        if (slug !== 'recanto') {
+        if (slug === 'recanto') {
+          var favRec = document.getElementById('pwa-favicon');
+          var appRec = document.getElementById('pwa-apple-icon');
+          var manRec = document.getElementById('pwa-manifest-link');
+          if (favRec) favRec.setAttribute('href', 'icon-192.png');
+          if (appRec) appRec.setAttribute('href', 'icon-192.png');
+          if (manRec) manRec.setAttribute('href', 'manifest.json');
+          document.title = 'Recanto Petshop • Catálogo Online';
+        } else {
           document.documentElement.classList.add('partner-loading');
           var favPre = document.getElementById('pwa-favicon');
           var appPre = document.getElementById('pwa-apple-icon');
@@ -95,8 +107,8 @@
           <img id="header-logo-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Logo" decoding="async" onerror="this.onerror=null;this.src=NEUTRAL_LOGO_IMG;" class="w-full h-full object-contain rounded-full transition-transform duration-200">
         </div>
         <div class="min-w-0 flex-1">
-          <h1 id="header-store-name" class="text-base sm:text-lg font-extrabold tracking-tight leading-snug break-words">Recanto Petshop</h1>
-          <p id="header-store-subtitle" class="text-xs text-cyan-50 font-medium leading-tight break-words">Tudo para o seu melhor amigo 🐾</p>
+          <h1 id="header-store-name" class="text-base sm:text-lg font-extrabold tracking-tight leading-snug break-words"></h1>
+          <p id="header-store-subtitle" class="text-xs text-white/90 font-medium leading-tight break-words"></p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -113,7 +125,7 @@
       </div>
     </div>
     <div id="header-address-bar" class="hidden max-w-6xl mx-auto px-4 pb-2.5 -mt-1 space-y-1.5">
-      <p id="header-store-address" class="hidden text-[11px] text-cyan-50 font-semibold leading-snug break-words"></p>
+      <p id="header-store-address" class="hidden text-[11px] text-white/90 font-semibold leading-snug break-words"></p>
       <div id="header-store-badges" class="hidden flex flex-wrap items-center gap-1.5">
         <span id="header-opening-hours" class="hidden bg-white/15 border border-white/25 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg leading-snug"></span>
         <span id="header-delivery-info" class="hidden bg-[#F7D046] text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-lg shadow-sm leading-snug"></span>
@@ -152,7 +164,7 @@
         <p><strong>• Android:</strong> toque nos <strong>3 pontinhos (⋮)</strong> no topo e escolha <strong>Abrir no Chrome</strong>.</p>
         <p><strong>• iPhone:</strong> toque no ícone da <strong>bússola / Safari</strong> no canto inferior direito.</p>
       </div>
-      <div id="pwa-help-browser" class="bg-[#E8F8FA] border border-[#B5E8EF] rounded-2xl p-3 text-left text-xs text-slate-700 space-y-1.5">
+      <div id="pwa-help-browser" style="background-color: var(--brand-primary-soft); border-color: var(--brand-primary-border);" class="border rounded-2xl p-3 text-left text-xs text-slate-700 space-y-1.5">
         <p><strong>• Android (Chrome):</strong> toque nos <strong>3 pontinhos (⋮)</strong> no canto superior e escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</p>
         <p><strong>• iPhone (Safari):</strong> toque em <strong>Compartilhar (⬆️)</strong> na barra inferior e escolha <strong>Adicionar à Tela de Início</strong>.</p>
       </div>
@@ -204,10 +216,10 @@
           <select id="client-subcat-select" onchange="selectSubcategory(this.value)" class="w-full bg-[#FEFCE8] border border-[#FCD40F] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#855E00] focus:outline-none focus:border-[#D99B00]"></select>
         </div>
         <div id="brand-select-wrap" class="min-w-0">
-          <select id="client-brand-select" onchange="selectBrand(this.value)" class="w-full bg-[#FDF2F8] border border-[#E94793]/40 rounded-xl px-2 py-1.5 text-xs font-bold text-[#9D174D] focus:outline-none focus:border-[#E94793]"></select>
+          <select id="client-brand-select" onchange="selectBrand(this.value)" style="background-color: var(--brand-primary-soft); border-color: var(--brand-primary-border); color: var(--brand-primary-dark);" class="w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none cursor-pointer"></select>
         </div>
         <div id="sort-select-wrap" class="min-w-0">
-          <select id="client-sort-select" onchange="filterProducts()" class="w-full bg-[#E8F8FA] border border-[#24B7C5]/50 rounded-xl px-2 py-1.5 text-xs font-bold text-[#155E75] focus:outline-none focus:border-[#24B7C5]">
+          <select id="client-sort-select" onchange="filterProducts()" style="background-color: var(--brand-primary-soft); border-color: var(--brand-primary-border); color: var(--brand-primary-dark);" class="w-full border rounded-xl px-2 py-1.5 text-xs font-bold focus:outline-none cursor-pointer">
             <option value="promo-first">🔥 Promoção</option>
             <option value="price-asc">💰 Menor preço</option>
             <option value="price-desc">💎 Maior preço</option>
@@ -220,7 +232,7 @@
         <span class="absolute left-1.5 flex items-center justify-center w-7 h-7 rounded-xl bg-brand-primary text-white shadow-sm pointer-events-none">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </span>
-        <input type="search" id="search-input" name="catalog-search-query" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, 15kg...)" class="w-full bg-slate-50 border-2 border-brand-primary/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#24B7C5] cursor-text">
+        <input type="search" id="search-input" name="catalog-search-query" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" oninput="filterProducts()" placeholder="O que seu pet precisa hoje? (Ex: Ração, 15kg...)" class="w-full bg-slate-50 border-2 border-brand-primary/80 rounded-xl pl-10 pr-9 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 cursor-text">
         <button id="search-clear-btn" type="button" onclick="clearSearchInput()" class="hidden absolute right-2 w-6 h-6 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 font-bold text-[11px] flex items-center justify-center transition" title="Limpar busca">✕</button>
       </div>
     </div>
@@ -228,7 +240,7 @@
     <!-- CABEÇALHO DA LISTAGEM DE PRODUTOS -->
     <div class="flex items-center justify-between mb-3 px-1">
       <h3 id="product-list-title" class="text-sm font-extrabold text-slate-800">Todos os Produtos</h3>
-      <span id="product-count-badge" class="text-xs font-semibold text-brand-primary bg-[#E8F8FA] border border-[#B5E8EF] px-2.5 py-0.5 rounded-full">0 itens</span>
+      <span id="product-count-badge" style="background-color: var(--brand-primary-soft); border-color: var(--brand-primary-border); color: var(--brand-primary-dark);" class="text-xs font-semibold border px-2.5 py-0.5 rounded-full">0 itens</span>
     </div>
 
     <!-- GRADE DE PRODUTOS -->
@@ -236,7 +248,7 @@
 
     <!-- ESTADO VAZIO -->
     <div id="empty-state" class="hidden flex flex-col items-center justify-center py-12 px-4 text-center">
-      <div class="w-16 h-16 bg-[#E8F8FA] text-brand-primary rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">🐾</div>
+      <div style="background-color: var(--brand-primary-soft);" class="w-16 h-16 text-brand-primary rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">🐾</div>
       <h3 class="text-base font-bold text-slate-700">Nenhum produto encontrado</h3>
       <p class="text-xs text-slate-500 mt-1">Tente buscar por outro termo ou limpar os filtros.</p>
       <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -252,7 +264,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800">Painel Gestor <span id="manager-store-slug-badge" class="text-[11px] font-bold bg-[#E8F8FA] text-[#176E7B] px-2 py-0.5 rounded-lg ml-1"></span></h2>
+          <h2 class="text-lg font-black text-slate-800">Painel Gestor <span id="manager-store-slug-badge" style="background-color: var(--brand-primary-soft); color: var(--brand-primary-dark);" class="text-[11px] font-bold px-2 py-0.5 rounded-lg ml-1"></span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -305,22 +317,22 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">WhatsApp para Pedidos (com DDD)</label>
-            <input type="text" id="config-whatsapp" placeholder="Ex: 5511999999999" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="config-whatsapp" placeholder="Ex: 5511999999999" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Nome da Loja</label>
-            <input type="text" id="config-store-name-input" placeholder="Nome da sua loja" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="config-store-name-input" placeholder="Nome da sua loja" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-[11px] font-bold text-slate-700">Subtítulo da Loja</label>
               <span id="count-config-subtitle" class="text-[10px] font-bold text-slate-400">0/55</span>
             </div>
-            <input type="text" id="config-store-subtitle-input" maxlength="55" oninput="updateCharCount('config-store-subtitle-input', 'count-config-subtitle', 55)" placeholder="Tudo para o seu melhor amigo 🐾" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="config-store-subtitle-input" maxlength="55" oninput="updateCharCount('config-store-subtitle-input', 'count-config-subtitle', 55)" placeholder="Tudo para o seu melhor amigo 🐾" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Endereço da Loja</label>
-            <input type="text" id="config-store-address-input" placeholder="Ex: Rua Itajubá, 338 - Carapicuíba" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="config-store-address-input" placeholder="Ex: Rua Itajubá, 338 - Carapicuíba" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
             <div class="flex items-center gap-3 mt-1.5 flex-wrap">
               <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
                 <input type="checkbox" id="hs-show-addr-top" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#2EB4C7] rounded">
@@ -334,7 +346,7 @@
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">🕒 Horário de Funcionamento</label>
-            <input type="text" id="config-opening-hours" placeholder="Ex: Seg a Sáb: 08h às 19h • Dom: 08h às 13h" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="config-opening-hours" placeholder="Ex: Seg a Sáb: 08h às 19h • Dom: 08h às 13h" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
             <div class="flex items-center gap-3 mt-1.5 flex-wrap">
               <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
                 <input type="checkbox" id="hs-show-hours-top" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#24B7C5] rounded">
@@ -348,7 +360,7 @@
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">🛵 Aviso de Entrega / Pedido Mínimo</label>
-            <input type="text" id="config-delivery-info" placeholder="Ex: Entrega grátis até 1,5km • Pedido mín. R$ 50,00" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="config-delivery-info" placeholder="Ex: Entrega grátis até 1,5km • Pedido mín. R$ 50,00" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
             <div class="flex items-center gap-3 mt-1.5 flex-wrap">
               <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
                 <input type="checkbox" id="hs-show-delivery-top" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#24B7C5] rounded">
@@ -362,7 +374,7 @@
           </div>
           <div class="sm:col-span-2">
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Chave Pix da Loja (para pagamento no carrinho)</label>
-            <input type="text" id="config-pix-key" placeholder="Ex: 11999999999, CNPJ, E-mail ou Chave Aleatória" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="config-pix-key" placeholder="Ex: 11999999999, CNPJ, E-mail ou Chave Aleatória" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
           </div>
           <div>
             <label for="config-primary-color" class="block text-[11px] font-bold text-slate-700 mb-1">Cor Principal da Loja</label>
@@ -502,13 +514,13 @@
               <span>📸 Galeria</span>
               <input type="file" accept="image/*" onchange="handleProductPhotoUpload(event, 'config-store-logo', 'config-store-logo-preview')" class="hidden">
             </label>
-            <input type="text" id="config-store-logo" oninput="updateImagePreview('config-store-logo', 'config-store-logo-preview')" onpaste="handleImagePaste(event, 'config-store-logo', 'config-store-logo-preview')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#2EB4C7]" placeholder="Ou cole link da logo">
+            <input type="text" id="config-store-logo" oninput="updateImagePreview('config-store-logo', 'config-store-logo-preview')" onpaste="handleImagePaste(event, 'config-store-logo', 'config-store-logo-preview')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400" placeholder="Ou cole link da logo">
           </div>
           <div id="config-store-logo-preview-wrap" class="hidden flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-200 mt-2">
             <div class="flex items-center gap-2">
               <span class="text-[11px] text-slate-500 font-medium">Prévia da Logo:</span>
               <div class="w-12 h-12 rounded-full overflow-hidden border border-slate-200 bg-white flex items-center justify-center cursor-zoom-in" onclick="openLogoZoom()">
-                <img id="config-store-logo-preview" src="" alt="Prévia da logo" class="w-full h-full object-contain transition-transform duration-150">
+                <img id="config-store-logo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Prévia da logo" decoding="async" onerror="this.onerror=null;this.src=NEUTRAL_LOGO_IMG;" class="w-full h-full object-contain transition-transform duration-150">
               </div>
             </div>
             <div class="flex items-center gap-2 flex-1 min-w-[160px] max-w-xs">
@@ -549,7 +561,7 @@
               <span class="text-xs font-bold text-slate-700">Subcategorias</span>
               <button onclick="addNewSubcatFromManager()" class="text-[11px] bg-[#D99B00] text-white font-bold px-2.5 py-1 rounded-lg hover:bg-[#B88200] transition shrink-0 whitespace-nowrap">+ Nova</button>
             </div>
-            <select id="manager-subcat-filter" onchange="renderManagerSubcategories()" class="w-full mb-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-[#2EB4C7]"></select>
+            <select id="manager-subcat-filter" onchange="renderManagerSubcategories()" class="w-full mb-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
             <div id="manager-subcat-list" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1"></div>
           </div>
           <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
@@ -583,39 +595,39 @@
               <label class="block text-[11px] font-bold text-[#176E7B]">Nome do Produto (máx. 60 caracteres)</label>
               <span id="count-new-name" class="text-[10px] font-bold text-[#176E7B]">0/60</span>
             </div>
-            <input type="text" id="new-name" maxlength="60" oninput="updateCharCount('new-name', 'count-new-name', 60); renderVariantSearchResults('new')" placeholder="Ex: Ração Golden Special 15kg" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm">
+            <input type="text" id="new-name" maxlength="60" oninput="updateCharCount('new-name', 'count-new-name', 60); renderVariantSearchResults('new')" placeholder="Ex: Ração Golden Special 15kg" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 shadow-sm">
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-[11px] font-bold text-[#176E7B]">Categoria</label>
               <button type="button" onclick="addNewCategoryModal('new-category', 'new-subcategory')" class="text-[10px] bg-brand-primary-dark text-white font-bold px-1.5 py-0.5 rounded">+ Nova</button>
             </div>
-            <select id="new-category" onchange="updateSubcatDropdown('new-category', 'new-subcategory')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm"></select>
+            <select id="new-category" onchange="updateSubcatDropdown('new-category', 'new-subcategory')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 shadow-sm"></select>
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-[11px] font-bold text-[#176E7B]">Subcategoria</label>
               <button type="button" onclick="addNewSubcatQuick('new-category', 'new-subcategory')" class="text-[10px] bg-brand-primary-dark text-white font-bold px-1.5 py-0.5 rounded">+ Nova</button>
             </div>
-            <select id="new-subcategory" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm"></select>
+            <select id="new-subcategory" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 shadow-sm"></select>
           </div>
           <div>
             <label class="block text-[11px] font-bold text-[#176E7B] mb-1">Preço Normal (R$)</label>
-            <input type="text" inputmode="numeric" id="new-price" oninput="formatPriceInput(this)" placeholder="Ex: 109,90" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm">
+            <input type="text" inputmode="numeric" id="new-price" oninput="formatPriceInput(this)" placeholder="Ex: 109,90" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 shadow-sm">
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-[11px] font-bold text-[#176E7B]">Marca</label>
               <button type="button" onclick="addNewBrandModal('new-brand')" class="text-[10px] bg-brand-accent text-white font-bold px-1.5 py-0.5 rounded">+ Nova</button>
             </div>
-            <select id="new-brand" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm"></select>
+            <select id="new-brand" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 shadow-sm"></select>
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-[11px] font-bold text-[#176E7B]">Peso / Medida</label>
               <button type="button" onclick="addNewWeightQuick('new-weight')" class="text-[10px] bg-brand-primary-dark text-white font-bold px-1.5 py-0.5 rounded">+ Nova</button>
             </div>
-            <select id="new-weight" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] shadow-sm"></select>
+            <select id="new-weight" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400 shadow-sm"></select>
           </div>
           <div class="flex flex-col justify-end">
             <label class="block text-[11px] font-bold text-[#176E7B] mb-1">Foto do Produto</label>
@@ -731,10 +743,10 @@
               <button type="button" onclick="pastePhotoIntoInput('new-image', 'new-image-preview')" class="text-[10px] bg-brand-primary hover:opacity-90 text-white font-bold px-2 py-0.5 rounded-lg">📋 Colar</button>
             </div>
           </div>
-          <input type="text" id="new-image" placeholder="Cole o link ou a imagem copiada aqui..." oninput="updateImagePreview('new-image', 'new-image-preview')" onpaste="handleImagePaste(event, 'new-image', 'new-image-preview')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+          <input type="text" id="new-image" placeholder="Cole o link ou a imagem copiada aqui..." oninput="updateImagePreview('new-image', 'new-image-preview')" onpaste="handleImagePaste(event, 'new-image', 'new-image-preview')" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400">
           <div id="new-image-preview-wrap" class="hidden flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-[#B5E8EF] mt-2">
             <div class="flex items-center gap-2">
-              <img id="new-image-preview" src="" alt="Prévia da foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+              <img id="new-image-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Prévia da foto" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
               <span class="text-[11px] text-slate-500 font-medium">Prévia da Foto</span>
             </div>
             <button type="button" onclick="clearProductImageField('new-image', 'new-image-preview')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-extrabold px-2.5 py-1.5 rounded-lg text-[11px] transition">🗑️ Excluir Foto</button>
@@ -744,7 +756,7 @@
           <div>
             <label class="block text-[10px] font-bold text-slate-600 mb-1">Código de Barras / EAN <span class="text-slate-400 font-normal">(só Gestor)</span></label>
             <div class="flex items-center gap-1.5">
-              <input type="text" inputmode="numeric" id="new-barcode" placeholder="Ex: 7896048906755" class="w-full min-w-0 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+              <input type="text" inputmode="numeric" id="new-barcode" placeholder="Ex: 7896048906755" class="w-full min-w-0 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400">
               <button type="button" onclick="openBarcodeScanner('new-barcode', false)" class="bg-slate-800 hover:bg-slate-900 text-white px-2 py-1.5 rounded-lg text-xs font-bold shrink-0" title="Ler código de barras pela câmera ou foto">📷</button>
               <button type="button" onclick="openCosmosByInput('new-barcode', 'new-name')" class="bg-[#1A8E99] hover:opacity-90 text-white px-2 py-1.5 rounded-lg text-xs font-bold shrink-0" title="Consultar Nome, NCM e Foto na Cosmos">⚡</button>
             </div>
@@ -752,7 +764,7 @@
           <div>
             <label class="block text-[10px] font-bold text-slate-600 mb-1">NCM <span class="text-slate-400 font-normal">(ou escolha)</span></label>
             <div class="flex items-center gap-1">
-              <input type="text" inputmode="numeric" id="new-ncm" maxlength="10" placeholder="Ex: 23091000" class="w-full min-w-0 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+              <input type="text" inputmode="numeric" id="new-ncm" maxlength="10" placeholder="Ex: 23091000" class="w-full min-w-0 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400">
               <select onchange="applyQuickNcm('new-ncm', this)" class="w-16 bg-white border border-slate-300 rounded-lg px-1 py-1.5 text-[10px] font-extrabold text-[#155E75] shrink-0" title="NCM comum de Pet Shop">
                 <option value="">▾ Pet</option>
                 <option value="23091000">🐶 23091000 Ração</option>
@@ -765,7 +777,7 @@
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-600 mb-1">Saldo / Estoque <span class="text-slate-400 font-normal">(só Gestor)</span></label>
-            <input type="number" step="any" min="0" id="new-stock" placeholder="Ex: 10" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="number" step="any" min="0" id="new-stock" placeholder="Ex: 10" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-400">
           </div>
         </div>
         <div class="mb-3 bg-[#FDF2F8] p-2.5 rounded-xl border border-[#E84D9A]/30 space-y-2">
@@ -844,7 +856,7 @@
           <div class="flex items-center gap-2">
             <div class="relative flex-1 min-w-0">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 text-xs">🔎</span>
-              <input type="search" id="manager-search" name="manager-search-query" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" oninput="clearManagerSelection(); toggleManagerSearchClear(); renderManagerProducts();" placeholder="Buscar por nome, EAN, NCM, marca, peso..." class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7] cursor-text">
+              <input type="search" id="manager-search" name="manager-search-query" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" oninput="clearManagerSelection(); toggleManagerSearchClear(); renderManagerProducts();" placeholder="Buscar por nome, EAN, NCM, marca, peso..." class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-text">
               <button type="button" id="manager-search-clear" onclick="clearManagerSearchInput()" class="hidden absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-slate-700 font-black text-xs" title="Limpar busca">✕</button>
             </div>
             <button type="button" onclick="openBarcodeScanner('manager-search', true)" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1 shadow-sm" title="Ler código de barras pela câmera ou foto">
@@ -852,11 +864,11 @@
             </button>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <select id="manager-filter-cat" onchange="clearManagerSelection(); updateManagerFilterSubcats(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-[#2EB4C7]"></select>
-            <select id="manager-filter-subcat" onchange="clearManagerSelection(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-[#2EB4C7]"></select>
-            <select id="manager-filter-brand" onchange="clearManagerSelection(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-[#2EB4C7]"></select>
+            <select id="manager-filter-cat" onchange="clearManagerSelection(); updateManagerFilterSubcats(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
+            <select id="manager-filter-subcat" onchange="clearManagerSelection(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
+            <select id="manager-filter-brand" onchange="clearManagerSelection(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
             <div class="flex items-center gap-1.5">
-              <select id="manager-filter-status" onchange="clearManagerSelection(); renderManagerProducts();" class="flex-1 min-w-0 bg-white border-2 border-[#2EB4C7]/50 rounded-xl px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-[#2EB4C7]">
+              <select id="manager-filter-status" onchange="clearManagerSelection(); renderManagerProducts();" class="flex-1 min-w-0 bg-white border-2 border-[#2EB4C7]/50 rounded-xl px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400">
                 <option value="all">📋 Todos Status</option>
                 <option value="no_photo">📷 Só Sem Foto</option>
                 <option value="active">✅ Só Ativos</option>
@@ -911,7 +923,7 @@
   <footer class="bg-white border-t border-slate-200 py-3 px-4 shadow-lg sticky bottom-0 z-20">
     <div class="max-w-6xl mx-auto flex items-center justify-center text-center">
       <div onclick="handleSecretManagerTap()" class="text-[11px] text-slate-500 font-medium leading-tight break-words select-none cursor-default">
-        <span id="footer-store-label" class="font-bold text-slate-800">Recanto Petshop</span> • Catálogo Oficial 🐾
+        <span id="footer-store-label" class="font-bold text-slate-800"></span> • Catálogo Oficial 🐾
       </div>
     </div>
   </footer>
@@ -944,7 +956,7 @@
             <label class="block text-[11px] font-bold text-slate-700">Nome do Produto (máx. 60 caracteres)</label>
             <span id="count-edit-name" class="text-[10px] font-bold text-slate-400">0/60</span>
           </div>
-          <input type="text" id="edit-product-name" maxlength="60" oninput="updateCharCount('edit-product-name', 'count-edit-name', 60); renderVariantSearchResults('edit')" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-[#2EB4C7]">
+          <input type="text" id="edit-product-name" maxlength="60" oninput="updateCharCount('edit-product-name', 'count-edit-name', 60); renderVariantSearchResults('edit')" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-slate-400">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -1121,11 +1133,11 @@
               <span>📸</span> <span>Escolher da Galeria</span>
               <input type="file" accept="image/*" onchange="handleProductPhotoUpload(event, 'edit-product-image', 'edit-product-preview')" class="hidden">
             </label>
-            <input type="text" id="edit-product-image" placeholder="Ou cole link da foto" oninput="updateImagePreview('edit-product-image', 'edit-product-preview')" onpaste="handleImagePaste(event, 'edit-product-image', 'edit-product-preview')" class="w-full min-w-0 bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="edit-product-image" placeholder="Ou cole link da foto" oninput="updateImagePreview('edit-product-image', 'edit-product-preview')" onpaste="handleImagePaste(event, 'edit-product-image', 'edit-product-preview')" class="w-full min-w-0 bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400">
           </div>
           <div id="edit-product-preview-wrap" class="hidden flex items-center justify-between gap-2 bg-white p-2 rounded-xl border border-slate-200 mt-1">
             <div class="flex items-center gap-2">
-              <img id="edit-product-preview" src="" alt="Prévia do produto" class="w-9 h-9 rounded-lg object-cover border border-slate-200">
+              <img id="edit-product-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Prévia do produto" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-9 h-9 rounded-lg object-cover border border-slate-200">
               <span class="text-[11px] text-slate-500 font-medium">Foto atual</span>
             </div>
             <button type="button" onclick="clearProductImageField('edit-product-image', 'edit-product-preview')" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-extrabold px-2.5 py-1 rounded-lg text-[11px] transition">🗑️ Excluir Foto</button>
@@ -1240,11 +1252,11 @@
       <form onsubmit="event.preventDefault(); loginManager();" class="space-y-3" autocomplete="on">
         <div>
           <label class="block text-[11px] font-bold text-slate-700 mb-1">E-mail</label>
-          <input type="email" id="login-email" name="email" autocomplete="username" placeholder="seu@email.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#2EB4C7]">
+          <input type="email" id="login-email" name="email" autocomplete="username" placeholder="seu@email.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-slate-400">
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-700 mb-1">Senha</label>
-          <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Sua senha" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#2EB4C7]">
+          <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Sua senha" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-slate-400">
         </div>
         <button id="login-submit-btn" type="submit" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Entrar no Painel Gestor</button>
       </form>
@@ -1269,7 +1281,7 @@
           </label>
           <span class="text-[11px] text-slate-500">ou cole abaixo direto do Excel / WhatsApp:</span>
         </div>
-        <textarea id="bulk-textarea" rows="4" oninput="parseBulkPreview()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-[#2EB4C7]" placeholder="Cole linhas do Excel ou digite:&#10;Ração Golden 15kg&#9;119,90&#10;Areia Dinkos 4kg | 9,99 | Gatos"></textarea>
+        <textarea id="bulk-textarea" rows="4" oninput="parseBulkPreview()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-slate-400" placeholder="Cole linhas do Excel ou digite:&#10;Ração Golden 15kg&#9;119,90&#10;Areia Dinkos 4kg | 9,99 | Gatos"></textarea>
         <div class="bg-[#E8F8FA] border border-[#B5E8EF] p-3 rounded-2xl space-y-2.5">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div class="space-y-1">
@@ -1496,7 +1508,7 @@
       <button onclick="closeImageZoom()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 text-sm font-bold transition">✕</button>
       <div class="relative w-full aspect-square bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 mb-3">
         <span id="zoom-modal-promo-badge" class="hidden absolute top-2.5 left-2.5 z-10 bg-brand-accent text-white text-xs font-black pl-1 pr-2.5 py-1 rounded-xl shadow-md inline-flex items-center gap-1.5"><span class="bg-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs leading-none">🔥</span><span>PROMOÇÃO</span></span>
-        <img id="zoom-modal-img" src="" alt="Foto ampliada" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-full h-full object-contain p-2">
+        <img id="zoom-modal-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="Foto ampliada" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-full h-full object-contain p-2">
       </div>
       <p id="zoom-modal-title" class="text-xs font-bold text-slate-800 text-center line-clamp-2"></p>
     </div>
@@ -1510,7 +1522,7 @@
         <button onclick="closeInputModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
       </div>
       <p id="input-modal-label" class="text-xs text-slate-500 mb-3"></p>
-      <input type="text" id="input-modal-field" onkeydown="if(event.key==='Enter') confirmInputModal()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 mb-3 focus:outline-none focus:border-[#2EB4C7]">
+      <input type="text" id="input-modal-field" onkeydown="if(event.key==='Enter') confirmInputModal()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 mb-3 focus:outline-none focus:border-slate-400">
       <div class="flex gap-2">
         <button onclick="closeInputModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
         <button onclick="confirmInputModal()" class="w-1/2 bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Salvar</button>
@@ -1685,12 +1697,26 @@
       return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
     }
 
+    function mixHexWithWhite(hex, whiteRatio = 0.88) {
+      const clean = (hex || '#334155').replace('#', '');
+      if (clean.length !== 6) return '#F1F5F9';
+      const r = Math.round(parseInt(clean.slice(0, 2), 16) * (1 - whiteRatio) + 255 * whiteRatio);
+      const g = Math.round(parseInt(clean.slice(2, 4), 16) * (1 - whiteRatio) + 255 * whiteRatio);
+      const b = Math.round(parseInt(clean.slice(4, 6), 16) * (1 - whiteRatio) + 255 * whiteRatio);
+      return '#' + [r, g, b].map(v => Math.min(255, Math.max(0, v)).toString(16).padStart(2, '0')).join('');
+    }
+
     function applyThemeColors() {
-      const p = storeConfig.primaryColor || '#2EB4C7';
-      const a = storeConfig.accentColor || '#E84D9A';
+      const p = storeConfig.primaryColor || (isRecantoStore ? '#2EB4C7' : '#334155');
+      const a = storeConfig.accentColor || (isRecantoStore ? '#E84D9A' : darkenHex(p, 16));
       document.documentElement.style.setProperty('--brand-primary', p);
-      document.documentElement.style.setProperty('--brand-primary-dark', darkenHex(p, 26));
+      document.documentElement.style.setProperty('--brand-primary-dark', darkenHex(p, 28));
+      document.documentElement.style.setProperty('--brand-primary-soft', mixHexWithWhite(p, 0.90));
+      document.documentElement.style.setProperty('--brand-primary-border', mixHexWithWhite(p, 0.62));
       document.documentElement.style.setProperty('--brand-accent', a);
+      document.documentElement.style.setProperty('--brand-accent-dark', darkenHex(a, 24));
+      document.documentElement.style.setProperty('--brand-accent-soft', mixHexWithWhite(a, 0.91));
+      document.documentElement.style.setProperty('--brand-accent-border', mixHexWithWhite(a, 0.58));
       const themeMeta = document.querySelector('meta[name="theme-color"]');
       if (themeMeta) themeMeta.setAttribute('content', p);
       const pHex = document.getElementById('primary-color-hex');
@@ -2002,7 +2028,7 @@
       try {
         const earlyCache = loadStoreLocalCache();
         if (earlyCache && earlyCache.store && earlyCache.store.slug === storeSlug && Array.isArray(earlyCache.products) && earlyCache.products.length > 0) {
-          hydrateStoreState(earlyCache.store);
+          hydrateStoreState(earlyCache.store, { skipTrack: true });
           products = earlyCache.products;
           renderStoreConfig();
           renderCategoryPills();
@@ -2103,7 +2129,7 @@
       }
     }
 
-    function hydrateStoreState(store) {
+    function hydrateStoreState(store, opts = {}) {
       currentStoreId = store.id;
       currentStoreOwnerId = store.owner_id;
       if (store.flash_sale && typeof store.flash_sale === 'object') {
@@ -2112,7 +2138,7 @@
         flashSaleConfig = { active: false, title: '', endsAt: 0, items: {} };
       }
       renderFlashSaleBanner();
-      trackStoreVisitOnce();
+      if (!opts.skipTrack) trackStoreVisitOnce();
       storeConfig = {
         whatsapp: store.whatsapp || "5511999999999",
         name: store.name || getDefaultStoreName(),
@@ -2120,27 +2146,50 @@
         address: store.address || "",
         openingHours: store.opening_hours || "",
         deliveryInfo: store.delivery_info || "",
-        headerStyles: Object.assign({
-          nameColor: "#FFFFFF",
-          subtitleColor: "#ECFEFF",
-          addressBg: "",
-          addressText: "#ECFEFF",
-          hoursBg: store.hours_bg_color || "#176E7B",
-          hoursText: "#FFFFFF",
-          deliveryBg: store.delivery_bg_color || "#F7D046",
-          deliveryText: "#0F172A",
-          showAddressTop: true,
-          showAddressFooter: true,
-          showHoursTop: true,
-          showHoursFooter: false,
-          showDeliveryTop: true,
-          showDeliveryFooter: false
-        }, store.header_styles || {}),
+        headerStyles: (() => {
+          const basePrimary = store.primary_color || (isRecantoStore ? "#2EB4C7" : "#334155");
+          const autoHoursBg = darkenHex(basePrimary, 34);
+          const merged = Object.assign({
+            nameColor: "#FFFFFF",
+            subtitleColor: "#FFFFFF",
+            addressBg: "",
+            addressText: "#FFFFFF",
+            hoursBg: store.hours_bg_color || autoHoursBg,
+            hoursText: "#FFFFFF",
+            deliveryBg: store.delivery_bg_color || "#F7D046",
+            deliveryText: "#0F172A",
+            showAddressTop: true,
+            showAddressFooter: true,
+            showHoursTop: true,
+            showHoursFooter: false,
+            showDeliveryTop: true,
+            showDeliveryFooter: false
+          }, store.header_styles || {});
+          // Isolamento multi-loja: nunca deixar o turquesa padrão da Recanto (#176E7B) vazar em outra loja
+          if (!isRecantoStore && (!merged.hoursBg || merged.hoursBg.toUpperCase() === '#176E7B')) {
+            merged.hoursBg = autoHoursBg;
+          }
+          if (!isRecantoStore && merged.subtitleColor && merged.subtitleColor.toUpperCase() === '#ECFEFF') {
+            merged.subtitleColor = '#FFFFFF';
+          }
+          if (!isRecantoStore && merged.addressText && merged.addressText.toUpperCase() === '#ECFEFF') {
+            merged.addressText = '#FFFFFF';
+          }
+          return merged;
+        })(),
         pixKey: store.pix_key || "",
         logo: store.logo_url || getDefaultStoreLogo(),
         logoZoom: store.logo_zoom || 100,
-        primaryColor: store.primary_color || "#2EB4C7",
-        accentColor: store.accent_color || "#E84D9A"
+        primaryColor: store.primary_color || (isRecantoStore ? "#2EB4C7" : "#334155"),
+        accentColor: (() => {
+          const baseP = store.primary_color || (isRecantoStore ? "#2EB4C7" : "#334155");
+          const rawA = (store.accent_color || "").trim();
+          // Se uma loja parceira ainda estiver com o rosa padrão herdado da Recanto, acompanha a cor da própria loja
+          if (!isRecantoStore && (!rawA || rawA.toUpperCase() === '#E84D9A' || rawA.toUpperCase() === '#E94793')) {
+            return darkenHex(baseP, 16);
+          }
+          return rawA || "#E84D9A";
+        })()
       };
       if (Array.isArray(store.categories)) categories = store.categories;
       if (store.subcategories && typeof store.subcategories === 'object') subcategories = store.subcategories;
@@ -2701,8 +2750,10 @@
       if (slugBadge) slugBadge.textContent = `?loja=${storeSlug}`;
       const shareUrlEl = document.getElementById('store-share-url');
       if (shareUrlEl) {
-        const base = window.location.href.split('?')[0];
-        shareUrlEl.textContent = `${base}?loja=${storeSlug}`;
+        const base = window.location.href.split('?')[0].replace(/index\.html$/, '').replace(/\/?$/, '/');
+        shareUrlEl.textContent = (storeSlug === 'suricata' || storeSlug === 'recanto')
+          ? `${base}${encodeURIComponent(storeSlug)}/`
+          : `${base}?loja=${encodeURIComponent(storeSlug)}`;
       }
 
       document.getElementById('config-whatsapp').value = storeConfig.whatsapp;
@@ -2892,7 +2943,7 @@
         `;
       }).join('');
       const promoBtn = `
-        <button onclick="togglePromoFilter()" class="ml-auto px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shadow-sm inline-flex items-center gap-1 ${onlyPromo ? 'bg-brand-accent text-white' : 'bg-[#FDF2F8] text-brand-accent border border-[#E94793]/40 hover:bg-[#FCE7F3]'}">
+        <button onclick="togglePromoFilter()" style="${onlyPromo ? '' : 'background-color: var(--brand-accent-soft); border-color: var(--brand-accent-border); color: var(--brand-accent-dark);'}" class="ml-auto px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shadow-sm inline-flex items-center gap-1 ${onlyPromo ? 'bg-brand-accent text-white' : 'border hover:opacity-90'}">
           <span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center shadow-sm text-[10px] leading-none">🔥</span><span>Promoções</span>
         </button>
       `;
@@ -3508,6 +3559,16 @@
       const emptyWaBtn = document.getElementById('empty-whatsapp-btn');
       if (emptyWaBtn) emptyWaBtn.classList.toggle('hidden', !query);
 
+      if (displayCards.length === 0 && lastCloudLoadFailed && products.length === 0) {
+        empty.classList.add('hidden');
+        grid.innerHTML = `<div class="col-span-full bg-white border-2 border-amber-300 rounded-3xl p-6 text-center space-y-3 shadow-sm">
+          <div class="text-3xl">📡</div>
+          <div class="text-sm font-black text-slate-800">Sinal de internet instável</div>
+          <p class="text-xs text-slate-500 font-semibold">Não conseguimos carregar os produtos agora. Toque abaixo para tentar de novo.</p>
+          <button onclick="loadStoreFromCloud()" class="bg-brand-primary text-white font-black px-5 py-2.5 rounded-2xl text-xs shadow">🔄 Recarregar Catálogo</button>
+        </div>`;
+        return;
+      }
       if (displayCards.length === 0) {
         grid.innerHTML = "";
         empty.classList.remove('hidden');
@@ -3544,7 +3605,7 @@
         const endMs = (isPromoNow && p.promoShowEnd && p.promoEnd) ? new Date(p.promoEnd).getTime() : null;
         const showClientCountdown = !!(endMs && !isNaN(endMs) && endMs > Date.now());
         const countdownBlock = showClientCountdown ? `
-          <div class="mt-1.5 pt-1 border-t border-[#E94793]/20 text-[10px] font-extrabold text-[#9D174D] space-y-0.5">
+          <div style="border-color: var(--brand-accent-border); color: var(--brand-accent-dark);" class="mt-1.5 pt-1 border-t text-[10px] font-extrabold space-y-0.5">
             <div class="flex items-center gap-1"><span>⏳</span><span>${formatPromoEndLabel(p.promoEnd)}</span></div>
             <div class="promo-live-countdown text-[10px] font-black text-rose-600 tabular-nums" data-end-ms="${endMs}">${formatCountdownDiff(endMs)}</div>
           </div>` : '';
@@ -3568,9 +3629,9 @@
           `;
         } else {
           actionArea = `
-            <div class="flex items-center justify-between ${isPromoNow ? 'bg-pink-50 border-[#E84D9A]/40' : 'bg-[#E8F8FA] border-[#2EB4C7]/40'} border rounded-xl p-1">
+            <div style="background-color: ${isPromoNow ? 'var(--brand-accent-soft)' : 'var(--brand-primary-soft)'}; border-color: ${isPromoNow ? 'var(--brand-accent-border)' : 'var(--brand-primary-border)'};" class="flex items-center justify-between border rounded-xl p-1">
               <button onclick="decreaseCart(${p.id})" class="w-8 h-8 bg-white hover:bg-slate-100 ${isPromoNow ? 'text-brand-accent' : 'text-brand-primary'} font-extrabold rounded-lg shadow-sm flex items-center justify-center text-sm active:scale-90 transition">-</button>
-              <span class="font-extrabold text-xs ${isPromoNow ? 'text-[#9D174D]' : 'text-[#176E7B]'} px-2">${qty}</span>
+              <span style="color: ${isPromoNow ? 'var(--brand-accent-dark)' : 'var(--brand-primary-dark)'};" class="font-extrabold text-xs px-2">${qty}</span>
               <button onclick="increaseCart(${p.id})" class="w-8 h-8 ${isPromoNow ? 'bg-brand-accent' : 'bg-brand-primary'} hover:opacity-90 text-white font-extrabold rounded-lg shadow-sm flex items-center justify-center text-sm active:scale-90 transition">+</button>
             </div>
           `;
@@ -3579,7 +3640,7 @@
         return `
           <div style="${flashItem ? '' : `border-color: ${isPromoNow ? 'var(--brand-accent)' : 'var(--brand-card-border)'};`}" class="bg-white rounded-2xl p-3 flex flex-col justify-between transition border-2 ${flashItem ? getFlashBadgeStyle().cardCls : ''} ${isPromoNow ? 'shadow-md hover:shadow-lg' : 'shadow-sm hover:shadow-md'}">
             <div>
-              <div onclick="openImageZoom(${p.id})" class="relative w-full aspect-square ${isPromoNow ? 'bg-pink-50/40 border-pink-100' : 'bg-slate-50 border-slate-100'} rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border group cursor-zoom-in">
+              <div onclick="openImageZoom(${p.id})" style="${isPromoNow ? 'background-color: var(--brand-accent-soft); border-color: var(--brand-accent-border);' : ''}" class="relative w-full aspect-square ${isPromoNow ? '' : 'bg-slate-50 border-slate-100'} rounded-xl mb-2.5 overflow-hidden flex items-center justify-center border group cursor-zoom-in">
                 ${isPromoNow && hasPickup
                   ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none shadow-sm">🔥</span><span>PROMO RETIRADA</span></span>`
                   : (flashItem ? getFlashCardBadgeHtml() : isPromoNow
@@ -3599,21 +3660,21 @@
             </div>
             <div>
               ${hasPromoPrice ? `
-                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" class="w-full text-left cursor-pointer hover:opacity-90 active:scale-95 transition bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
+                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" style="background-color: var(--brand-accent-soft); border-color: var(--brand-accent-border);" class="w-full text-left cursor-pointer hover:opacity-90 active:scale-95 transition border-2 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
                   <div class="text-[10px] text-slate-400 line-through font-bold">De R$ ${p.price.toFixed(2).replace('.', ',')}</div>
                   <div class="flex items-center justify-between gap-1 flex-wrap">
-                    <span class="text-base font-black text-[#BE185D] leading-tight">${flashItem ? '⚡ ' : ''}Por R$ ${activePromoVal.toFixed(2).replace('.', ',')}</span>
+                    <span style="color: var(--brand-accent-dark);" class="text-base font-black leading-tight">${flashItem ? '⚡ ' : ''}Por R$ ${activePromoVal.toFixed(2).replace('.', ',')}</span>
                     ${diffReais >= 1 ? `<span class="text-[9px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded-md">-R$ ${diffReais}</span>` : ''}
                   </div>
                   ${countdownBlock}
                 </button>
               ` : (isPromoNow ? `
-                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" class="w-full text-left cursor-pointer hover:opacity-90 active:scale-95 transition bg-gradient-to-r from-[#FDF2F8] to-[#FFF1F2] border-2 border-[#E84D9A]/60 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
-                  <div class="text-base font-black text-[#BE185D]">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
+                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" style="background-color: var(--brand-accent-soft); border-color: var(--brand-accent-border);" class="w-full text-left cursor-pointer hover:opacity-90 active:scale-95 transition border-2 rounded-xl px-2.5 py-1.5 mb-2 shadow-sm">
+                  <div style="color: var(--brand-accent-dark);" class="text-base font-black">R$ ${p.price.toFixed(2).replace('.', ',')}</div>
                   ${countdownBlock}
                 </button>
               ` : `
-                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" style="color: var(--brand-price-color);" class="inline-block cursor-pointer hover:opacity-85 active:scale-95 transition bg-[#F0FAFB] border border-slate-200 rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</button>
+                <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" style="color: var(--brand-price-color); background-color: var(--brand-primary-soft); border-color: var(--brand-primary-border);" class="inline-block cursor-pointer hover:opacity-85 active:scale-95 transition border rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</button>
               `)}
               ${hasWholesale ? `<button type="button" onclick="addWholesalePack(${p.id})" class="w-full text-left bg-amber-50 hover:bg-amber-100 active:scale-95 border-2 border-amber-300 hover:border-amber-400 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-amber-900 mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5" title="Clique para adicionar o kit atacado ao carrinho"><span>📦 Atacado: ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold text-amber-700">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></span><span class="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">+${qty > 0 && qty < p.wholesaleQty ? (p.wholesaleQty - qty) : p.wholesaleQty}</span></button>` : ''}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
@@ -3810,47 +3871,47 @@
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Seu Nome (opcional)</label>
-            <input type="text" id="checkout-name" placeholder="Ex: Maria Silva" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="checkout-name" placeholder="Ex: Maria Silva" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Telefone / WhatsApp <span class="text-rose-600">*</span></label>
-            <input type="tel" inputmode="tel" id="checkout-phone" value="(11) " oninput="clearCheckoutError('checkout-phone')" placeholder="Ex: (11) 99999-9999" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7] transition">
+            <input type="tel" inputmode="tel" id="checkout-phone" value="(11) " oninput="clearCheckoutError('checkout-phone')" placeholder="Ex: (11) 99999-9999" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400 transition">
             <p id="err-checkout-phone" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ Informe seu telefone ou WhatsApp para contato.</p>
           </div>
           <div class="${isPickupMode ? 'hidden' : 'space-y-3'}">
             <div>
               <label class="block text-[11px] font-bold text-slate-700 mb-1">Endereço de Entrega (Rua, Número, Bairro) <span class="text-rose-600">*</span></label>
-              <input type="text" id="checkout-address" oninput="clearCheckoutError('checkout-address')" placeholder="Ex: Rua das Flores, 123 - Centro" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7] transition">
+              <input type="text" id="checkout-address" oninput="clearCheckoutError('checkout-address')" placeholder="Ex: Rua das Flores, 123 - Centro" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400 transition">
               <p id="err-checkout-address" class="hidden text-[11px] font-bold text-rose-600 mt-1">⚠️ Informe o endereço completo para entrega.</p>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Ponto de Referência</label>
-                <input type="text" id="checkout-reference" placeholder="Ex: Próximo à padaria" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+                <input type="text" id="checkout-reference" placeholder="Ex: Próximo à padaria" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400">
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Cor do Portão</label>
-                <input type="text" id="checkout-gate" placeholder="Ex: Portão Preto" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+                <input type="text" id="checkout-gate" placeholder="Ex: Portão Preto" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400">
               </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Tem Campainha?</label>
-                <select id="checkout-bell" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+                <select id="checkout-bell" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400">
                   <option value="Sim">Sim, tem campainha</option>
                   <option value="Não">Não tem campainha</option>
                 </select>
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">Quem vai receber?</label>
-                <input type="text" id="checkout-receiver" placeholder="Ex: Eu mesma / Esposo" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+                <input type="text" id="checkout-receiver" placeholder="Ex: Eu mesma / Esposo" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400">
               </div>
             </div>
           </div>
           ${isPickupMode && storeConfig.address ? `<div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-[11px] text-emerald-900 font-semibold">📍 Retirar em: <strong>${storeConfig.address}</strong></div>` : ''}
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Forma de Pagamento <span class="text-rose-600">*</span></label>
-            <select id="checkout-payment" onchange="toggleChangeField(); clearCheckoutError('checkout-payment');" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7] transition">
+            <select id="checkout-payment" onchange="toggleChangeField(); clearCheckoutError('checkout-payment');" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400 transition">
               <option value="">Selecione a forma de pagamento...</option>
               <option value="Dinheiro">Dinheiro</option>
               <option value="Pix">Pix</option>
@@ -3869,11 +3930,11 @@
           </div>
           <div id="change-field-wrap" class="hidden">
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Precisa de troco para quanto?</label>
-            <input type="text" id="checkout-change" placeholder="Ex: Para R$ 100,00 ou Não precisa" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]">
+            <input type="text" id="checkout-change" placeholder="Ex: Para R$ 100,00 ou Não precisa" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Observações gerais de entrega</label>
-            <textarea id="checkout-obs" rows="2" placeholder="Ex: Deixar na portaria, cuidado com o cachorro..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#2EB4C7]"></textarea>
+            <textarea id="checkout-obs" rows="2" placeholder="Ex: Deixar na portaria, cuidado com o cachorro..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-slate-400"></textarea>
           </div>
           <button onclick="sendOrderWhatsApp()" class="w-full bg-brand-primary hover:opacity-90 text-white font-black py-3 rounded-2xl text-xs shadow-lg flex items-center justify-center gap-2 transition">
             <span>💬</span> <span>Enviar Pedido pelo WhatsApp</span>
@@ -4983,18 +5044,6 @@
         ? `4. Produtos Cadastrados (${products.length})`
         : `4. Produtos Cadastrados (${filtered.length} de ${products.length})`;
 
-      if (filtered.length === 0 && lastCloudLoadFailed && products.length === 0) {
-        const grid = document.getElementById('products-grid');
-        if (grid) {
-          grid.innerHTML = `<div class="col-span-full bg-white border-2 border-amber-300 rounded-3xl p-6 text-center space-y-3 shadow-sm">
-            <div class="text-3xl">📡</div>
-            <div class="text-sm font-black text-slate-800">Sinal de internet instável</div>
-            <p class="text-xs text-slate-500 font-semibold">Não conseguimos carregar os produtos agora. Toque abaixo para tentar de novo.</p>
-            <button onclick="loadStoreFromCloud()" class="bg-brand-primary text-white font-black px-5 py-2.5 rounded-2xl text-xs shadow">🔄 Recarregar Catálogo</button>
-          </div>`;
-        }
-        return;
-      }
       if (filtered.length === 0) {
         list.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum produto encontrado.</p>`;
         return;
@@ -7311,7 +7360,10 @@
       m.classList.remove('hidden'); m.classList.add('flex');
       const chk = document.getElementById('an-ignore-this');
       if (chk) chk.checked = isDeviceIgnored();
-      document.getElementById('analytics-sql-warn').classList.add('hidden');
+      const warnEl = document.getElementById('analytics-sql-warn');
+      if (warnEl) warnEl.classList.add('hidden');
+      const vEl = document.getElementById('an-visits');
+      if (vEl) vEl.textContent = '...';
       if (!sb || !currentStoreId) return;
       let q = sb.from('store_analytics').select('event_type,visitor_id,platform,product_name,created_at').eq('store_id', currentStoreId).order('created_at', { ascending: false });
       if (analyticsPeriod === '30d') {
@@ -7323,7 +7375,7 @@
       }
       const { data, error } = await q;
       if (error) {
-        document.getElementById('analytics-sql-warn').classList.remove('hidden');
+        if (warnEl) warnEl.classList.remove('hidden');
         analyticsRowsCache = [];
       } else {
         analyticsRowsCache = data || [];
@@ -7344,7 +7396,7 @@
     function renderAnalyticsModal() {
       ['today', '7d', '30d', 'all'].forEach(k => {
         const b = document.getElementById('an-p-' + k);
-        if (b) b.className = k === analyticsPeriod ? 'px-2 py-1 rounded-lg bg-white text-[#156F78] shadow-xs' : 'px-2 py-1 rounded-lg text-slate-500';
+        if (b) { b.className = k === analyticsPeriod ? 'px-2 py-1 rounded-lg bg-white shadow-xs' : 'px-2 py-1 rounded-lg text-slate-500'; b.style.color = k === analyticsPeriod ? 'var(--brand-primary-dark)' : ''; }
       });
       const now = Date.now();
       const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
@@ -7389,7 +7441,7 @@
       document.getElementById('an-bars-7d').innerHTML = days.map(d => `
         <div class="flex flex-col items-center gap-1">
           <span class="text-[9px] font-black">${d.cnt}</span>
-          <div style="height:${Math.max(10, Math.round((d.cnt / mx) * 70))}px" class="w-full rounded-t-lg ${d.isToday ? 'bg-[#1A8E99]' : 'bg-[#24B7C5]/45'}"></div>
+          <div style="height:${Math.max(10, Math.round((d.cnt / mx) * 70))}px; background-color:${d.isToday ? 'var(--brand-primary)' : 'var(--brand-primary-border)'};" class="w-full rounded-t-lg"></div>
           <span class="text-[9px] font-bold text-slate-500">${d.lbl}</span>
         </div>`).join('');
 
@@ -7400,7 +7452,7 @@
       document.getElementById('an-top-prods').innerHTML = top.length ? top.map(([nm, c], i) => `
         <div class="flex justify-between bg-white border rounded-xl px-2 py-1.5 font-bold">
           <span class="truncate">${i + 1}. ${escapeHtml(nm)}</span>
-          <span class="text-[#156F78] font-black ml-1 shrink-0">${c}</span>
+          <span style="color: var(--brand-primary-dark);" class="font-black ml-1 shrink-0">${c}</span>
         </div>`).join('') : '<div class="text-slate-400 font-bold text-center py-4">Sem cliques ainda neste período.</div>';
     }
 
