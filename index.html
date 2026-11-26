@@ -3454,26 +3454,50 @@
       return deliveryPrice;
     }
 
+    function getWholesaleGroupCartQty(groupName) {
+      const key = String(groupName || '').trim().toLowerCase();
+      if (!key) return 0;
+      let total = 0;
+      Object.keys(cart).forEach(cid => {
+        const q = Number(cart[cid]) || 0;
+        if (q <= 0) return;
+        const prod = products.find(x => String(x.id) === String(cid));
+        if (prod && String(prod.wholesaleGroup || '').trim().toLowerCase() === key) {
+          total += q;
+        }
+      });
+      return total;
+    }
+
     function getCartLinePricing(p, qty, mode) {
       const baseUnit = getCartItemPrice(p, mode);
       let unitPrice = baseUnit;
       let lineTotal = baseUnit * qty;
       let isWholesaleApplied = false;
+      let isWholesaleMix = false;
+      let groupQty = qty;
       let missingForWholesale = 0;
 
       if (hasValidWholesale(p)) {
         const wUnit = p.wholesalePrice / p.wholesaleQty;
+        const mixKey = String(p.wholesaleGroup || '').trim();
+        if (mixKey) {
+          groupQty = Math.max(qty, getWholesaleGroupCartQty(mixKey));
+        }
         if (wUnit < baseUnit) {
-          if (qty >= p.wholesaleQty) {
+          const effQty = mixKey ? groupQty : qty;
+          if (effQty >= p.wholesaleQty) {
             isWholesaleApplied = true;
+            isWholesaleMix = !!(mixKey && groupQty > qty);
             unitPrice = wUnit;
-            lineTotal = (qty === p.wholesaleQty) ? p.wholesalePrice : (wUnit * qty);
+            lineTotal = (qty === p.wholesaleQty && !isWholesaleMix) ? p.wholesalePrice : (wUnit * qty);
           } else {
-            missingForWholesale = p.wholesaleQty - qty;
+            missingForWholesale = p.wholesaleQty - effQty;
+            isWholesaleMix = !!mixKey;
           }
         }
       }
-      return { baseUnit, unitPrice, lineTotal, isWholesaleApplied, missingForWholesale };
+      return { baseUnit, unitPrice, lineTotal, isWholesaleApplied, isWholesaleMix, groupQty, missingForWholesale };
     }
 
     const selectedVariantByGroup = {};
@@ -3939,7 +3963,7 @@
                   : (flashItem ? getFlashCardBadgeHtml() : isPromoNow
                     ? `<span class="absolute top-1.5 left-1.5 z-10 bg-brand-accent text-white text-[9px] font-black pl-0.5 pr-2 py-0.5 rounded-lg shadow inline-flex items-center gap-1"><span style="background-color: var(--brand-fire-bg);" class="rounded-full w-4 h-4 inline-flex items-center justify-center text-[10px] leading-none shadow-sm">🔥</span><span>PROMOÇÃO</span></span>`
                     : (hasPickup ? `<span class="absolute top-1.5 left-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">🏪 RETIRADA NA LOJA</span>` : ''))}
-                ${hasWholesale ? `<span class="absolute bottom-1.5 left-1.5 z-10 ${qty >= p.wholesaleQty ? 'bg-emerald-600' : 'bg-amber-500'} text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">${qty >= p.wholesaleQty ? `✅ ${qty} UN ATACADO` : `📦 LEVE ${p.wholesaleQty}`}</span>` : ''}
+                ${hasWholesale ? (() => { const mixQ = p.wholesaleGroup ? Math.max(qty, getWholesaleGroupCartQty(p.wholesaleGroup)) : qty; const whOn = mixQ >= p.wholesaleQty; return `<span class="absolute bottom-1.5 left-1.5 z-10 ${whOn ? 'bg-emerald-600' : 'bg-amber-500'} text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow">${whOn ? `✅ ${mixQ} UN ${p.wholesaleGroup ? 'MIX ' : ''}ATACADO` : (p.wholesaleGroup ? `🎨 MIX LEVE ${p.wholesaleQty}` : `📦 LEVE ${p.wholesaleQty}`)}</span>`; })() : ''}
                 ${pctOff >= 1 ? `<span class="absolute bottom-1.5 right-1.5 z-10 bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow">-${pctOff}% OFF</span>` : ''}
                 <img src="${imgSrc}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-full h-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-125">
               </div>
@@ -3969,7 +3993,7 @@
               ` : `
                 <button type="button" onclick="addToCart(${p.id})" title="Clique para adicionar 1 unidade ao carrinho" style="color: var(--brand-price-color); background-color: var(--brand-primary-soft); border-color: var(--brand-primary-border);" class="inline-block cursor-pointer hover:opacity-85 active:scale-95 transition border rounded-xl px-2.5 py-1 text-sm font-black mb-2">R$ ${p.price.toFixed(2).replace('.', ',')}</button>
               `)}
-              ${hasWholesale ? `<button type="button" onclick="addWholesalePack(${p.id})" class="w-full text-left bg-amber-50 hover:bg-amber-100 active:scale-95 border-2 border-amber-300 hover:border-amber-400 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-amber-900 mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5" title="Clique para adicionar o kit atacado ao carrinho"><span>📦 Atacado: ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold text-amber-700">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></span><span class="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">+${qty > 0 && qty < p.wholesaleQty ? (p.wholesaleQty - qty) : p.wholesaleQty}</span></button>` : ''}
+              ${hasWholesale ? `<button type="button" onclick="addWholesalePack(${p.id})" class="w-full text-left bg-amber-50 hover:bg-amber-100 active:scale-95 border-2 border-amber-300 hover:border-amber-400 rounded-xl px-2.5 py-1.5 text-[10px] font-black text-amber-900 mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5" title="Clique para adicionar o kit atacado ao carrinho"><span>${p.wholesaleGroup ? '🎨 Atacado Mix (pode misturar):' : '📦 Atacado:'} ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold text-amber-700">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></span><span class="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">+${qty > 0 && qty < p.wholesaleQty ? (p.wholesaleQty - qty) : p.wholesaleQty}</span></button>` : ''}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
               ${actionArea}
             </div>
@@ -4105,9 +4129,9 @@
         const isPickBetter = isPickupMode && pickPricing.lineTotal < delivPricing.lineTotal;
         const unitPrice = activePricing.unitPrice;
         const wholesaleNote = activePricing.isWholesaleApplied
-          ? `<div class="mt-1 inline-block bg-amber-100 text-amber-900 border border-amber-300 rounded-lg px-2 py-0.5 text-[10px] font-extrabold">📦 Atacado aplicado (${p.wholesaleQty} por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')})!</div>`
+          ? `<div class="mt-1 inline-block ${activePricing.isWholesaleMix ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-amber-100 text-amber-900 border-amber-300'} border rounded-lg px-2 py-0.5 text-[10px] font-extrabold">${activePricing.isWholesaleMix ? `🎉 Atacado Mix ativado (${activePricing.groupQty} un. no grupo "${escapeHtml(p.wholesaleGroup)}")!` : `📦 Atacado aplicado (${p.wholesaleQty} por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')})!`}</div>`
           : (activePricing.missingForWholesale > 0
-            ? `<div class="mt-1 flex items-center justify-between gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 text-[10px] font-bold text-amber-900"><span>💡 Falta${activePricing.missingForWholesale > 1 ? 'm' : ''} ${activePricing.missingForWholesale} un p/ levar ${p.wholesaleQty} por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}!</span><button type="button" onclick="addBulkToCart(${p.id}, ${activePricing.missingForWholesale}); openCartModal();" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-0.5 rounded font-black shrink-0">+${activePricing.missingForWholesale}</button></div>`
+            ? `<div class="mt-1 flex items-center justify-between gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 text-[10px] font-bold text-amber-900"><span>💡 Falta${activePricing.missingForWholesale > 1 ? 'm' : ''} ${activePricing.missingForWholesale} un ${p.wholesaleGroup ? `(pode misturar "${escapeHtml(p.wholesaleGroup)}") ` : ''}p/ levar ${p.wholesaleQty} por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}!</span><button type="button" onclick="addBulkToCart(${p.id}, ${activePricing.missingForWholesale}); openCartModal();" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-0.5 rounded font-black shrink-0">+${activePricing.missingForWholesale}</button></div>`
             : '');
 
         return `
@@ -7031,17 +7055,46 @@
       return [line.trim()];
     }
 
+    const VALID_BULK_UNITS = ['UN', 'KG', 'G', 'L', 'ML', 'M', 'PC', 'PCT', 'CX', 'FD', 'DP', 'PAR'];
+
+    function normalizeBulkUnit(val) {
+      const u = String(val || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+      if (!u) return 'UN';
+      if (u === 'UND' || u === 'UNID' || u === 'UNIDADE') return 'UN';
+      if (u === 'KGS' || u === 'QUILO' || u === 'KILO') return 'KG';
+      if (u === 'GR' || u === 'GRAMA' || u === 'GRAMAS') return 'G';
+      if (u === 'LT' || u === 'LITRO' || u === 'LITROS') return 'L';
+      if (u === 'MT' || u === 'METRO' || u === 'METROS') return 'M';
+      if (u === 'PCA' || u === 'PECA') return 'PC';
+      if (u === 'CAIXA') return 'CX';
+      if (u === 'FARDO') return 'FD';
+      if (u === 'DISPLAY') return 'DP';
+      return VALID_BULK_UNITS.includes(u) ? u : 'UN';
+    }
+
     function classifyBulkHeaderCell(cell) {
       const k = String(cell || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
       if (!k) return null;
+      if (/^(plu|codinterno|codigointerno|codigo|cod|ref|referencia|sku|proidproduto|idproduto)$/.test(k)) return 'internal_code';
       if (/^(procodproduto|ean|gtin|barcode|codbarras|codigobarras|codigodebarras|codproduto)$/.test(k)) return 'barcode';
+      if (/^(eansextras|codigosextras|extrabarcodes|barrasextras|outroseans)$/.test(k)) return 'extra_barcodes';
       if (/^(procodncm|ncm|codncm)$/.test(k)) return 'ncm';
       if (/^(prodescproduto|descproduto|descricao|produto|nome|item|desc)$/.test(k)) return 'name';
-      if (/^(provprod|vprod|preco|precovenda|valor|valorvenda|vlr|price)$/.test(k)) return 'price';
+      if (/^(provprod|vprod|preco|precovenda|valor|valorvenda|vlr|price|venda)$/.test(k)) return 'price';
+      if (/^(custo|precocusto|precodecusto|vlrcusto|valorcusto|custounit|cost|costprice)$/.test(k)) return 'cost_price';
       if (/^(qsaldo|saldo|estoque|qtd|quantidade|qtde|stock)$/.test(k)) return 'stock';
+      if (/^(estoquemin|estoqueminimo|minstock|qtdmin|minimo)$/.test(k)) return 'min_stock';
+      if (/^(un|und|unid|unidade|unittype|medida)$/.test(k)) return 'unit_type';
+      if (/^(cfop)$/.test(k)) return 'cfop';
+      if (/^(csosn|cst)$/.test(k)) return 'csosn';
+      if (/^(validade|datavalidade|vencimento|expirydate)$/.test(k)) return 'expiry_date';
+      if (/^(atacadomix|grupoatacado|wholesalegroup|mixsabores|grupomix|mix)$/.test(k)) return 'wholesale_group';
+      if (/^(qtdatacado|wholesaleqty|qtdeatacado)$/.test(k)) return 'wholesale_qty';
+      if (/^(precoatacado|wholesaleprice|valoratacado)$/.test(k)) return 'wholesale_price';
+      if (/^(vitrine|showincatalog|exibirvitrine|catalogo)$/.test(k)) return 'show_in_catalog';
       if (/^(categoria|cat)$/.test(k)) return 'category';
       if (/^(marca|fabricante|fornecedor|brand)$/.test(k)) return 'brand';
-      if (/^(prodescregproduto|regime|icms|cst|csosn|cfop|un|unidade)$/.test(k)) return 'ignore';
+      if (/^(prodescregproduto|regime|icms)$/.test(k)) return 'ignore';
       return null;
     }
 
@@ -7052,6 +7105,46 @@
       if (!/^\d+(\.\d+)?$/.test(cleaned)) return null;
       const n = parseFloat(cleaned);
       return isNaN(n) ? null : n;
+    }
+
+    function extractKgFromProductName(name) {
+      const m = String(name || '').match(/(\d+(?:[.,]\d+)?)\s*kg\b/i);
+      if (!m) return null;
+      const v = parseFloat(m[1].replace(',', '.'));
+      return (!isNaN(v) && v >= 1) ? v : null;
+    }
+
+    function suggestBulkParentBag(row, batchRows) {
+      const nmUpper = String(row.name || '').toUpperCase();
+      const isBulkKg = row.unitType === 'KG' || /\b(GRANEL|AVULSO|FRACIONADO)\b/i.test(nmUpper);
+      if (!isBulkKg) return null;
+      const stop = new Set(['RACAO', 'RAÇÃO', 'GRANEL', 'AVULSO', 'FRACIONADO', 'KG', 'PARA', 'CAES', 'CÃES', 'GATOS', 'DE', 'DA', 'DO', 'COM', 'EM']);
+      const tokens = nmUpper.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9\s]/g, ' ').split(/\s+/).filter(t => t.length >= 3 && !stop.has(t));
+      if (tokens.length === 0) return null;
+
+      const candidates = [];
+      products.forEach(p => {
+        const kg = extractKgFromProductName(p.name);
+        if (!kg || kg < 2 || /\b(GRANEL|AVULSO|FRACIONADO)\b/i.test(p.name)) return;
+        const pNorm = p.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const score = tokens.filter(t => pNorm.includes(t)).length;
+        if (score >= Math.min(2, tokens.length)) {
+          candidates.push({ type: 'existing', id: p.id, name: p.name, kg, score });
+        }
+      });
+      batchRows.forEach((other, idx) => {
+        if (other === row) return;
+        const kg = extractKgFromProductName(other.name);
+        if (!kg || kg < 2 || /\b(GRANEL|AVULSO|FRACIONADO)\b/i.test(other.name)) return;
+        const pNorm = other.name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const score = tokens.filter(t => pNorm.includes(t)).length;
+        if (score >= Math.min(2, tokens.length)) {
+          candidates.push({ type: 'batch', batchIdx: idx, name: other.name, kg, score });
+        }
+      });
+      if (!candidates.length) return null;
+      candidates.sort((a, b) => b.score - a.score || b.kg - a.kg);
+      return candidates[0];
     }
 
     function parseBulkPreview() {
@@ -7076,8 +7169,7 @@
       firstParts.forEach((cell, idx) => {
         const role = classifyBulkHeaderCell(cell);
         if (role) {
-          if (role !== 'ignore') headerMap[idx] = role;
-          else headerMap[idx] = 'ignore';
+          headerMap[idx] = role;
           headerMatchCount++;
         }
       });
@@ -7086,9 +7178,14 @@
       const dataLines = hasHeader ? rawLines.slice(1) : rawLines;
       if (colsBadge) {
         if (hasHeader) {
-          const labels = { barcode: 'EAN', name: 'Descrição', ncm: 'NCM', price: 'Preço', stock: 'Saldo' };
-          const found = Object.values(headerMap).filter(v => labels[v]).map(v => labels[v]);
-          colsBadge.textContent = found.length ? `Colunas: ${found.join(' • ')}` : '';
+          const labels = {
+            internal_code: 'PLU', barcode: 'EAN', extra_barcodes: 'EANs Extras', name: 'Descrição',
+            unit_type: 'Unidade', cost_price: 'Custo 🔒', price: 'Preço', stock: 'Estoque',
+            ncm: 'NCM', cfop: 'CFOP', csosn: 'CSOSN', min_stock: 'Est. Mín',
+            wholesale_group: 'Atacado Mix', show_in_catalog: 'Vitrine'
+          };
+          const found = [...new Set(Object.values(headerMap).filter(v => labels[v]).map(v => labels[v]))];
+          colsBadge.textContent = found.length ? `Colunas Saurus/Excel: ${found.join(' • ')}` : '';
         } else {
           colsBadge.textContent = 'Detecção automática por formato';
         }
@@ -7101,12 +7198,26 @@
 
         let name = '';
         let price = null;
+        let costPrice = null;
+        let internalCode = '';
         let barcode = '';
+        let extraBarcodes = [];
+        let unitType = 'UN';
         let ncm = '';
+        let cfop = '';
+        let csosn = '';
         let stockQty = null;
+        let minStock = null;
+        let expiryDate = '';
+        let wholesaleGroup = '';
+        let wholesaleQty = null;
+        let wholesalePrice = null;
+        let showInCatalog = true;
         let cat = defCat;
         let brand = defBrand;
         let weight = "Sem peso/medida";
+
+        const splitBarcodesList = (raw) => String(raw || '').split(/[;,/|]+/).map(s => normalizeBarcodeKey(s)).filter(Boolean);
 
         if (parts.length === 1 && !hasHeader) {
           const pMatch = line.match(/(?:R\$\s*)?(\d{1,5}[.,]\d{1,2})\s*$/);
@@ -7120,16 +7231,39 @@
           parts.forEach((val, idx) => {
             const role = headerMap[idx];
             if (!val || role === 'ignore') return;
-            if (role === 'barcode') barcode = normalizeBarcodeKey(val);
-            else if (role === 'ncm') ncm = normalizeBarcodeKey(val);
+            if (role === 'internal_code') internalCode = String(val).trim().slice(0, 32);
+            else if (role === 'barcode') {
+              const listE = splitBarcodesList(val);
+              if (listE.length) {
+                if (!barcode) barcode = listE[0];
+                listE.slice(1).forEach(x => { if (x !== barcode && !extraBarcodes.includes(x)) extraBarcodes.push(x); });
+              }
+            } else if (role === 'extra_barcodes') {
+              splitBarcodesList(val).forEach(x => { if (x !== barcode && !extraBarcodes.includes(x)) extraBarcodes.push(x); });
+            } else if (role === 'ncm') ncm = normalizeBarcodeKey(val);
+            else if (role === 'cfop') cfop = String(val).replace(/\D/g, '').slice(0, 4);
+            else if (role === 'csosn') csosn = String(val).replace(/\D/g, '').slice(0, 4);
+            else if (role === 'unit_type') unitType = normalizeBulkUnit(val);
             else if (role === 'name') name = val;
             else if (role === 'price') { const n = parseNumberLoose(val); if (n !== null) price = n; }
+            else if (role === 'cost_price') { const n = parseNumberLoose(val); if (n !== null) costPrice = n; }
             else if (role === 'stock') { const n = parseNumberLoose(val); if (n !== null) stockQty = n; }
-            else if (role === 'category' && categories.includes(val) && val !== "Todos") cat = val;
+            else if (role === 'min_stock') { const n = parseNumberLoose(val); if (n !== null) minStock = n; }
+            else if (role === 'expiry_date') {
+              const s = String(val).trim();
+              const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+              if (br) expiryDate = `${br[3]}-${br[2]}-${br[1]}`;
+              else if (/^\d{4}-\d{2}-\d{2}$/.test(s)) expiryDate = s;
+            } else if (role === 'wholesale_group') wholesaleGroup = String(val).trim().slice(0, 60);
+            else if (role === 'wholesale_qty') { const n = parseNumberLoose(val); if (n !== null && n >= 2) wholesaleQty = Math.round(n); }
+            else if (role === 'wholesale_price') { const n = parseNumberLoose(val); if (n !== null && n > 0) wholesalePrice = n; }
+            else if (role === 'show_in_catalog') {
+              const low = String(val).toLowerCase().trim();
+              if (/^(nao|não|n|0|false|pdv|sopdv|só pdv)$/.test(low)) showInCatalog = false;
+            } else if (role === 'category' && categories.includes(val) && val !== "Todos") cat = val;
             else if (role === 'brand' && brands.includes(val)) brand = val;
           });
         } else {
-          // Order-independent smart detection without header
           const numericCandidates = [];
           parts.forEach(part => {
             if (!part) return;
@@ -7138,8 +7272,10 @@
               barcode = digitsOnly;
             } else if (/^\d{8}$/.test(digitsOnly) && !ncm) {
               ncm = digitsOnly;
+            } else if (/^(un|kg|g|l|ml|m|pc|pct|cx|fd|dp|par)$/i.test(part.trim())) {
+              unitType = normalizeBulkUnit(part);
             } else if (/^(icms|st|isento|tributado)$/i.test(part)) {
-              // ignore tax regime column
+              // ignore tax regime
             } else if (categories.includes(part) && part !== "Todos") {
               cat = part;
             } else if (brands.includes(part)) {
@@ -7150,7 +7286,6 @@
               name = part;
             }
           });
-          // Prefer decimal number as price, integer as stock (if multiple numbers)
           const decCand = numericCandidates.find(c => c.hasDecimal && c.val !== null);
           if (decCand) {
             price = decCand.val;
@@ -7165,22 +7300,41 @@
         }
 
         if (!name || (/^(produto|descrição|item|nome)$/i.test(name) && price === null)) return;
-        // Marca permanece no padrão selecionado ("Sem Marca") salvo coluna explícita de Marca
         const foundWeight = weights.find(w => w !== "Sem peso/medida" && name.toLowerCase().includes(w.toLowerCase()));
         if (foundWeight) weight = foundWeight;
+        if (unitType === 'UN' && /\b(GRANEL|AVULSO)\b/i.test(name)) unitType = 'KG';
 
         bulkRows.push({
           checked: true,
           name,
           price: price || 0,
+          costPrice,
+          internalCode,
           barcode,
+          extraBarcodes,
+          unitType,
           ncm,
+          cfop,
+          csosn,
           stockQty,
+          minStock,
+          expiryDate,
+          wholesaleGroup,
+          wholesaleQty,
+          wholesalePrice,
+          showInCatalog,
+          parentLink: null,
           category: cat,
           subcategory: defSub,
           brand,
           weight
         });
+      });
+
+      // Sugestão inteligente de Saco Pai para itens Granel/KG
+      bulkRows.forEach(r => {
+        const sug = suggestBulkParentBag(r, bulkRows);
+        if (sug) r.parentLink = sug;
       });
       renderBulkPreview();
     }
@@ -7227,6 +7381,18 @@
         const statusBadge = isDup
           ? (skipped ? `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">⏭️ Pular (já existe)</span>` : `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">🔄 Atualizar existente</span>`)
           : `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">🆕 Novo</span>`;
+        const metaParts = [];
+        if (r.internalCode) metaParts.push(`PLU: ${escapeHtml(r.internalCode)}`);
+        if (r.unitType && r.unitType !== 'UN') metaParts.push(`Un: ${r.unitType}`);
+        if (r.barcode) metaParts.push(`EAN: ${escapeHtml(r.barcode)}${r.extraBarcodes?.length ? ` (+${r.extraBarcodes.length})` : ''}`);
+        if (r.costPrice != null) metaParts.push(`🔒 Custo: R$ ${r.costPrice.toFixed(2).replace('.', ',')}`);
+        if (r.ncm) metaParts.push(`NCM: ${escapeHtml(r.ncm)}`);
+        if (r.stockQty !== null && r.stockQty !== undefined) metaParts.push(`Est: ${r.stockQty}`);
+        if (r.wholesaleGroup) metaParts.push(`🎨 Mix: ${escapeHtml(r.wholesaleGroup)}`);
+        if (r.showInCatalog === false) metaParts.push(`🖥️ Só PDV`);
+        const parentBar = r.parentLink
+          ? `<div class="flex items-center justify-between gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-1 text-[10px] font-bold text-indigo-900"><span>🔗 Vínculo Granel → Saco Pai: <strong>${escapeHtml(r.parentLink.name)}</strong> (÷ ${r.parentLink.kg})</span><button type="button" onclick="bulkRows[${i}].parentLink = null; renderBulkPreview();" class="text-indigo-500 hover:text-rose-600 font-black px-1">✕</button></div>`
+          : '';
         return `
         <div class="border rounded-xl p-2 space-y-1.5 text-[11px] ${skipped ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-slate-50 border-slate-200'}">
           <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -7235,7 +7401,7 @@
               ${statusBadge}
             </div>
             <div class="text-[10px] font-semibold text-slate-500">
-              ${r.barcode ? `EAN: ${r.barcode}` : ''}${r.ncm ? `${r.barcode ? ' • ' : ''}NCM: ${r.ncm}` : ''}${r.stockQty !== null && r.stockQty !== undefined ? `${(r.barcode || r.ncm) ? ' • ' : ''}Est: ${r.stockQty}` : ''}
+              ${metaParts.join(' • ')}
             </div>
           </div>
           <div class="grid grid-cols-12 gap-1.5 items-center">
@@ -7248,6 +7414,7 @@
               ${brands.map(b => `<option value="${b}" ${b === r.brand ? 'selected' : ''}>${b}</option>`).join('')}
             </select>
           </div>
+          ${parentBar}
         </div>
       `; }).join('');
     }
@@ -7264,30 +7431,50 @@
       }
 
       const toInsert = [];
+      const toInsertMeta = [];
       const toUpdate = [];
+      const batchIndexToSavedId = {};
+
       selected.forEach(r => {
+        const origIdx = bulkRows.indexOf(r);
         const dup = findDuplicateProduct(r.name, r.barcode);
         const shouldPause = pauseAllImported || (pauseZeroStock && r.stockQty !== null && r.stockQty !== undefined && Number(r.stockQty) <= 0);
         if (dup) {
           if (dupMode === 'update') {
-            toUpdate.push({ id: dup.match.id, row: r, shouldPause });
+            toUpdate.push({ id: dup.match.id, row: r, origIdx, shouldPause });
+            batchIndexToSavedId[origIdx] = dup.match.id;
           }
         } else {
-          toInsert.push({
+          const payload = {
             store_id: currentStoreId,
             name: r.name.trim(),
             category: r.category,
             subcategory: r.subcategory || "Geral",
             price: r.price || 0,
             barcode: r.barcode || null,
+            extra_barcodes: (r.extraBarcodes && r.extraBarcodes.length) ? r.extraBarcodes : [],
+            internal_code: r.internalCode || null,
+            unit_type: r.unitType || 'UN',
             ncm: r.ncm || null,
+            cfop: r.cfop || null,
+            csosn: r.csosn || null,
             stock_qty: r.stockQty !== undefined ? r.stockQty : null,
+            min_stock: r.minStock !== null && r.minStock !== undefined ? r.minStock : null,
+            expiry_date: r.expiryDate || null,
+            wholesale_group: r.wholesaleGroup || null,
+            wholesale_qty: r.wholesaleQty || null,
+            wholesale_price: r.wholesalePrice || null,
+            show_in_catalog: r.showInCatalog !== false,
+            parent_product_id: (r.parentLink && r.parentLink.type === 'existing') ? r.parentLink.id : null,
+            conversion_factor: (r.parentLink && r.parentLink.kg) ? r.parentLink.kg : null,
             active: shouldPause ? false : true,
             brand: r.brand || "Sem Marca",
             weight: r.weight || "Sem peso/medida",
             image_url: "",
             promo: false
-          });
+          };
+          toInsert.push(payload);
+          toInsertMeta.push({ row: r, origIdx });
         }
       });
 
@@ -7297,52 +7484,127 @@
       }
 
       let insertedCount = 0;
+      const costUpserts = [];
+      const deferredParentLinks = [];
+
       for (let i = 0; i < toInsert.length; i += 100) {
         const batch = toInsert.slice(i, i + 100);
+        const metaBatch = toInsertMeta.slice(i, i + 100);
         const { data, error } = await sb.from('products').insert(batch).select('*');
         if (error) {
-          showToast("⚠️ Erro ao importar! Verifique se barcode, ncm e stock_qty existem no Supabase.");
+          showToast("⚠️ Erro ao importar! Verifique se o SQL da Etapa 2 foi rodado no Supabase.");
           return;
         }
         if (data) {
           insertedCount += data.length;
-          data.forEach(d => products.unshift({
-            id: d.id, name: d.name, category: d.category, subcategory: d.subcategory,
-            price: parseFloat(d.price) || 0,
-            promoPrice: d.promo_price != null ? (parseFloat(d.promo_price) || null) : null,
-            barcode: d.barcode || '',
-            ncm: d.ncm || '',
-            stockQty: d.stock_qty != null ? (parseFloat(d.stock_qty) || 0) : null,
-            brand: d.brand, weight: d.weight, image: d.image_url || '',
-            promo: !!d.promo, promoStart: d.promo_start || '', promoEnd: d.promo_end || '',
-            active: d.active !== false
-          }));
+          data.forEach((d, idx) => {
+            const meta = metaBatch[idx];
+            if (meta) {
+              batchIndexToSavedId[meta.origIdx] = d.id;
+              if (meta.row.costPrice != null && !isNaN(meta.row.costPrice)) {
+                costUpserts.push({ store_id: currentStoreId, product_id: d.id, cost_price: meta.row.costPrice, updated_at: new Date().toISOString() });
+              }
+              if (meta.row.parentLink && meta.row.parentLink.type === 'batch') {
+                deferredParentLinks.push({ childId: d.id, parentBatchIdx: meta.row.parentLink.batchIdx, kg: meta.row.parentLink.kg });
+              }
+            }
+            products.unshift({
+              id: d.id, name: d.name, category: d.category, subcategory: d.subcategory,
+              price: parseFloat(d.price) || 0,
+              promoPrice: d.promo_price != null ? (parseFloat(d.promo_price) || null) : null,
+              barcode: d.barcode || '',
+              extraBarcodes: Array.isArray(d.extra_barcodes) ? d.extra_barcodes : [],
+              internalCode: d.internal_code || '',
+              unitType: d.unit_type || 'UN',
+              ncm: d.ncm || '',
+              cfop: d.cfop || '',
+              csosn: d.csosn || '',
+              stockQty: d.stock_qty != null ? (parseFloat(d.stock_qty) || 0) : null,
+              minStock: d.min_stock != null ? (parseFloat(d.min_stock) || 0) : null,
+              expiryDate: d.expiry_date || '',
+              wholesaleGroup: d.wholesale_group || '',
+              wholesaleQty: d.wholesale_qty != null ? (parseInt(d.wholesale_qty, 10) || null) : null,
+              wholesalePrice: d.wholesale_price != null ? (parseFloat(d.wholesale_price) || null) : null,
+              showInCatalog: d.show_in_catalog !== false,
+              parentProductId: d.parent_product_id || null,
+              conversionFactor: d.conversion_factor != null ? parseFloat(d.conversion_factor) : null,
+              brand: d.brand, weight: d.weight, image: d.image_url || '',
+              promo: !!d.promo, promoStart: d.promo_start || '', promoEnd: d.promo_end || '',
+              active: d.active !== false
+            });
+          });
         }
       }
 
       let updatedCount = 0;
       for (const item of toUpdate) {
+        const r = item.row;
         const patch = {
-          price: item.row.price || 0,
-          barcode: item.row.barcode || null,
-          ncm: item.row.ncm || null,
-          stock_qty: item.row.stockQty !== undefined ? item.row.stockQty : null
+          price: r.price || 0,
+          barcode: r.barcode || null,
+          ncm: r.ncm || null,
+          stock_qty: r.stockQty !== undefined ? r.stockQty : null
         };
-        if (pauseZeroStock && item.row.stockQty !== null && item.row.stockQty !== undefined) {
+        if (r.internalCode) patch.internal_code = r.internalCode;
+        if (r.unitType) patch.unit_type = r.unitType;
+        if (r.extraBarcodes && r.extraBarcodes.length) patch.extra_barcodes = r.extraBarcodes;
+        if (r.cfop) patch.cfop = r.cfop;
+        if (r.csosn) patch.csosn = r.csosn;
+        if (r.minStock !== null && r.minStock !== undefined) patch.min_stock = r.minStock;
+        if (r.expiryDate) patch.expiry_date = r.expiryDate;
+        if (r.wholesaleGroup) patch.wholesale_group = r.wholesaleGroup;
+        if (r.wholesaleQty) patch.wholesale_qty = r.wholesaleQty;
+        if (r.wholesalePrice) patch.wholesale_price = r.wholesalePrice;
+        if (r.showInCatalog === false) patch.show_in_catalog = false;
+        if (r.parentLink && r.parentLink.type === 'existing') {
+          patch.parent_product_id = r.parentLink.id;
+          patch.conversion_factor = r.parentLink.kg;
+        } else if (r.parentLink && r.parentLink.type === 'batch') {
+          deferredParentLinks.push({ childId: item.id, parentBatchIdx: r.parentLink.batchIdx, kg: r.parentLink.kg });
+        }
+        if (pauseZeroStock && r.stockQty !== null && r.stockQty !== undefined) {
           patch.active = !item.shouldPause;
         }
         const { error: upErr } = await sb.from('products').update(patch).eq('id', item.id);
         if (!upErr) {
           updatedCount++;
+          if (r.costPrice != null && !isNaN(r.costPrice)) {
+            costUpserts.push({ store_id: currentStoreId, product_id: item.id, cost_price: r.costPrice, updated_at: new Date().toISOString() });
+          }
           const local = products.find(p => p.id === item.id);
           if (local) {
             local.price = patch.price;
             if (patch.barcode) local.barcode = patch.barcode;
             if (patch.ncm) local.ncm = patch.ncm;
             if (patch.stock_qty !== null) local.stockQty = patch.stock_qty;
+            if (patch.internal_code) local.internalCode = patch.internal_code;
+            if (patch.unit_type) local.unitType = patch.unit_type;
+            if (patch.extra_barcodes) local.extraBarcodes = patch.extra_barcodes;
+            if (patch.wholesale_group) local.wholesaleGroup = patch.wholesale_group;
+            if (patch.wholesale_qty) local.wholesaleQty = patch.wholesale_qty;
+            if (patch.wholesale_price) local.wholesalePrice = patch.wholesale_price;
+            if (patch.show_in_catalog === false) local.showInCatalog = false;
+            if (patch.parent_product_id) { local.parentProductId = patch.parent_product_id; local.conversionFactor = patch.conversion_factor; }
             if (patch.active !== undefined) local.active = patch.active;
           }
         }
+      }
+
+      // Resolve vínculos Pai/Filho quando Saco Pai e Granel vieram na mesma planilha
+      for (const link of deferredParentLinks) {
+        const parentId = batchIndexToSavedId[link.parentBatchIdx];
+        if (!parentId || parentId === link.childId) continue;
+        await sb.from('products').update({ parent_product_id: parentId, conversion_factor: link.kg }).eq('id', link.childId);
+        const local = products.find(p => p.id === link.childId);
+        if (local) { local.parentProductId = parentId; local.conversionFactor = link.kg; }
+      }
+
+      // Salva preços de custo na tabela privada product_costs (somente Gestor)
+      if (costUpserts.length > 0) {
+        for (let i = 0; i < costUpserts.length; i += 100) {
+          await sb.from('product_costs').upsert(costUpserts.slice(i, i + 100), { onConflict: 'product_id' });
+        }
+        costUpserts.forEach(c => { if (typeof productCostsMap !== 'undefined') productCostsMap[c.product_id] = c.cost_price; });
       }
 
       filterProducts();
@@ -7350,7 +7612,7 @@
       closeBulkModal();
       document.getElementById('bulk-textarea').value = '';
       bulkRows = [];
-      showToast(`✅ ${insertedCount} novo(s) importado(s) e ${updatedCount} atualizado(s)!`);
+      showToast(`✅ ${insertedCount} novo(s) importado(s) e ${updatedCount} atualizado(s)!${costUpserts.length ? ` (${costUpserts.length} custos 🔒 salvos)` : ''}`);
     }
 
     function exportJSON() {
@@ -8045,6 +8307,8 @@
       });
       const now = Date.now();
       const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+      const start7d = new Date(startToday.getTime() - 6 * 86400000);
+      const start30d = new Date(startToday.getTime() - 29 * 86400000);
       let rows = analyticsRowsCache;
       if (analyticsPeriod === 'custom') {
         const fVal = document.getElementById('an-date-from')?.value;
@@ -8053,7 +8317,7 @@
         const tMs = tVal ? new Date(tVal + 'T23:59:59.999').getTime() : Infinity;
         rows = analyticsRowsCache.filter(r => { const ts = new Date(r.created_at).getTime(); return ts >= fMs && ts <= tMs; });
       } else {
-        const cutMap = { today: startToday.getTime(), '7d': now - 7*86400000, '30d': now - 30*86400000, all: 0 };
+        const cutMap = { today: startToday.getTime(), '7d': start7d.getTime(), '30d': start30d.getTime(), all: 0 };
         const cut = cutMap[analyticsPeriod] || 0;
         rows = analyticsRowsCache.filter(r => new Date(r.created_at).getTime() >= cut);
       }
@@ -8077,43 +8341,113 @@
       document.getElementById('an-app-pct').textContent = `${appPct}%`;
       document.getElementById('an-app-sub').textContent = `${appOpens} via app • ${Math.max(0, visitRows.length - appOpens)} via link`;
 
-      // Gráfico 7 dias (horário local do aparelho / Brasília)
+      // Gráfico de barras alinhado ao horário local (e ao intervalo personalizado em 📅 Data)
       const toLocalDayKey = (dt) => {
         const x = new Date(dt);
         if (isNaN(x.getTime())) return '';
         return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
       };
+      const todayKey = toLocalDayKey(startToday);
+      const chartTitleEl = document.getElementById('an-chart-title');
       const days = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(now - i * 86400000);
-        const lbl = i === 0 ? 'Hoje' : d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+      let endAnchor = new Date(startToday.getTime());
+      let spanDays = 7;
+      if (analyticsPeriod === 'custom') {
+        const fVal = document.getElementById('an-date-from')?.value;
+        const tVal = document.getElementById('an-date-to')?.value;
+        if (tVal) endAnchor = new Date(tVal + 'T00:00:00');
+        if (fVal && tVal) {
+          const diffD = Math.floor((new Date(tVal + 'T00:00:00') - new Date(fVal + 'T00:00:00')) / 86400000) + 1;
+          spanDays = Math.min(7, Math.max(1, diffD));
+        }
+        if (chartTitleEl) chartTitleEl.textContent = `📊 Visitas no período (${spanDays}d)`;
+      } else if (chartTitleEl) {
+        chartTitleEl.textContent = '📊 Visitas nos últimos 7 dias';
+      }
+      const chartSource = analyticsPeriod === 'custom' ? rows : analyticsRowsCache;
+      for (let i = spanDays - 1; i >= 0; i--) {
+        const d = new Date(endAnchor.getTime() - i * 86400000);
         const key = toLocalDayKey(d);
-        const cnt = analyticsRowsCache.filter(r => (r.event_type === 'visit' || r.event_type === 'app_open') && toLocalDayKey(r.created_at) === key).length;
-        days.push({ lbl, cnt, isToday: i === 0 });
+        const lbl = key === todayKey
+          ? 'Hoje'
+          : (analyticsPeriod === 'custom'
+              ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
+              : d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''));
+        const cnt = chartSource.filter(r => (r.event_type === 'visit' || r.event_type === 'app_open') && toLocalDayKey(r.created_at) === key).length;
+        days.push({ lbl, cnt, isToday: key === todayKey });
       }
       const mx = Math.max(...days.map(x => x.cnt), 1);
-      document.getElementById('an-bars-7d').innerHTML = days.map(d => `
+      const barsEl = document.getElementById('an-bars-7d');
+      barsEl.style.gridTemplateColumns = `repeat(${days.length}, minmax(0, 1fr))`;
+      barsEl.innerHTML = days.map(d => `
         <div class="flex flex-col items-center gap-1">
           <span class="text-[9px] font-black">${d.cnt}</span>
           <div style="height:${Math.max(10, Math.round((d.cnt / mx) * 70))}px; background-color:${d.isToday ? 'var(--brand-primary)' : 'var(--brand-primary-border)'};" class="w-full rounded-t-lg"></div>
           <span class="text-[9px] font-bold text-slate-500">${d.lbl}</span>
         </div>`).join('');
 
-      // Top produtos clicados (ranking completo maior -> menor com barra visual)
-      const pCounts = {};
-      rows.filter(r => r.event_type === 'product_click' && r.product_name).forEach(r => { pCounts[r.product_name] = (pCounts[r.product_name] || 0) + 1; });
-      const top = Object.entries(pCounts).sort((a, b) => b[1] - a[1]).slice(0, 30);
-      const totalClicks = Object.values(pCounts).reduce((s, v) => s + v, 0);
-      const maxClicks = top.length ? top[0][1] : 1;
+      // Ranking dinâmico com seletor (Maior->Menor, Menor->Maior, Tempo real, Pessoas únicas, A-Z) e busca rápida
+      const formatRelTime = (ts) => {
+        if (!ts) return '';
+        const diff = Math.max(0, Date.now() - ts);
+        if (diff < 60000) return 'agora mesmo';
+        const mins = Math.floor(diff / 60000);
+        if (mins < 60) return `há ${mins} min`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `há ${hrs}h`;
+        const ds = Math.floor(hrs / 24);
+        return ds === 1 ? 'ontem' : `há ${ds} dias`;
+      };
+      const pMap = {};
+      let latestClickTs = 0;
+      rows.filter(r => r.event_type === 'product_click' && r.product_name).forEach(r => {
+        const nm = r.product_name;
+        const ts = new Date(r.created_at).getTime() || 0;
+        if (ts > latestClickTs) latestClickTs = ts;
+        if (!pMap[nm]) pMap[nm] = { name: nm, clicks: 0, visitors: new Set(), lastAt: 0 };
+        pMap[nm].clicks += 1;
+        if (r.visitor_id) pMap[nm].visitors.add(r.visitor_id);
+        if (ts > pMap[nm].lastAt) pMap[nm].lastAt = ts;
+      });
+      const sortMode = document.getElementById('an-top-sort')?.value || 'desc';
+      const searchQ = (document.getElementById('an-top-search')?.value || '').trim().toLowerCase();
+      const clearBtn = document.getElementById('an-top-search-clear');
+      if (clearBtn) clearBtn.classList.toggle('hidden', !searchQ);
+
+      let items = Object.values(pMap).map(x => ({
+        name: x.name,
+        clicks: x.clicks,
+        people: Math.max(1, x.visitors.size),
+        lastAt: x.lastAt
+      }));
+      if (searchQ) items = items.filter(x => x.name.toLowerCase().includes(searchQ));
+
+      if (sortMode === 'asc') items.sort((a, b) => a.clicks - b.clicks || a.lastAt - b.lastAt);
+      else if (sortMode === 'recent') items.sort((a, b) => b.lastAt - a.lastAt);
+      else if (sortMode === 'people') items.sort((a, b) => b.people - a.people || b.clicks - a.clicks);
+      else if (sortMode === 'alpha') items.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+      else items.sort((a, b) => b.clicks - a.clicks || b.lastAt - a.lastAt);
+
+      const shown = items.slice(0, 100);
+      const totalClicks = items.reduce((s, v) => s + v.clicks, 0);
+      const maxClicks = Math.max(...items.map(x => x.clicks), 1);
       const totLbl = document.getElementById('an-top-total');
       if (totLbl) totLbl.textContent = `${totalClicks} ${totalClicks === 1 ? 'clique' : 'cliques'}`;
-      document.getElementById('an-top-prods').innerHTML = top.length ? top.map(([nm, c], i) => {
-        const w = Math.max(8, Math.round((c / maxClicks) * 100));
+      const cntLbl = document.getElementById('an-top-count');
+      if (cntLbl) cntLbl.textContent = `Exibindo ${shown.length} ${shown.length === 1 ? 'produto' : 'produtos'}`;
+      const lastLbl = document.getElementById('an-top-last');
+      if (lastLbl) lastLbl.textContent = latestClickTs ? `🕒 Último clique: ${formatRelTime(latestClickTs)}` : '';
+
+      document.getElementById('an-top-prods').innerHTML = shown.length ? shown.map((it, i) => {
+        const w = Math.max(8, Math.round((it.clicks / maxClicks) * 100));
         return `
         <div class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 space-y-1">
-          <div class="flex items-center justify-between gap-2 font-bold">
-            <span class="truncate text-slate-800"><span style="color: var(--brand-primary-dark);" class="font-black mr-1">${i + 1}º</span>${escapeHtml(nm)}</span>
-            <span style="color: var(--brand-primary-dark);" class="font-black shrink-0">${c} ${c === 1 ? 'clique' : 'cliques'}</span>
+          <div class="flex items-start justify-between gap-2 font-bold">
+            <div class="min-w-0">
+              <div class="truncate text-slate-800"><span style="color: var(--brand-primary-dark);" class="font-black mr-1">${i + 1}º</span>${escapeHtml(it.name)}</div>
+              <div class="text-[9px] font-semibold text-slate-400">👥 ${it.people} ${it.people === 1 ? 'pessoa' : 'pessoas'}${it.lastAt ? ` • 🕒 ${formatRelTime(it.lastAt)}` : ''}</div>
+            </div>
+            <span style="color: var(--brand-primary-dark);" class="font-black shrink-0">${it.clicks} ${it.clicks === 1 ? 'clique' : 'cliques'}</span>
           </div>
           <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div style="width:${w}%; background-color: var(--brand-primary);" class="h-full rounded-full"></div>
@@ -8477,10 +8811,10 @@
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div class="bg-[#E8F8FA] border border-[#24B7C5]/50 rounded-2xl p-3">
-          <div class="text-[10px] font-extrabold text-[#176E7B]">👀 Cliques no Link</div>
+        <div style="background-color: var(--brand-primary-soft); border-color: var(--brand-primary-border);" class="border rounded-2xl p-3">
+          <div style="color: var(--brand-primary-dark);" class="text-[10px] font-extrabold">👀 Cliques no Link</div>
           <div id="an-visits" class="text-xl font-black text-slate-900 mt-0.5">0</div>
-          <div id="an-unique" class="text-[10px] font-bold text-[#176E7B]">0 pessoas únicas</div>
+          <div id="an-unique" style="color: var(--brand-primary-dark);" class="text-[10px] font-bold">0 pessoas únicas</div>
         </div>
         <div class="bg-emerald-50 border border-emerald-300 rounded-2xl p-3">
           <div class="text-[10px] font-extrabold text-emerald-800">📲 Baixaram App</div>
@@ -8500,16 +8834,38 @@
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-        <div class="sm:col-span-5 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
-          <div class="text-xs font-black text-slate-700">📊 Visitas nos últimos 7 dias</div>
-          <div id="an-bars-7d" class="grid grid-cols-7 gap-1.5 items-end h-32 pt-3"></div>
+        <div class="sm:col-span-5 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2 flex flex-col justify-between">
+          <div>
+            <div id="an-chart-title" class="text-xs font-black text-slate-700">📊 Visitas nos últimos 7 dias</div>
+            <div id="an-bars-7d" class="grid grid-cols-7 gap-1.5 items-end h-32 pt-3"></div>
+          </div>
+          <div class="pt-2 border-t border-slate-200 text-[10px] text-slate-500 font-semibold leading-snug">
+            Conta como clique em produto: zoom na foto, troca de variação, atacado e adicionar ao carrinho.
+          </div>
         </div>
         <div class="sm:col-span-7 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="text-xs font-black text-slate-700">🔥 Produtos mais clicados (Maior → Menor)</div>
-            <span id="an-top-total" class="text-[10px] font-black text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">0 cliques</span>
+          <div class="flex flex-wrap items-center justify-between gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <div class="text-xs font-black text-slate-700">🔥 Produtos mais clicados</div>
+              <span id="an-top-total" class="text-[10px] font-black text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">0 cliques</span>
+            </div>
+            <select id="an-top-sort" onchange="renderAnalyticsModal()" class="text-[10px] font-extrabold text-slate-700 bg-white border border-slate-300 rounded-xl px-2 py-1 focus:outline-none">
+              <option value="desc">🔥 Maior → Menor</option>
+              <option value="asc">📉 Menor → Maior</option>
+              <option value="recent">🕒 Últimos clicados</option>
+              <option value="people">👥 Mais pessoas únicas</option>
+              <option value="alpha">🔤 Ordem A → Z</option>
+            </select>
           </div>
-          <div id="an-top-prods" class="space-y-1.5 text-[11px] max-h-56 overflow-y-auto pr-1"></div>
+          <div class="relative">
+            <input id="an-top-search" type="text" oninput="renderAnalyticsModal()" placeholder="🔍 Filtrar produto no ranking..." class="w-full text-[11px] bg-white border border-slate-200 rounded-xl pl-2.5 pr-7 py-1.5 font-semibold text-slate-700 placeholder:text-slate-400 focus:outline-none" />
+            <button id="an-top-search-clear" type="button" onclick="document.getElementById('an-top-search').value=''; renderAnalyticsModal();" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-[11px] font-black">✕</button>
+          </div>
+          <div id="an-top-prods" class="space-y-1.5 text-[11px] max-h-60 overflow-y-auto pr-1"></div>
+          <div class="pt-1.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-1 text-[10px] font-bold text-slate-500">
+            <span id="an-top-count">Exibindo 0 produtos</span>
+            <span id="an-top-last" style="color: var(--brand-primary-dark);"></span>
+          </div>
         </div>
       </div>
 
