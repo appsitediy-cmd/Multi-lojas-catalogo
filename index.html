@@ -102,6 +102,7 @@
         <button id="gtb-btn-pdv" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../pdv.html' : 'pdv.html') + '?loja=' + encodeURIComponent(storeSlug)" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🖥️ PDV</button>
         <button id="gtb-btn-entregas" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../pdv.html' : 'pdv.html') + '?loja=' + encodeURIComponent(storeSlug) + '&open=motoboy'" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛵 Entregas</button>
         <button id="gtb-btn-vitrine" type="button" onclick="switchToClient()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛍️ Vitrine</button>
+        <button id="gtb-btn-admin" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../admin.html' : 'admin.html')" class="hidden px-2.5 py-1 rounded-xl text-xs font-black bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer">👑 Contas</button>
         <button type="button" onclick="logoutManager()" title="Sair do modo Gestor" class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600/90 hover:bg-rose-600 text-white cursor-pointer ml-1">🚪 Sair</button>
       </div>
     </div>
@@ -2486,11 +2487,13 @@
     }
 
     function updateModuleButtonsVisibility() {
-      const hasPdv = !!(currentStoreModules && currentStoreModules.pdv === true);
-      ['btn-open-pdv-module', 'btn-open-repo-module', 'btn-open-entry-module'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('hidden', !hasPdv);
-      });
+      const mods = currentStoreModules || {};
+      const hasPdv = !!(mods.pdv === true);
+      const hasRepo = typeof mods.replenishment === 'boolean' ? mods.replenishment : hasPdv;
+      const hasEntry = typeof mods.stock_entry === 'boolean' ? mods.stock_entry : hasPdv;
+      document.getElementById('btn-open-pdv-module')?.classList.toggle('hidden', !hasPdv);
+      document.getElementById('btn-open-repo-module')?.classList.toggle('hidden', !hasRepo);
+      document.getElementById('btn-open-entry-module')?.classList.toggle('hidden', !hasEntry);
       if (typeof syncManagerGlobalTopbar === 'function') syncManagerGlobalTopbar();
       const saBtn = document.getElementById('btn-open-superadmin-modal');
       if (saBtn) saBtn.classList.toggle('hidden', !isSuperAdminUser());
@@ -9403,9 +9406,12 @@
       bar.classList.toggle('hidden', !canSeeBar);
       if (!canSeeBar) return;
 
-      const hasPdv = !!(currentStoreModules && currentStoreModules.pdv === true) || isSuperAdmin;
+      const mods = currentStoreModules || {};
+      const hasPdv = !!(mods.pdv === true) || isSuperAdmin;
+      const hasDeliv = isSuperAdmin || (typeof mods.deliveries === 'boolean' ? mods.deliveries : !!(mods.pdv === true));
       document.getElementById('gtb-btn-pdv')?.classList.toggle('hidden', !hasPdv);
-      document.getElementById('gtb-btn-entregas')?.classList.toggle('hidden', !hasPdv);
+      document.getElementById('gtb-btn-entregas')?.classList.toggle('hidden', !hasDeliv);
+      document.getElementById('gtb-btn-admin')?.classList.toggle('hidden', !isSuperAdmin);
 
       const inManager = !document.getElementById('manager-view')?.classList.contains('hidden');
       const bGest = document.getElementById('gtb-btn-gestor');

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Super Admin — Controle de Contas e Módulos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .toggle-pill { transition: all 0.18s ease; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
+
+  <!-- TELA DE LOGIN / BLOQUEIO SUPER ADMIN -->
+  <div id="admin-gate" class="fixed inset-0 z-50 bg-slate-950/95 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="text-center space-y-1">
+        <div class="text-3xl">👑</div>
+        <h1 class="text-lg font-black text-slate-900">Painel Super Admin</h1>
+        <p id="gate-subtitle" class="text-xs font-semibold text-slate-500">Acesso exclusivo do administrador da plataforma</p>
+      </div>
+      <div id="gate-login-form" class="space-y-2.5">
+        <input id="admin-email" type="email" placeholder="E-mail Super Admin" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold" />
+        <input id="admin-pass" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter') doAdminLogin()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold" />
+        <button id="admin-login-btn" onclick="doAdminLogin()" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-black shadow cursor-pointer">🔑 Entrar no Super Admin</button>
+      </div>
+      <div id="gate-error" class="hidden text-xs font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3 text-center"></div>
+    </div>
+  </div>
+
+  <!-- TOPO FIXO DO SUPER ADMIN -->
+  <header class="sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <span class="text-xl">👑</span>
+        <div>
+          <h1 class="text-sm sm:text-base font-black tracking-tight">Central de Contas &amp; Módulos (Super Admin)</h1>
+          <p id="admin-user-label" class="text-[11px] font-semibold text-slate-400">Carregando...</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openNewStoreModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-black shadow cursor-pointer">+ Nova Loja</button>
+        <button onclick="loadAllStores()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-black cursor-pointer">🔄 Atualizar</button>
+        <button onclick="doAdminLogout()" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black cursor-pointer">🚪 Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 pt-5 space-y-5">
+
+    <!-- KPIs GERAIS DA PLATAFORMA -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+        <div class="text-[11px] font-black uppercase text-slate-400">🏪 Total de Lojas</div>
+        <div id="kpi-total" class="text-3xl font-black text-slate-900 mt-1">0</div>
+      </div>
+      <div class="bg-white border border-emerald-200 rounded-2xl p-4 shadow-xs">
+        <div class="text-[11px] font-black uppercase text-emerald-700">✅ Lojas Ativas</div>
+        <div id="kpi-active" class="text-3xl font-black text-emerald-700 mt-1">0</div>
+      </div>
+      <div class="bg-white border border-indigo-200 rounded-2xl p-4 shadow-xs">
+        <div class="text-[11px] font-black uppercase text-indigo-700">🖥️ Com PDV Ativo</div>
+        <div id="kpi-pdv" class="text-3xl font-black text-indigo-700 mt-1">0</div>
+      </div>
+      <div class="bg-white border border-orange-200 rounded-2xl p-4 shadow-xs">
+        <div class="text-[11px] font-black uppercase text-orange-700">🛵 Com Entregas</div>
+        <div id="kpi-deliv" class="text-3xl font-black text-orange-700 mt-1">0</div>
+      </div>
+    </section>
+
+    <!-- BUSCA E FILTROS (ESCALÁVEL PARA 10, 100, 1.000+ LOJAS) -->
+    <section class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-2.5">
+      <input id="admin-search" type="text" oninput="renderStores()" placeholder="🔍 Buscar loja por nome, slug ou plano..." class="flex-1 min-w-[220px] bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-slate-400" />
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button data-f="all" onclick="setFilter('all')" class="flt-btn px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">Todas</button>
+        <button data-f="active" onclick="setFilter('active')" class="flt-btn px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">✅ Ativas</button>
+        <button data-f="paused" onclick="setFilter('paused')" class="flt-btn px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">⏸️ Pausadas</button>
+        <button data-f="pdv" onclick="setFilter('pdv')" class="flt-btn px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">🖥️ Com PDV</button>
+        <button data-f="vitrine" onclick="setFilter('vitrine')" class="flt-btn px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">🛍️ Só Vitrine</button>
+      </div>
+    </section>
+
+    <!-- LISTA DE LOJAS COM BOTÕES LIGAR / DESLIGAR POR MÓDULO -->
+    <section id="stores-container" class="space-y-4"></section>
+
+  </main>
+
+  <!-- MODAL: + NOVA LOJA -->
+  <div id="modal-new-store" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <h2 class="text-sm font-black">🏪 Cadastrar Nova Loja Cliente</h2>
+        <button onclick="closeNewStoreModal()" class="font-black text-lg cursor-pointer">✕</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="font-black text-slate-600 block mb-1">Nome da Loja</label>
+          <input id="ns-name" type="text" placeholder="Ex.: Pet Shop Amigo Fiel" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+        </div>
+        <div>
+          <label class="font-black text-slate-600 block mb-1">Slug da URL (sem espaço nem acento)</label>
+          <input id="ns-slug" type="text" placeholder="Ex.: amigofiel" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono font-bold" />
+        </div>
+        <div>
+          <label class="font-black text-slate-600 block mb-1">Plano Inicial</label>
+          <select id="ns-plan" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold">
+            <option value="vitrine">🛍️ Só Vitrine / Catálogo</option>
+            <option value="pro">🖥️ Vitrine + PDV + Entregas</option>
+            <option value="completo" selected>🚀 Completo (Todos os Módulos)</option>
+          </select>
+        </div>
+        <p class="text-[11px] font-semibold text-slate-500">A loja é criada vinculada à sua conta inicialmente para você configurar e depois transferir o <code>owner_id</code> para o cliente.</p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="closeNewStoreModal()" class="px-4 py-2 rounded-xl bg-slate-100 font-black cursor-pointer">Cancelar</button>
+          <button onclick="createNewStore()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black cursor-pointer">✅ Criar Loja</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl text-xs font-black shadow-2xl"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://pimqhnjyahykpewbzpum.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Zrf-FIwgM87vZTbN8ybmcA_UUTAi2eQ';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const MODULES_DEF = [
+      { key: 'catalog',       icon: '🛍️', label: 'Vitrine / Catálogo',    defaultVal: true },
+      { key: 'pdv',           icon: '🖥️', label: 'PDV Caixa',             defaultVal: false },
+      { key: 'deliveries',    icon: '🛵', label: 'Entregas / Motoboy',    defaultVal: 'inherit_pdv' },
+      { key: 'replenishment', icon: '📦', label: 'Reposição / Transf.',   defaultVal: 'inherit_pdv' },
+      { key: 'stock_entry',   icon: '📥', label: 'Entrada de Nota',       defaultVal: 'inherit_pdv' },
+      { key: 'analytics',     icon: '📊', label: 'Acessos & Buscas',      defaultVal: true },
+      { key: 'flash_sale',    icon: '⚡', label: 'Oferta Relâmpago',      defaultVal: true },
+      { key: 'wholesale_mix', icon: '🎉', label: 'Atacado & Mix',         defaultVal: true }
+    ];
+
+    let currentUser = null;
+    let allStores = [];
+    let activeFilter = 'all';
+    let savingStoreIds = new Set();
+
+    function norm(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.remove('hidden');
+      clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.add('hidden'), 2800);
+    }
+
+    function getModuleState(store, modDef) {
+      const mods = store.modules || {};
+      if (typeof mods[modDef.key] === 'boolean') return mods[modDef.key];
+      if (modDef.defaultVal === 'inherit_pdv') return Boolean(mods.pdv === true);
+      return Boolean(modDef.defaultVal);
+    }
+
+    async function verifySuperAdmin(user) {
+      if (!user || !user.email) return false;
+      const { data } = await sb.from('super_admins').select('email').ilike('email', user.email).maybeSingle();
+      return Boolean(data && data.email);
+    }
+
+    async function bootAdmin() {
+      const { data } = await sb.auth.getSession();
+      const user = data?.session?.user || null;
+      if (user) {
+        const isSA = await verifySuperAdmin(user);
+        if (isSA) {
+          currentUser = user;
+          document.getElementById('admin-gate').classList.add('hidden');
+          document.getElementById('admin-user-label').textContent = `Super Admin: ${user.email}`;
+          await loadAllStores();
+          return;
+        } else {
+          showGateError('🔒 Esta conta não tem permissão de Super Admin.');
+          return;
+        }
+      }
+      document.getElementById('admin-gate').classList.remove('hidden');
+    }
+
+    function showGateError(msg) {
+      const el = document.getElementById('gate-error');
+      el.textContent = msg; el.classList.remove('hidden');
+    }
+
+    async function doAdminLogin() {
+      const email = document.getElementById('admin-email').value.trim();
+      const password = document.getElementById('admin-pass').value;
+      if (!email || !password) { showGateError('Informe e-mail e senha.'); return; }
+      const btn = document.getElementById('admin-login-btn');
+      btn.disabled = true; btn.textContent = 'Entrando...';
+      document.getElementById('gate-error').classList.add('hidden');
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      btn.disabled = false; btn.textContent = '🔑 Entrar no Super Admin';
+      if (error) { showGateError('Login inválido: ' + error.message); return; }
+      const isSA = await verifySuperAdmin(data.user);
+      if (!isSA) {
+        await sb.auth.signOut();
+        showGateError('🔒 Acesso negado: e-mail não está na tabela super_admins.');
+        return;
+      }
+      currentUser = data.user;
+      document.getElementById('admin-gate').classList.add('hidden');
+      document.getElementById('admin-user-label').textContent = `Super Admin: ${data.user.email}`;
+      await loadAllStores();
+    }
+
+    async function doAdminLogout() {
+      await sb.auth.signOut();
+      location.reload();
+    }
+
+    async function loadAllStores() {
+      const { data, error } = await sb.from('stores').select('id,slug,name,active,plan,modules,plan_expires_at,created_at').order('name');
+      if (error) { showToast('❌ Erro ao carregar lojas: ' + error.message); return; }
+      allStores = Array.isArray(data) ? data : [];
+      renderStores();
+    }
+
+    function setFilter(f) { activeFilter = f; renderStores(); }
+
+    function renderStores() {
+      document.getElementById('kpi-total').textContent = allStores.length;
+      document.getElementById('kpi-active').textContent = allStores.filter(s => s.active !== false).length;
+      document.getElementById('kpi-pdv').textContent = allStores.filter(s => Boolean(s.modules?.pdv)).length;
+      document.getElementById('kpi-deliv').textContent = allStores.filter(s => getModuleState(s, MODULES_DEF[2])).length;
+
+      document.querySelectorAll('.flt-btn').forEach(btn => {
+        btn.className = 'flt-btn px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer ' +
+          (btn.dataset.f === activeFilter ? 'bg-slate-900 text-white shadow' : 'bg-slate-100 hover:bg-slate-200 text-slate-700');
+      });
+
+      const q = norm(document.getElementById('admin-search').value.trim());
+      const list = allStores.filter(s => {
+        if (activeFilter === 'active' && s.active === false) return false;
+        if (activeFilter === 'paused' && s.active !== false) return false;
+        if (activeFilter === 'pdv' && !s.modules?.pdv) return false;
+        if (activeFilter === 'vitrine' && s.modules?.pdv) return false;
+        if (q && !norm(`${s.name} ${s.slug} ${s.plan}`).includes(q)) return false;
+        return true;
+      });
+
+      const box = document.getElementById('stores-container');
+      if (!list.length) {
+        box.innerHTML = '<div class="bg-white border border-slate-200 rounded-2xl p-8 text-center text-xs font-black text-slate-400">Nenhuma loja encontrada neste filtro.</div>';
+        return;
+      }
+
+      box.innerHTML = list.map(s => {
+        const isActive = s.active !== false;
+        const expVal = s.plan_expires_at ? String(s.plan_expires_at).slice(0, 10) : '';
+        return `
+          <article class="bg-white border-2 ${isActive ? 'border-slate-200' : 'border-rose-300 bg-rose-50/20'} rounded-3xl shadow-xs overflow-hidden">
+            <!-- Cabeçalho da Loja -->
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex flex-wrap items-center gap-2.5">
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-black ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isActive ? '🟢 ATIVA' : '⏸️ PAUSADA'}</span>
+                <div>
+                  <div class="text-base font-black text-slate-900">${esc(s.name)}</div>
+                  <div class="text-[11px] font-mono font-bold text-slate-500">slug: ${esc(s.slug)}</div>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <a href="index.html?loja=${encodeURIComponent(s.slug)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 font-black text-slate-700">🛍️ Vitrine</a>
+                <a href="index.html?loja=${encodeURIComponent(s.slug)}#gestor" target="_blank" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 font-black text-slate-700">⚙️ Gestor</a>
+                <a href="pdv.html?loja=${encodeURIComponent(s.slug)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black">🖥️ PDV</a>
+                <button onclick="toggleStoreActive('${s.id}')" class="px-3 py-1.5 rounded-xl font-black cursor-pointer ${isActive ? 'bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}">
+                  ${isActive ? '⏸️ Pausar Conta' : '▶️ Reativar Conta'}
+                </button>
+              </div>
+            </div>
+
+            <!-- Controles de Plano + Presets Rápidos + Vencimento -->
+            <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex flex-wrap items-center gap-2">
+                <label class="flex items-center gap-1.5 font-bold text-slate-600">
+                  <span>Plano:</span>
+                  <select onchange="updateStoreMeta('${s.id}', { plan: this.value })" class="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 font-black text-slate-900">
+                    <option value="vitrine" ${s.plan === 'vitrine' ? 'selected' : ''}>🛍️ Vitrine</option>
+                    <option value="pro" ${s.plan === 'pro' ? 'selected' : ''}>🖥️ Pro (PDV)</option>
+                    <option value="completo" ${(!s.plan || s.plan === 'completo') ? 'selected' : ''}>🚀 Completo</option>
+                  </select>
+                </label>
+                <label class="flex items-center gap-1.5 font-bold text-slate-600">
+                  <span>Vencimento:</span>
+                  <input type="date" value="${expVal}" onchange="updateStoreMeta('${s.id}', { plan_expires_at: this.value ? this.value + 'T23:59:59Z' : null })" class="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 font-black text-slate-900" />
+                </label>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[11px] font-bold text-slate-400">Atalhos:</span>
+                <button onclick="applyPreset('${s.id}', 'vitrine')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-black cursor-pointer">Só Vitrine</button>
+                <button onclick="applyPreset('${s.id}', 'pdv_basico')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-[11px] font-black cursor-pointer">Vitrine + PDV</button>
+                <button onclick="applyPreset('${s.id}', 'tudo')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-black cursor-pointer">🚀 Ligar Tudo</button>
+              </div>
+            </div>
+
+            <!-- GRADE DE BOTÕES LIGAR / DESLIGAR POR MÓDULO -->
+            <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              ${MODULES_DEF.map(m => {
+                const on = getModuleState(s, m);
+                return `
+                  <button type="button" onclick="toggleStoreModule('${s.id}', '${m.key}')" class="toggle-pill text-left p-3 rounded-2xl border-2 flex items-center justify-between gap-2 cursor-pointer ${on ? 'bg-emerald-50 border-emerald-400 text-emerald-950' : 'bg-slate-50 border-slate-200 text-slate-400'}">
+                    <div class="min-w-0">
+                      <div class="text-xs font-black truncate">${m.icon} ${m.label}</div>
+                      <div class="text-[10px] font-extrabold mt-0.5">${on ? 'LIGADO' : 'DESLIGADO'}</div>
+                    </div>
+                    <div class="w-10 h-6 rounded-full p-0.5 shrink-0 flex items-center ${on ? 'bg-emerald-500 justify-end' : 'bg-slate-300 justify-start'}">
+                      <span class="w-5 h-5 rounded-full bg-white shadow"></span>
+                    </div>
+                  </button>`;
+              }).join('')}
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    async function toggleStoreModule(storeId, modKey) {
+      if (savingStoreIds.has(storeId)) return;
+      const store = allStores.find(s => s.id === storeId);
+      if (!store) return;
+      const def = MODULES_DEF.find(m => m.key === modKey);
+      const curState = getModuleState(store, def);
+      const nextMods = Object.assign({}, store.modules || {});
+      nextMods[modKey] = !curState;
+      // Se desligou PDV, desliga junto os sub-módulos do PDV se ainda não estavam explícitos
+      if (modKey === 'pdv' && !nextMods.pdv) {
+        nextMods.deliveries = false;
+        nextMods.replenishment = false;
+        nextMods.stock_entry = false;
+      }
+      await saveStoreUpdate(storeId, { modules: nextMods }, `${def.icon} ${def.label} ${nextMods[modKey] ? 'LIGADO' : 'DESLIGADO'} em ${store.name}`);
+    }
+
+    async function applyPreset(storeId, preset) {
+      const store = allStores.find(s => s.id === storeId);
+      if (!store) return;
+      let mods = {};
+      let plan = store.plan || 'completo';
+      if (preset === 'vitrine') {
+        plan = 'vitrine';
+        mods = { catalog: true, pdv: false, deliveries: false, replenishment: false, stock_entry: false, analytics: true, flash_sale: true, wholesale_mix: true };
+      } else if (preset === 'pdv_basico') {
+        plan = 'pro';
+        mods = { catalog: true, pdv: true, deliveries: true, replenishment: false, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true };
+      } else {
+        plan = 'completo';
+        mods = { catalog: true, pdv: true, deliveries: true, replenishment: true, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true };
+      }
+      await saveStoreUpdate(storeId, { plan, modules: mods }, `✅ Preset aplicado em ${store.name}!`);
+    }
+
+    async function toggleStoreActive(storeId) {
+      const store = allStores.find(s => s.id === storeId);
+      if (!store) return;
+      const nextActive = store.active === false;
+      await saveStoreUpdate(storeId, { active: nextActive }, nextActive ? `▶️ ${store.name} reativada!` : `⏸️ ${store.name} pausada!`);
+    }
+
+    async function updateStoreMeta(storeId, patch) {
+      const store = allStores.find(s => s.id === storeId);
+      if (!store) return;
+      await saveStoreUpdate(storeId, patch, `💾 ${store.name} atualizada!`);
+    }
+
+    async function saveStoreUpdate(storeId, patch, successMsg) {
+      if (savingStoreIds.has(storeId)) return;
+      savingStoreIds.add(storeId);
+      try {
+        const { error } = await sb.from('stores').update(patch).eq('id', storeId);
+        if (error) { showToast('❌ Erro ao salvar no Supabase: ' + error.message); return; }
+        const st = allStores.find(s => s.id === storeId);
+        if (st) Object.assign(st, patch);
+        renderStores();
+        showToast(successMsg);
+      } finally {
+        savingStoreIds.delete(storeId);
+      }
+    }
+
+    function openNewStoreModal() {
+      document.getElementById('ns-name').value = '';
+      document.getElementById('ns-slug').value = '';
+      const m = document.getElementById('modal-new-store');
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+    function closeNewStoreModal() {
+      const m = document.getElementById('modal-new-store');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    async function createNewStore() {
+      const name = document.getElementById('ns-name').value.trim();
+      const slug = document.getElementById('ns-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      const plan = document.getElementById('ns-plan').value;
+      if (!name || !slug) { showToast('⚠️ Preencha nome e slug da loja.'); return; }
+      const mods = plan === 'vitrine'
+        ? { catalog: true, pdv: false, deliveries: false, replenishment: false, stock_entry: false, analytics: true, flash_sale: true, wholesale_mix: true }
+        : (plan === 'pro'
+            ? { catalog: true, pdv: true, deliveries: true, replenishment: false, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true }
+            : { catalog: true, pdv: true, deliveries: true, replenishment: true, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true });
+      const { error } = await sb.from('stores').insert({
+        slug, name, owner_id: currentUser.id, active: true, plan, modules: mods
+      });
+      if (error) { showToast('❌ Erro ao criar loja: ' + error.message); return; }
+      closeNewStoreModal();
+      await loadAllStores();
+      showToast(`🏪 Loja "${name}" criada com sucesso!`);
+    }
+
+    bootAdmin();
+  </script>
+</body>
+</html>
