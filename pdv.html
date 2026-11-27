@@ -1621,7 +1621,7 @@
         return `
         <div class="border border-slate-200 ${borderCls} rounded-2xl p-2.5 space-y-1.5">
           <div class="flex items-center justify-between text-[11px] font-black text-slate-900">
-            <span class="truncate">${origLbl} ${escapeHtml(o.customer_name || 'Cliente')}</span>
+            <span class="truncate">${origLbl} ${escapeHtml((o.customer_name || o.name || 'Cliente'))}</span>
             <span class="shrink-0 text-[10px]">${tag}</span>
           </div>
           <div class="flex items-center justify-between text-[10px] font-bold text-slate-500">
@@ -1640,8 +1640,8 @@
       const ord = appOrders[idx];
       if (!ord) return;
       activeAppOrderId = ord.id || null;
-      document.getElementById('top-client-name').textContent = ord.customer_name || 'Cliente App';
-      const itemsArr = Array.isArray(ord.items) ? ord.items : [];
+      document.getElementById('top-client-name').textContent = (ord.customer_name || ord.name || 'Cliente App');
+      const itemsArr = parseOrderItems(ord.items);
       itemsArr.forEach(it => {
         const match = catalog.find(p => String(p.id) === String(it.id) || p.name.toLowerCase() === String(it.name || '').toLowerCase());
         if (match) addToCupom(match, Number(it.qty) || 1);
@@ -2981,6 +2981,20 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
     let activeSelectedCustomer = null;
     let deliveryActionBusy = false;
 
+    function parseOrderItems(raw) {
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'string') {
+        const s = raw.trim();
+        if (!s) return [];
+        try {
+          const parsed = JSON.parse(s);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {}
+        return [{ product_id: null, name: s, qty: 1, price: 0 }];
+      }
+      return [];
+    }
+
     function normalizePayMethod(m) {
       const s = String(m || '').trim();
       if (/pix/i.test(s)) return 'PIX';
@@ -3246,6 +3260,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
 
       const orderPayload = {
         store_id: currentStore.id,
+        name: clientName,
         customer_name: clientName,
         phone: phone || '',
         customer_phone: phone || '',
@@ -3254,7 +3269,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
         payment: method,
         order_date: new Date().toISOString(),
         created_at: new Date().toISOString(),
-        items: itemsJson,
+        items: JSON.stringify(itemsJson),
         total: tot,
         origin,
         pay_status: delivCheckoutMode,
@@ -3339,7 +3354,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       const bnr = document.getElementById('mb-sched-banner');
       if (schedAlerts.length) {
         bnr.classList.remove('hidden');
-        document.getElementById('mb-sched-banner-text').textContent = schedAlerts.map(o => `${o.customer_name || 'Cliente'} (marcado p/ ${o.scheduled_time})`).join(' · ');
+        document.getElementById('mb-sched-banner-text').textContent = schedAlerts.map(o => `${(o.customer_name || o.name || 'Cliente')} (marcado p/ ${o.scheduled_time})`).join(' · ');
       } else bnr.classList.add('hidden');
 
       document.querySelectorAll('.mb-st-pill').forEach(btn => {
@@ -3366,7 +3381,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
         if (mbStatusFilter === 'done' && st !== 'done') return false;
         if (mbStatusFilter === 'cancelled' && st !== 'cancelled') return false;
         if (q) {
-          const itemsStr = (Array.isArray(o.items) ? o.items : []).map(it => it.name).join(' ');
+          const itemsStr = (parseOrderItems(o.items)).map(it => it.name).join(' ');
           if (!normText(`${o.customer_name} ${o.customer_phone} ${o.customer_address} ${itemsStr} #${o.id}`).includes(q)) return false;
         }
         return true;
@@ -3395,7 +3410,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
         const isUrg = isDeliveryEffectivelyUrgent(o);
         const method = normalizePayMethod(o.pay_method);
         const changeFor = parseFloat(o.change_for) || 0;
-        const itemsArr = Array.isArray(o.items) ? o.items : [];
+        const itemsArr = parseOrderItems(o.items);
         const itemsTxt = itemsArr.map(it => `${it.qty}x ${it.name}`).join(' + ') || 'Itens do pedido';
         const timeStr = new Date(o.order_date || o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const waitMins = Math.max(0, Math.floor((Date.now() - new Date(o.order_date || o.created_at).getTime()) / 60000));
@@ -3431,7 +3446,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
                   ${ogMap[o.origin || 'app'] || ogMap.app}
                   ${roadBadge}
                   ${waitPill}
-                  <span class="font-black text-slate-900 text-sm">${escapeHtml(o.customer_name || 'Cliente')}</span>
+                  <span class="font-black text-slate-900 text-sm">${escapeHtml((o.customer_name || o.name || 'Cliente'))}</span>
                   ${(o.customer_phone || o.phone) ? `<span class="text-slate-500 font-bold">📱 ${escapeHtml(o.customer_phone || o.phone)}</span>` : ''}
                 </div>
                 ${(o.customer_address || o.address) ? `<div class="font-extrabold text-slate-700">📍 ${escapeHtml(o.customer_address || o.address)}</div>` : ''}
@@ -3536,7 +3551,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
     async function cancelDeliveryOrder(id) {
       const o = appOrders.find(x => x.id === id); if (!o || deliveryActionBusy) return;
       const hasLinkedSale = Boolean(o.linked_sale_id);
-      if (!confirm(`Cancelar o pedido #${o.id} de ${o.customer_name || 'Cliente'}?\n\nOs produtos voltarão para o estoque automaticamente${hasLinkedSale ? ' e o valor será estornado do caixa' : ''}.`)) return;
+      if (!confirm(`Cancelar o pedido #${o.id} de ${(o.customer_name || o.name || 'Cliente')}?\n\nOs produtos voltarão para o estoque automaticamente${hasLinkedSale ? ' e o valor será estornado do caixa' : ''}.`)) return;
       deliveryActionBusy = true;
       try {
         if (hasLinkedSale) {
@@ -3544,7 +3559,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
           if (sErr) { showToast('❌ Erro ao estornar venda: ' + sErr.message); return; }
         }
         if (o.stock_deducted) {
-          for (const it of (Array.isArray(o.items) ? o.items : [])) {
+          for (const it of (parseOrderItems(o.items))) {
             if (it.product_id && Number(it.qty) > 0) {
               await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: Math.abs(Number(it.qty)) });
             }
@@ -3562,9 +3577,9 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
     function openDeliverySettleModal(id) {
       const o = appOrders.find(x => x.id === id); if (!o) return;
       delivSettleId = id;
-      const itemsTxt = (Array.isArray(o.items) ? o.items : []).map(it => `${it.qty}x ${it.name}`).join(' + ');
+      const itemsTxt = (parseOrderItems(o.items)).map(it => `${it.qty}x ${it.name}`).join(' + ');
       document.getElementById('deliv-settle-summary').innerHTML = `
-        <div class="text-sm font-black text-slate-900">#${o.id} — ${escapeHtml(o.customer_name || 'Cliente')}</div>
+        <div class="text-sm font-black text-slate-900">#${o.id} — ${escapeHtml((o.customer_name || o.name || 'Cliente'))}</div>
         <div class="text-slate-600">${escapeHtml(itemsTxt)}</div>
         <div class="text-base font-black text-orange-600 pt-1">Total: ${brl(o.total)}</div>`;
       document.getElementById('deliv-settle-method').value = normalizePayMethod(o.pay_method);
@@ -3577,7 +3592,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       try {
       const method = normalizePayMethod(document.getElementById('deliv-settle-method').value);
       const tot = parseFloat(o.total) || 0;
-      const itemsJson = Array.isArray(o.items) ? o.items : [];
+      const itemsJson = parseOrderItems(o.items);
       let linkedSaleId = o.linked_sale_id || null;
 
       if (!linkedSaleId) {
@@ -3640,7 +3655,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       toggleDelivEditChange();
       document.getElementById('deliv-ed-method').value = normalizePayMethod(o.pay_method);
       document.getElementById('deliv-ed-change').value = o.change_for ? String(o.change_for).replace('.', ',') : '';
-      document.getElementById('deliv-ed-name').value = o.customer_name || '';
+      document.getElementById('deliv-ed-name').value = (o.customer_name || o.name || '');
       document.getElementById('deliv-ed-phone').value = o.customer_phone || o.phone || '';
       document.getElementById('deliv-ed-address').value = o.customer_address || o.address || '';
       document.getElementById('deliv-ed-sched').value = o.scheduled_time || '';
@@ -3662,7 +3677,8 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
           pay_status: payStatus,
           pay_method: method,
           change_for: changeFor,
-          customer_name: document.getElementById('deliv-ed-name').value.trim() || o.customer_name,
+          name: document.getElementById('deliv-ed-name').value.trim() || o.name || o.customer_name || 'Cliente',
+          customer_name: document.getElementById('deliv-ed-name').value.trim() || o.customer_name || o.name || 'Cliente',
           phone: document.getElementById('deliv-ed-phone').value.trim(),
           customer_phone: document.getElementById('deliv-ed-phone').value.trim(),
           address: document.getElementById('deliv-ed-address').value.trim(),
@@ -3681,7 +3697,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
             store_id: currentStore.id,
             client_name: upd.customer_name || 'Cliente Entrega',
             operator_email: currentUser?.email || '',
-            items: Array.isArray(o.items) ? o.items : [],
+            items: parseOrderItems(o.items),
             payments: [{ method, amount: tot }],
             subtotal: tot, discount_amount: 0, extra_amount: 0, total: tot,
             status: 'completed', origin: o.origin || 'app', app_order_id: o.id,
@@ -3730,9 +3746,9 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       if (o.scheduled_time) lines.push(`HORARIO MARCADO: ${o.scheduled_time}`);
       if (o.urgent_deadline) lines.push(`PRAZO: ${o.urgent_deadline.toUpperCase()}`);
       lines.push(`PEDIDO #${o.id} [${(o.origin || 'app').toUpperCase()}]`);
-      lines.push(`CLIENTE: ${o.customer_name || 'Cliente'} ${(o.customer_phone || o.phone) ? '| ' + (o.customer_phone || o.phone) : ''}`);
+      lines.push(`CLIENTE: ${(o.customer_name || o.name || 'Cliente')} ${(o.customer_phone || o.phone) ? '| ' + (o.customer_phone || o.phone) : ''}`);
       if (o.customer_address || o.address) lines.push(`END:     ${o.customer_address || o.address}`);
-      const itemsTxt = (Array.isArray(o.items) ? o.items : []).map(it => `${it.qty}x ${it.name}`).join(' + ');
+      const itemsTxt = (parseOrderItems(o.items)).map(it => `${it.qty}x ${it.name}`).join(' + ');
       lines.push(`ITENS:   ${itemsTxt}`);
       const method = normalizePayMethod(o.pay_method);
       if ((o.pay_status || 'cod') === 'paid') {
