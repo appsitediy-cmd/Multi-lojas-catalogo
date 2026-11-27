@@ -350,7 +350,7 @@
       <div id="f3-results" class="space-y-1.5 max-h-60 overflow-y-auto scroll-slim"></div>
       <div id="f3-detail" style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="hidden border rounded-2xl p-3 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
-          <img id="f3-det-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-200 p-1 shrink-0 hidden" />
+          <img id="f3-det-img" onclick="openPdvPhotoZoom(this.src, document.getElementById('f3-det-name').textContent)" title="Clique para dar zoom na foto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="" class="w-14 h-14 rounded-xl object-contain bg-white border border-slate-200 p-1 shrink-0 hidden cursor-zoom-in hover:scale-105 transition" />
           <div class="min-w-0">
             <div id="f3-det-name" style="color: var(--pdv-primary-dark);" class="text-xs font-black truncate"></div>
             <div id="f3-det-desc" class="text-[11px] font-semibold text-slate-600 mt-0.5"></div>
@@ -463,16 +463,20 @@
         <div>
           <label class="block text-[11px] font-bold text-slate-600 mb-1">Buscar produto devolvido</label>
           <input id="tr-search" type="text" oninput="renderTrocaProductOptions()" placeholder="Digite nome, EAN ou PLU..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 font-bold mb-1.5" />
-          <select id="tr-prod" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold"></select>
+          <select id="tr-prod" onchange="recalcTrocaSuggestedValue()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold"></select>
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-2">
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">Qtd devolvida</label>
-            <input id="tr-qty" type="text" inputmode="decimal" value="1" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-black" />
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Qtd voltou</label>
+            <input id="tr-qty" type="text" inputmode="decimal" value="1" oninput="recalcTrocaSuggestedValue()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-black" />
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">Cliente (opcional)</label>
-            <input id="tr-client" type="text" placeholder="Consumidor" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+            <label class="block text-[11px] font-bold text-amber-800 mb-1">Valor Vale (R$)</label>
+            <input id="tr-value" type="text" inputmode="decimal" placeholder="0,00" class="w-full bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-2 font-black text-amber-950" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Cliente</label>
+            <input id="tr-client" type="text" placeholder="Nome" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-bold" />
           </div>
         </div>
         <label class="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-xl p-2.5 font-bold text-rose-800 cursor-pointer">
@@ -609,6 +613,35 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: 🔍 ZOOM NA FOTO DO PRODUTO (IGUAL AO APP) ==================== -->
+  <div id="modal-pdv-zoom" onclick="closeModal('modal-pdv-zoom')" class="hidden fixed inset-0 z-[60] bg-slate-950/85 items-center justify-center p-4 cursor-zoom-out">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-3xl max-w-lg w-full p-4 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between gap-2">
+        <h4 id="pdv-zoom-title" class="text-xs sm:text-sm font-black text-slate-800 truncate">Produto</h4>
+        <button onclick="closeModal('modal-pdv-zoom')" class="font-black text-slate-400 hover:text-slate-800 text-lg cursor-pointer">✕</button>
+      </div>
+      <div class="bg-slate-50 rounded-2xl p-3 flex items-center justify-center max-h-[65vh] overflow-hidden">
+        <img id="pdv-zoom-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="" class="max-h-[60vh] max-w-full object-contain rounded-xl" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 🎟️ SELETOR DE VALES-TROCA ATIVOS (F5) ==================== -->
+  <div id="modal-voucher-picker" class="hidden fixed inset-0 z-[60] bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">🎟️ F5 — Selecionar Vale-Troca</h3>
+        <button onclick="closeModal('modal-voucher-picker')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <input id="vp-search" type="text" oninput="renderVoucherPickerList()" placeholder="🔍 Buscar por nome do cliente ou código VT-..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold" />
+      <div id="vp-list" class="space-y-1.5 max-h-56 overflow-y-auto scroll-slim"></div>
+      <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+        <span class="text-[10px] font-bold text-slate-500">Sem código? Lance o valor digitado:</span>
+        <button onclick="useManualVoucherValue()" class="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black cursor-pointer">Usar Valor Manual</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ÁREA OCULTA DE IMPRESSÃO TÉRMICA (80mm/58mm) -->
   <div id="thermal-receipt-area" class="hidden"></div>
 
@@ -665,6 +698,46 @@
     }
     function normText(s) {
       return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+    function levenshteinSmall(a, b) {
+      if (Math.abs(a.length - b.length) > 2) return 3;
+      const m = a.length, n = b.length;
+      const dp = Array.from({ length: m + 1 }, (_, i) => [i]);
+      for (let j = 1; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          dp[i][j] = a[i - 1] === b[j - 1]
+            ? dp[i - 1][j - 1]
+            : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+        }
+      }
+      return dp[m][n];
+    }
+    function smartMatchProduct(p, rawQuery) {
+      const q = normText(rawQuery).trim();
+      if (!q) return true;
+      const rawClean = String(rawQuery || '').trim();
+      if (p.ean && p.ean.includes(rawClean)) return true;
+      if (p.plu && p.plu.toLowerCase() === rawClean.toLowerCase()) return true;
+      if (p.extraEans && p.extraEans.some(x => x.includes(rawClean))) return true;
+      const hay = normText(`${p.name} ${p.plu || ''} ${p.ean || ''}`);
+      if (hay.includes(q)) return true;
+      const tokens = q.split(/\s+/).filter(Boolean);
+      const words = hay.split(/[^a-z0-9]+/).filter(Boolean);
+      return tokens.every(tok => {
+        if (hay.includes(tok)) return true;
+        if (tok.length >= 4) {
+          const maxDist = tok.length >= 7 ? 2 : 1;
+          return words.some(w => w.length >= 3 && levenshteinSmall(tok, w.slice(0, tok.length + 1)) <= maxDist);
+        }
+        return false;
+      });
+    }
+    function openPdvPhotoZoom(src, title) {
+      if (!src || src.startsWith('data:image/svg+xml')) return;
+      document.getElementById('pdv-zoom-img').src = src;
+      document.getElementById('pdv-zoom-title').textContent = title || 'Foto do Produto';
+      openModal('modal-pdv-zoom');
     }
 
     function darkenHex(hex, amt) {
@@ -898,7 +971,7 @@
     // MODAIS & ATALHOS GLOBAIS
     function isAnyModalOpen() {
       return !document.getElementById('pdv-gate').classList.contains('hidden') ||
-        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry']
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry', 'modal-pdv-zoom', 'modal-voucher-picker']
           .some(id => !document.getElementById(id).classList.contains('hidden'));
     }
 
@@ -931,7 +1004,7 @@
       }
       const payOpen = !document.getElementById('modal-payment').classList.contains('hidden');
       if (e.key === 'Escape') {
-        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
+        ['modal-pdv-zoom', 'modal-voucher-picker', 'modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
         return;
       }
       if (payOpen) {
@@ -997,9 +1070,8 @@
 
     function findCatalogProductByCode(code) {
       const c = String(code || '').trim();
-      const low = normText(c);
       return catalog.find(p => p.ean === c || (p.plu && p.plu.toLowerCase() === c.toLowerCase()) || p.extraEans.includes(c))
-        || catalog.find(p => normText(p.name).includes(low));
+        || catalog.find(p => smartMatchProduct(p, c));
     }
 
     function runCommand(raw) {
@@ -1225,22 +1297,11 @@
         return;
       }
       let val = parseBrNumber(document.getElementById('pay-receive-input').value);
-      if (method === 'Vale Troca' && navigator.onLine && sb && currentStore) {
-        const code = prompt('Código do Vale-Troca (ex: VT-1234) — ou deixe vazio para lançar o valor digitado:', '');
-        if (code === null) return;
-        const cleanCode = code.trim().toUpperCase();
-        if (cleanCode) {
-          const { data: vData } = await sb.from('pdv_vouchers')
-            .select('*').eq('store_id', currentStore.id).eq('code', cleanCode).eq('used', false).maybeSingle();
-          if (!vData) {
-            showToast(`⚠️ Vale-Troca "${cleanCode}" não encontrado ou já utilizado!`);
-            return;
-          }
-          val = Math.min(remaining, parseFloat(vData.amount) || val);
-          pendingVoucherCode = cleanCode;
-          showToast(`🎟️ Vale ${cleanCode} (${brl(vData.amount)}) validado!`);
-        }
+      if (method === 'Vale Troca' && !window._bypassVoucherModal && navigator.onLine && sb && currentStore) {
+        await openVoucherPickerModal();
+        return;
       }
+      window._bypassVoucherModal = false;
       if (val <= 0) return;
       if (method === 'Dinheiro' && val > remaining) {
         pendingSaleTroco = +(val - remaining).toFixed(2);
@@ -1407,31 +1468,111 @@
     }
 
     // TROCA / DEVOLUÇÃO / VALE-TROCA
+    let activeVouchersCache = [];
+
+    async function openVoucherPickerModal() {
+      document.getElementById('vp-search').value = '';
+      document.getElementById('vp-list').innerHTML = '<div class="text-xs text-slate-400 font-bold text-center py-4">Buscando vales ativos...</div>';
+      openModal('modal-voucher-picker');
+      const { data } = await sb.from('pdv_vouchers')
+        .select('*').eq('store_id', currentStore.id).eq('used', false).order('created_at', { ascending: false }).limit(50);
+      activeVouchersCache = Array.isArray(data) ? data : [];
+      renderVoucherPickerList();
+      setTimeout(() => document.getElementById('vp-search').focus(), 60);
+    }
+
+    function renderVoucherPickerList() {
+      const q = normText((document.getElementById('vp-search')?.value || '').trim());
+      const list = activeVouchersCache.filter(v => !q || normText(v.client_name).includes(q) || normText(v.code).includes(q) || normText(v.product_name).includes(q));
+      const el = document.getElementById('vp-list');
+      el.innerHTML = list.length ? list.map(v => `
+        <button type="button" onclick="selectVoucherForPayment('${escapeHtml(v.code)}', ${Number(v.amount) || 0})" class="w-full text-left bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl px-3 py-2 flex items-center justify-between gap-2 cursor-pointer">
+          <div class="min-w-0">
+            <div class="text-xs font-black text-amber-950">${escapeHtml(v.code)} • ${escapeHtml(v.client_name || 'Consumidor')}</div>
+            <div class="text-[10px] font-bold text-slate-600 truncate">${escapeHtml(v.product_name || '')}</div>
+          </div>
+          <span class="text-sm font-black text-amber-900 shrink-0">${brl(v.amount)}</span>
+        </button>`).join('') : '<div class="text-xs text-slate-400 font-bold text-center py-4">Nenhum vale-troca ativo encontrado.</div>';
+    }
+
+    function selectVoucherForPayment(code, amount) {
+      closeModal('modal-voucher-picker');
+      pendingVoucherCode = code;
+      const total = getCupomNetTotal();
+      const already = currentPayments.reduce((s, p) => s + p.amount, 0);
+      const rem = Math.max(0, +(total - already).toFixed(2));
+      const useAmt = Math.min(rem, amount);
+      document.getElementById('pay-receive-input').value = useAmt.toFixed(2).replace('.', ',');
+      window._bypassVoucherModal = true;
+      applyPayment('Vale Troca');
+    }
+
+    function useManualVoucherValue() {
+      closeModal('modal-voucher-picker');
+      pendingVoucherCode = '';
+      window._bypassVoucherModal = true;
+      applyPayment('Vale Troca');
+    }
+
+    function printVoucherReceipt(code, client, prodName, amount) {
+      const storeTitle = (currentStore?.name || storeSlug).toUpperCase();
+      document.getElementById('thermal-receipt-area').innerHTML = `
+        <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+          <div style="font-weight:900; font-size:13px;">${escapeHtml(storeTitle)}</div>
+          <div style="font-weight:900; font-size:12px;">VALE-TROCA / CRÉDITO</div>
+          <div style="font-size:10px;">${new Date().toLocaleString('pt-BR')}</div>
+        </div>
+        <div style="text-align:center; padding:8px 0; border-bottom:1px dashed #000; margin-bottom:6px;">
+          <div style="font-size:18px; font-weight:900; letter-spacing:2px;">${escapeHtml(code)}</div>
+          <div style="font-size:16px; font-weight:900; margin-top:4px;">VALOR: ${brl(amount)}</div>
+        </div>
+        <div style="font-size:10px; margin-bottom:6px;">
+          <div><strong>Cliente:</strong> ${escapeHtml(client)}</div>
+          <div><strong>Ref.:</strong> ${escapeHtml(prodName)}</div>
+        </div>
+        <div style="text-align:center; font-size:10px;">Apresente este vale no caixa.</div>
+      `;
+      window.print();
+    }
+
     function openTrocaModal() {
       document.getElementById('tr-search').value = '';
       document.getElementById('tr-qty').value = '1';
       document.getElementById('tr-client').value = '';
       document.getElementById('tr-damaged').checked = false;
       renderTrocaProductOptions();
+      recalcTrocaSuggestedValue();
       openModal('modal-troca');
     }
 
     function renderTrocaProductOptions() {
-      const q = normText((document.getElementById('tr-search')?.value || '').trim());
-      const list = catalog.filter(p => !q || normText(p.name).includes(q) || p.ean.includes(q) || p.plu.toLowerCase() === q).slice(0, 50);
+      const rawQ = (document.getElementById('tr-search')?.value || '').trim();
+      const list = catalog.filter(p => smartMatchProduct(p, rawQ)).slice(0, 50);
       document.getElementById('tr-prod').innerHTML = list.map(p => `<option value="${p.id}">${escapeHtml(p.name)} — ${brl(p.promoPrice || p.price)}</option>`).join('');
+      recalcTrocaSuggestedValue();
+    }
+
+    function recalcTrocaSuggestedValue() {
+      const prodId = Number(document.getElementById('tr-prod')?.value || 0);
+      const prod = catalog.find(x => x.id === prodId);
+      const qty = parseBrNumber(document.getElementById('tr-qty')?.value);
+      const valEl = document.getElementById('tr-value');
+      if (!prod || !valEl) return;
+      const sug = +((prod.promoPrice || prod.price) * (qty > 0 ? qty : 0)).toFixed(2);
+      valEl.value = sug.toFixed(2).replace('.', ',');
     }
 
     async function confirmTroca(mode) {
       const prodId = Number(document.getElementById('tr-prod')?.value || 0);
       const prod = catalog.find(x => x.id === prodId);
-      const qty = parseBrNumber(document.getElementById('tr-qty')?.value) || 1;
+      const qty = parseBrNumber(document.getElementById('tr-qty')?.value) || 0;
+      const customAmount = parseBrNumber(document.getElementById('tr-value')?.value);
       const client = (document.getElementById('tr-client')?.value || '').trim() || 'Consumidor';
       const damaged = !!document.getElementById('tr-damaged')?.checked;
-      if (!prod || qty <= 0) return;
+      if (!prod || customAmount <= 0) { showToast('⚠️ Informe um valor válido para a troca.'); return; }
 
-      const amount = +((prod.promoPrice || prod.price) * qty).toFixed(2);
-      if (!damaged && navigator.onLine) {
+      const amount = +customAmount.toFixed(2);
+      if (!damaged && qty > 0 && navigator.onLine) {
         await sb.rpc('pdv_adjust_stock', { p_product_id: prod.id, p_delta: Math.abs(qty) });
         await loadCatalog();
       }
@@ -1441,7 +1582,12 @@
           await sb.from('pdv_vouchers').insert({ store_id: currentStore.id, code, client_name: client, product_name: prod.name, amount, damaged });
         }
         closeModal('modal-troca');
-        showToast(`🎟️ Vale-Troca ${code} (${brl(amount)}) criado! ${damaged ? 'Avariado (não voltou ao estoque)' : 'Devolvido ao estoque'}.`);
+        showToast(`🎟️ Vale-Troca ${code} (${brl(amount)}) gerado! ${damaged ? 'Avariado (fora do estoque)' : 'Devolvido ao estoque'}.`);
+        if (confirm(`Vale-Troca ${code} (${brl(amount)}) criado!
+
+Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
+          printVoucherReceipt(code, client, prod.name, amount);
+        }
       } else {
         if (navigator.onLine) {
           await sb.from('pdv_cash_movements').insert({ store_id: currentStore.id, unit_code: '002', move_type: 'refund', amount, note: `Estorno troca: ${qty}x ${prod.name}`, operator_email: currentUser?.email || '' });
@@ -1559,13 +1705,16 @@
     }
 
     function renderF3List() {
-      const q = normText(document.getElementById('f3-search').value.trim());
-      const list = catalog.filter(p => !q || normText(p.name).includes(q) || p.plu.toLowerCase() === q || p.ean.includes(q) || p.extraEans.some(x => x.includes(q))).slice(0, 60);
+      const rawQ = document.getElementById('f3-search').value.trim();
+      const list = catalog.filter(p => smartMatchProduct(p, rawQ)).slice(0, 60);
       document.getElementById('f3-results').innerHTML = list.length ? list.map(p => `
-        <div onclick="showF3Detail(${p.id})" ondblclick="addToCupom(catalog.find(x=>x.id===${p.id}),1); closeModal('modal-f3');" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between cursor-pointer">
-          <div class="min-w-0 pr-2">
-            <div class="text-xs font-black text-slate-800 truncate">${p.plu ? `[${escapeHtml(p.plu)}] ` : ''}${escapeHtml(p.name)}</div>
-            <div class="text-[10px] font-semibold text-slate-500">${p.ean ? `EAN: ${escapeHtml(p.ean)} • ` : ''}Est: ${p.stock != null ? `${p.stock} ${p.unit}` : 'Livre'}</div>
+        <div onclick="showF3Detail(${p.id})" ondblclick="addToCupom(catalog.find(x=>x.id===${p.id}),1); closeModal('modal-f3');" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-2 flex items-center justify-between gap-2 cursor-pointer">
+          <div class="flex items-center gap-2 min-w-0">
+            ${p.image ? `<img src="${escapeHtml(p.image)}" onclick="event.stopPropagation(); openPdvPhotoZoom(this.src, '${escapeHtml(p.name).replace(/'/g, '')}');" title="Zoom na foto" class="w-9 h-9 rounded-lg object-contain bg-white border border-slate-200 p-0.5 shrink-0 cursor-zoom-in" />` : ''}
+            <div class="min-w-0">
+              <div class="text-xs font-black text-slate-800 truncate">${p.plu ? `[${escapeHtml(p.plu)}] ` : ''}${escapeHtml(p.name)}</div>
+              <div class="text-[10px] font-semibold text-slate-500">${p.ean ? `EAN: ${escapeHtml(p.ean)} • ` : ''}Est: ${p.stock != null ? `${p.stock} ${p.unit}` : 'Livre'}</div>
+            </div>
           </div>
           <span style="color: var(--pdv-primary-dark);" class="text-xs font-black shrink-0">${brl(p.promoPrice || p.price)}</span>
         </div>`).join('') : '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum produto encontrado.</div>';
@@ -1828,7 +1977,7 @@
       const q = normText((document.getElementById('repo-search')?.value || '').trim());
       const flt = document.getElementById('repo-filter')?.value || 'low';
       return catalog.filter(p => {
-        if (q && !normText(p.name).includes(q) && !p.ean.includes(q) && p.plu.toLowerCase() !== q) return false;
+        if (q && !smartMatchProduct(p, document.getElementById('repo-search')?.value || '')) return false;
         if (flt === 'low') {
           if (p.stock == null) return false;
           return p.stock <= 0 || (p.minStock != null && p.stock <= p.minStock);
@@ -1897,10 +2046,7 @@
         if (p) lines.push(`• ${q} ${p.unit} — ${p.name}`);
       });
       if (!lines.length) { showToast('⚠️ Preencha ao menos 1 quantidade antes de copiar.'); return; }
-      const txt = `📦 *Pedido de Reposição — ${currentStore?.name || storeSlug}*
-
-${lines.join('
-')}`;
+      const txt = `📦 *Pedido de Reposição — ${currentStore?.name || storeSlug}*\n\n${lines.join('\n')}`;
       navigator.clipboard?.writeText(txt);
       showToast(`📋 Lista com ${lines.length} produto(s) copiada para o WhatsApp!`);
     }
@@ -1995,8 +2141,8 @@ ${lines.join('
     }
 
     function renderStockEntryOptions() {
-      const q = normText((document.getElementById('se-search')?.value || '').trim());
-      const list = catalog.filter(p => !q || normText(p.name).includes(q) || p.ean.includes(q) || p.plu.toLowerCase() === q).slice(0, 50);
+      const rawQ = (document.getElementById('se-search')?.value || '').trim();
+      const list = catalog.filter(p => smartMatchProduct(p, rawQ)).slice(0, 50);
       document.getElementById('se-prod').innerHTML = list.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (Est: ${p.stock != null ? p.stock : 'Livre'})</option>`).join('');
     }
 
