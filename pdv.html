@@ -56,6 +56,19 @@
         padding: 4px;
       }
     }
+    @keyframes pulseUrgent {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); }
+      50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+    }
+    @keyframes gentleShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-3px); }
+      40% { transform: translateX(3px); }
+      60% { transform: translateX(-2px); }
+      80% { transform: translateX(2px); }
+    }
+    .urgent-glow { animation: pulseUrgent 1.5s infinite; }
+    .alarm-shake { animation: pulseUrgent 1.2s infinite, gentleShake 0.6s ease-in-out 2; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col select-none">
@@ -132,12 +145,17 @@
     <!-- COLUNA ESQUERDA: PEDIDOS DO APP + BARRA DE ATALHOS EMBAIXO -->
     <aside class="lg:col-span-3 bg-white rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between overflow-hidden min-h-[420px]">
       <div class="p-3.5 flex-1 flex flex-col min-h-0">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
-          <h2 style="color: var(--pdv-primary-dark);" class="text-xs font-black flex items-center gap-1.5">📱 Pedidos do App</h2>
-          <div class="flex items-center gap-1.5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
+          <h2 style="color: var(--pdv-primary-dark);" class="text-xs font-black flex items-center gap-1.5">🛵 Pedidos &amp; Entregas</h2>
+          <div class="flex items-center gap-1">
+            <span id="orders-urgent-badge" class="hidden px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black animate-pulse">🚨 0</span>
             <span id="orders-badge" class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black">0</span>
             <button onclick="loadAppOrders()" title="Atualizar pedidos" class="text-xs text-slate-500 hover:text-slate-900 cursor-pointer">🔄</button>
           </div>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 mb-2.5">
+          <button onclick="openMotoboyModal()" style="background-color: var(--pdv-primary);" class="py-1.5 px-2 rounded-xl text-white text-[11px] font-black shadow-sm cursor-pointer">🛵 Painel (M)</button>
+          <button onclick="openClientsModal()" class="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-black cursor-pointer">👥 Clientes</button>
         </div>
 
         <div id="left-orders-list" class="space-y-2 flex-1 overflow-y-auto scroll-slim pr-0.5"></div>
@@ -189,6 +207,8 @@
           <button onclick="reprintLastSale()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">I</kbd> Imprimir Última</button>
         </div>
         <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+          <button onclick="openMotoboyModal()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 text-xs font-extrabold cursor-pointer">🛵 <kbd class="font-black">M</kbd> Painel Entregas</button>
+          <button onclick="openClientsModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">👥 Clientes</button>
           <button onclick="openStockEntryModal(false)" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-extrabold cursor-pointer">📥 <kbd class="font-black">E</kbd> Entrada Mercadoria</button>
           <button onclick="openTrocaModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🔄 <kbd class="font-black">T</kbd> Troca</button>
           <button onclick="openCaixaMoveModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">💵 Sangria / Suprimento</button>
@@ -238,9 +258,17 @@
               <div style="color: var(--pdv-primary);" class="text-[10px] font-black uppercase">TOTAL DA VENDA</div>
               <div id="cupom-total-big" style="color: var(--pdv-primary-dark);" class="text-3xl sm:text-4xl font-black tabular-nums">R$ 0,00</div>
             </div>
-            <button onclick="openPaymentScreen()" class="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-md cursor-pointer active:scale-95 transition">
-              💰 RECEBER
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openDeliveryCheckoutModal('cod')" class="px-3.5 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs shadow cursor-pointer active:scale-95 transition">
+                🟠 Salvar na Fila<br/><span class="text-[9px] font-bold opacity-90">Cobrar na entrega</span>
+              </button>
+              <button onclick="openDeliveryCheckoutModal('paid')" class="px-3.5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow cursor-pointer active:scale-95 transition">
+                🔵 Receber + Entrega<br/><span class="text-[9px] font-bold opacity-90">Já pago · Motoboy</span>
+              </button>
+              <button onclick="openPaymentScreen()" class="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-md cursor-pointer active:scale-95 transition">
+                💰 RECEBER
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -710,6 +738,301 @@
   <!-- ÁREA OCULTA DE IMPRESSÃO TÉRMICA (80mm/58mm) -->
   <div id="thermal-receipt-area" class="hidden"></div>
 
+
+  <!-- ==================== MODAL: 🛵 PAINEL MOTOBOY / ENTREGAS (FAROL) ==================== -->
+  <div id="modal-motoboy" class="hidden fixed inset-0 z-50 bg-slate-900/80 items-center justify-center p-2 sm:p-4">
+    <div class="bg-slate-100 rounded-3xl max-w-6xl w-full max-h-[94vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">🛵</span>
+          <div>
+            <h3 class="text-sm sm:text-base font-black">Painel Motoboy &amp; Fila de Entregas (Farol)</h3>
+            <p class="text-[11px] font-semibold text-slate-300">App + WhatsApp + Balcão na mesma fila · Horário marcado sobe sozinho</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="openMotoboySummaryModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer">💼 Acerto Motoboy</button>
+          <button type="button" onclick="printMotoboyRoute(false)" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black cursor-pointer">🖨️ Imprimir Rota</button>
+          <button type="button" onclick="loadAppOrders()" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black cursor-pointer">🔄 Atualizar</button>
+          <button type="button" onclick="closeModal('modal-motoboy')" class="font-black text-slate-300 hover:text-white text-lg px-2 cursor-pointer">✕</button>
+        </div>
+      </div>
+
+      <div class="p-4 overflow-y-auto scroll-slim flex-1 space-y-3.5">
+        <!-- Banner Alerta de Horário Marcado -->
+        <div id="mb-sched-banner" class="hidden bg-red-600 text-white rounded-2xl px-4 py-3 shadow-lg flex flex-wrap items-center justify-between gap-2 urgent-glow">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">⏰</span>
+            <div>
+              <div class="text-xs sm:text-sm font-black uppercase">Entrega com Horário Marcado Chegando na Hora!</div>
+              <div id="mb-sched-banner-text" class="text-xs font-bold text-red-100"></div>
+            </div>
+          </div>
+          <button type="button" onclick="setMbStatusFilter('urgent')" class="px-3 py-1.5 rounded-xl bg-white text-red-700 text-xs font-black cursor-pointer">Ver Urgentes</button>
+        </div>
+
+        <!-- 4 Cards do Farol (SEM VALORES R$ — PRIVACIDADE NO BALCÃO + LETRA DOBRADA) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <button type="button" onclick="setMbStatusFilter('urgent')" class="text-left bg-red-600 hover:bg-red-700 text-white rounded-2xl p-3.5 shadow-md transition cursor-pointer">
+            <div class="flex items-center justify-between"><span class="text-xs sm:text-sm font-black uppercase">🔴 Urgentes</span><span class="text-lg">🚨</span></div>
+            <div id="mb-kpi-urgent" class="text-3xl sm:text-4xl font-black my-0.5">0</div>
+            <div class="text-sm sm:text-base font-black leading-tight">Entrega urgente</div>
+          </button>
+          <button type="button" onclick="setMbStatusFilter('cod')" class="text-left bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-3.5 shadow-md transition cursor-pointer">
+            <div class="flex items-center justify-between"><span class="text-xs sm:text-sm font-black uppercase">🟠 Cobrar na Entrega</span><span class="text-lg">💰</span></div>
+            <div id="mb-kpi-cod" class="text-3xl sm:text-4xl font-black my-0.5">0</div>
+            <div id="mb-kpi-cod-lbl" class="text-sm sm:text-base font-black leading-tight">Pendências de acerto</div>
+          </button>
+          <button type="button" onclick="setMbStatusFilter('paid')" class="text-left bg-blue-600 hover:bg-blue-700 text-white rounded-2xl p-3.5 shadow-md transition cursor-pointer">
+            <div class="flex items-center justify-between"><span class="text-xs sm:text-sm font-black uppercase">🔵 Já Pagos</span><span class="text-lg">✅</span></div>
+            <div id="mb-kpi-paid" class="text-3xl sm:text-4xl font-black my-0.5">0</div>
+            <div class="text-sm sm:text-base font-black leading-tight">Só entregar (não cobrar)</div>
+          </button>
+          <button type="button" onclick="setMbStatusFilter('done')" class="text-left bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl p-3.5 shadow-md transition cursor-pointer">
+            <div class="flex items-center justify-between"><span class="text-xs sm:text-sm font-black uppercase">🟢 Entregues Hoje</span><span class="text-lg">🏁</span></div>
+            <div id="mb-kpi-done" class="text-3xl sm:text-4xl font-black my-0.5">0</div>
+            <div class="text-sm sm:text-base font-black leading-tight">Concluído</div>
+          </button>
+        </div>
+
+        <!-- Filtros + Despacho em Lote -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" data-mbst="active" onclick="setMbStatusFilter('active')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">📋 Fila Ativa</button>
+              <button type="button" data-mbst="urgent" onclick="setMbStatusFilter('urgent')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">🔴 Entrega urgente</button>
+              <button type="button" data-mbst="scheduled" onclick="setMbStatusFilter('scheduled')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">⏰ Horário Marcado</button>
+              <button type="button" data-mbst="cod" onclick="setMbStatusFilter('cod')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">🟠 A Cobrar</button>
+              <button type="button" data-mbst="paid" onclick="setMbStatusFilter('paid')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">🔵 Já Pagos</button>
+              <button type="button" data-mbst="out" onclick="setMbStatusFilter('out')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">🛵 Na Rua</button>
+              <button type="button" data-mbst="done" onclick="setMbStatusFilter('done')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">🟢 Concluídos</button>
+              <button type="button" data-mbst="cancelled" onclick="setMbStatusFilter('cancelled')" class="mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer">❌ Cancelados</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" data-mbog="all" onclick="setMbOriginFilter('all')" class="mb-og-pill px-2.5 py-1.5 rounded-xl text-xs font-black cursor-pointer">Todas</button>
+              <button type="button" data-mbog="app" onclick="setMbOriginFilter('app')" class="mb-og-pill px-2.5 py-1.5 rounded-xl text-xs font-black cursor-pointer">📱 App</button>
+              <button type="button" data-mbog="whats" onclick="setMbOriginFilter('whats')" class="mb-og-pill px-2.5 py-1.5 rounded-xl text-xs font-black cursor-pointer">💬 Whats</button>
+              <button type="button" data-mbog="balcao" onclick="setMbOriginFilter('balcao')" class="mb-og-pill px-2.5 py-1.5 rounded-xl text-xs font-black cursor-pointer">🏪 Balcão</button>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+            <input id="mb-search" type="text" oninput="renderMotoboyPanel()" placeholder="🔍 Buscar por cliente, WhatsApp, endereço ou produto..." class="flex-1 min-w-[200px] bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold" />
+            <button id="mb-batch-btn" type="button" onclick="dispatchSelectedDeliveries()" class="hidden px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black shadow cursor-pointer">🛵 Despachar Selecionados + Rota</button>
+          </div>
+        </div>
+
+        <!-- Lista de Cards -->
+        <div id="mb-orders-list" class="space-y-2.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 👥 BASE DE CLIENTES (REPETIR PEDIDO) ==================== -->
+  <div id="modal-clients" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 style="color: var(--pdv-primary-dark);" class="text-sm sm:text-base font-black">👥 Base de Clientes (Puxa automático pelo WhatsApp)</h3>
+          <p class="text-[11px] font-semibold text-slate-500">Clique em "Repetir no Caixa" para jogar a última compra do cliente direto no PDV.</p>
+        </div>
+        <button type="button" onclick="closeModal('modal-clients')" class="font-black text-slate-400 hover:text-slate-800 text-lg cursor-pointer">✕</button>
+      </div>
+      <div class="p-4 space-y-3 overflow-y-auto scroll-slim flex-1">
+        <input id="clients-search" type="text" oninput="renderClientsModal()" placeholder="🔍 Buscar cliente por nome, WhatsApp ou rua..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold" />
+        <div id="clients-list-grid" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: ENVIAR CARRINHO DO PDV PARA FILA DE ENTREGA ==================== -->
+  <div id="modal-delivery-checkout" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl">
+      <div id="deliv-co-header" class="px-5 py-3.5 text-white flex items-center justify-between">
+        <h3 id="deliv-co-title" class="text-sm sm:text-base font-black"></h3>
+        <button type="button" onclick="closeModal('modal-delivery-checkout')" class="font-black text-lg cursor-pointer">✕</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <div id="deliv-co-summary" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold text-slate-700"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-300 bg-white font-black cursor-pointer">
+            <input type="radio" name="deliv-co-origin" value="balcao" /> 🏪 Balcão
+          </label>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-300 bg-white font-black cursor-pointer">
+            <input type="radio" name="deliv-co-origin" value="whats" /> 💬 WhatsApp
+          </label>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5">
+          <label class="font-black text-slate-700 block">📱 WhatsApp do Cliente (puxa cadastro salvo)</label>
+          <input id="deliv-co-phone" type="text" oninput="lookupStoreCustomerByPhone(this.value)" placeholder="Ex.: 11999887766" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          <div id="deliv-co-match" class="hidden text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">✅ Cliente encontrado na base! Nome e endereço preenchidos.</div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="font-black text-slate-600 block mb-1">Nome do Cliente</label>
+            <input id="deliv-co-name" type="text" placeholder="Nome do cliente" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+          <div>
+            <label id="deliv-co-method-lbl" class="font-black text-slate-600 block mb-1">Forma de Pagamento</label>
+            <select id="deliv-co-method" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-bold">
+              <option value="Dinheiro">💵 Dinheiro</option>
+              <option value="Débito">💳 Débito</option>
+              <option value="Crédito">💳 Crédito</option>
+              <option value="PIX">💠 Pix</option>
+            </select>
+          </div>
+        </div>
+        <div id="deliv-co-change-wrap">
+          <label class="font-black text-orange-900 block mb-1">Troco para quanto? (opcional, se for Dinheiro)</label>
+          <input id="deliv-co-change" type="text" inputmode="decimal" placeholder="Ex.: 200,00" class="w-full bg-orange-50/60 border border-orange-300 rounded-xl px-3 py-2 font-bold" />
+        </div>
+        <div>
+          <label class="font-black text-slate-600 block mb-1">Endereço + Referência</label>
+          <input id="deliv-co-address" type="text" placeholder="Rua, Nº, Bairro — Ponto de referência" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-2xl p-3 space-y-2">
+          <div class="font-black text-purple-900">⏰ Entrega com Horário Marcado (opcional)</div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] font-bold text-purple-800 block mb-1">Entregar às:</label>
+              <input id="deliv-co-sched" type="time" class="w-full bg-white border border-purple-300 rounded-xl px-2.5 py-1.5 font-black" />
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-purple-800 block mb-1">Avisar &amp; subir pro topo:</label>
+              <select id="deliv-co-alert" class="w-full bg-white border border-purple-300 rounded-xl px-2.5 py-1.5 font-bold">
+                <option value="15">15 min antes</option>
+                <option value="30" selected>30 min antes</option>
+                <option value="45">45 min antes</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <label class="flex items-center gap-2 font-black text-red-700 cursor-pointer">
+            <input id="deliv-co-urgent" type="checkbox" class="w-4 h-4 accent-red-600" /> 🚨 ENTREGA URGENTE AGORA
+          </label>
+          <input id="deliv-co-deadline" type="text" placeholder="Ex.: Cliente sai às 12:00" class="bg-white border border-red-300 rounded-xl px-2.5 py-1.5 text-xs font-bold w-48" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-delivery-checkout')" class="px-4 py-2 rounded-xl bg-slate-100 font-black text-slate-700 cursor-pointer">Cancelar</button>
+          <button type="button" onclick="confirmDeliveryCheckout()" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black cursor-pointer">✅ Confirmar e Enviar p/ Fila</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: EDITAR PEDIDO DE ENTREGA ==================== -->
+  <div id="modal-delivery-edit" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <h3 id="deliv-ed-title" class="text-sm sm:text-base font-black">✏️ Editar Pedido</h3>
+        <button type="button" onclick="closeModal('modal-delivery-edit')" class="font-black text-lg cursor-pointer">✕</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center gap-2 p-2.5 rounded-xl border-2 border-orange-400 bg-orange-50 font-black text-orange-900 cursor-pointer">
+            <input type="radio" name="deliv-ed-paystatus" value="cod" onchange="toggleDelivEditChange()" /> 🟠 Cobrar na Entrega
+          </label>
+          <label class="flex items-center gap-2 p-2.5 rounded-xl border-2 border-blue-400 bg-blue-50 font-black text-blue-900 cursor-pointer">
+            <input type="radio" name="deliv-ed-paystatus" value="paid" onchange="toggleDelivEditChange()" /> 🔵 Já Pago
+          </label>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="font-black text-slate-600 block mb-1">Forma de Pagamento</label>
+            <select id="deliv-ed-method" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-bold">
+              <option value="Dinheiro">💵 Dinheiro</option>
+              <option value="Débito">💳 Débito</option>
+              <option value="Crédito">💳 Crédito</option>
+              <option value="PIX">💠 Pix</option>
+            </select>
+          </div>
+          <div id="deliv-ed-change-wrap">
+            <label class="font-black text-orange-900 block mb-1">Troco para (opcional)</label>
+            <input id="deliv-ed-change" type="text" inputmode="decimal" placeholder="Ex.: 200,00" class="w-full bg-orange-50/60 border border-orange-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="font-black text-slate-600 block mb-1">Nome do Cliente</label>
+            <input id="deliv-ed-name" type="text" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+          <div>
+            <label class="font-black text-slate-600 block mb-1">WhatsApp</label>
+            <input id="deliv-ed-phone" type="text" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+        </div>
+        <div>
+          <label class="font-black text-slate-600 block mb-1">Endereço + Referência</label>
+          <input id="deliv-ed-address" type="text" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+        </div>
+        <div class="grid grid-cols-2 gap-2 bg-purple-50 border border-purple-200 rounded-2xl p-3">
+          <div>
+            <label class="font-black text-purple-900 block mb-1">⏰ Horário Marcado</label>
+            <input id="deliv-ed-sched" type="time" class="w-full bg-white border border-purple-300 rounded-xl px-2.5 py-1.5 font-black" />
+          </div>
+          <div>
+            <label class="font-black text-purple-900 block mb-1">Avisar antes</label>
+            <select id="deliv-ed-alert" class="w-full bg-white border border-purple-300 rounded-xl px-2.5 py-1.5 font-bold">
+              <option value="15">15 min antes</option>
+              <option value="30">30 min antes</option>
+              <option value="45">45 min antes</option>
+            </select>
+          </div>
+        </div>
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <label class="flex items-center gap-2 font-black text-red-700 cursor-pointer">
+            <input id="deliv-ed-urgent" type="checkbox" class="w-4 h-4 accent-red-600" /> 🚨 Entrega urgente
+          </label>
+          <input id="deliv-ed-deadline" type="text" placeholder="Ex.: Cliente sai às 12:00" class="bg-white border border-red-300 rounded-xl px-2.5 py-1.5 text-xs font-bold w-44" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-delivery-edit')" class="px-4 py-2 rounded-xl bg-slate-100 font-black text-slate-700 cursor-pointer">Cancelar</button>
+          <button type="button" onclick="saveDeliveryEdit()" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black cursor-pointer">💾 Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CONFIRMAR ACERTO DO MOTOBOY ==================== -->
+  <div id="modal-delivery-settle" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden">
+      <div class="px-5 py-3.5 bg-orange-500 text-white flex items-center justify-between">
+        <h3 class="text-sm font-black">💵 Confirmar Acerto do Motoboy</h3>
+        <button type="button" onclick="closeModal('modal-delivery-settle')" class="font-black text-lg cursor-pointer">✕</button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <div id="deliv-settle-summary" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 font-bold space-y-1"></div>
+        <div>
+          <label class="font-black text-slate-700 block mb-1">Forma recebida na entrega:</label>
+          <select id="deliv-settle-method" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-black text-slate-900">
+            <option value="Dinheiro">💵 Dinheiro</option>
+            <option value="Débito">💳 Débito</option>
+            <option value="Crédito">💳 Crédito</option>
+            <option value="PIX">💠 Pix</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-delivery-settle')" class="px-4 py-2 rounded-xl bg-slate-100 font-black cursor-pointer">Voltar</button>
+          <button type="button" onclick="confirmDeliverySettle()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black cursor-pointer">✅ Confirmar Acerto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CONFERÊNCIA PRIVADA DO MALOTE DO MOTOBOY ==================== -->
+  <div id="modal-motoboy-summary" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden">
+      <div class="px-5 py-3.5 bg-indigo-700 text-white flex items-center justify-between">
+        <h3 class="text-sm font-black">💼 Conferência Privada — Malote do Motoboy</h3>
+        <button type="button" onclick="closeModal('modal-motoboy-summary')" class="font-black text-lg cursor-pointer">✕</button>
+      </div>
+      <div id="mb-summary-body" class="p-5 space-y-3 text-xs"></div>
+      <div class="px-5 py-3 border-t border-slate-100 flex justify-end">
+        <button type="button" onclick="closeModal('modal-motoboy-summary')" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black cursor-pointer">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div id="toast" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white px-4 py-2.5 rounded-2xl text-xs font-extrabold shadow-xl"></div>
 
@@ -1006,11 +1329,13 @@
       const { data } = await sb.from('customer_orders')
         .select('*')
         .eq('store_id', currentStore.id)
-        .gte('created_at', startToday.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(30);
+        .gte('order_date', startToday.toISOString())
+        .order('order_date', { ascending: false })
+        .limit(100);
       appOrders = Array.isArray(data) ? data : [];
       renderAppOrders();
+      if (!document.getElementById('modal-motoboy')?.classList.contains('hidden')) renderMotoboyPanel();
+      loadStoreCustomers();
     }
 
     async function loadTodaySales() {
@@ -1042,7 +1367,7 @@
     // MODAIS & ATALHOS GLOBAIS
     function isAnyModalOpen() {
       return !document.getElementById('pdv-gate').classList.contains('hidden') ||
-        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry', 'modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val']
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry', 'modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-motoboy', 'modal-clients', 'modal-delivery-checkout', 'modal-delivery-edit', 'modal-delivery-settle', 'modal-motoboy-summary']
           .some(id => !document.getElementById(id).classList.contains('hidden'));
     }
 
@@ -1075,7 +1400,7 @@
       }
       const payOpen = !document.getElementById('modal-payment').classList.contains('hidden');
       if (e.key === 'Escape') {
-        ['modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
+        ['modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-delivery-edit', 'modal-delivery-settle', 'modal-delivery-checkout', 'modal-motoboy-summary', 'modal-clients', 'modal-motoboy', 'modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
         return;
       }
       if (payOpen) {
@@ -1108,6 +1433,7 @@
             if (e.key.toLowerCase() === 'g') { e.preventDefault(); openGranelValueModal(); return; }
             if (e.key.toLowerCase() === 'e') { e.preventDefault(); openStockEntryModal(false); return; }
             if (e.key.toLowerCase() === 't') { e.preventDefault(); openTrocaModal(); return; }
+            if (e.key.toLowerCase() === 'm') { e.preventDefault(); openMotoboyModal(); return; }
           }
           if (activeEl !== mainInp && !e.ctrlKey && !e.altKey && !e.metaKey) {
             if (e.key === 'Enter') {
@@ -1268,23 +1594,46 @@
     // PEDIDOS DO APP
     function renderAppOrders() {
       const el = document.getElementById('left-orders-list');
-      document.getElementById('orders-badge').textContent = String(appOrders.length);
-      if (!appOrders.length) {
+      const activeList = appOrders.filter(o => (o.delivery_status || 'waiting') !== 'done' && (o.delivery_status || 'waiting') !== 'cancelled');
+      const urgentCount = activeList.filter(o => isDeliveryEffectivelyUrgent(o)).length;
+      document.getElementById('orders-badge').textContent = String(activeList.length);
+      const ub = document.getElementById('orders-urgent-badge');
+      if (ub) {
+        if (urgentCount > 0) { ub.textContent = `🚨 ${urgentCount}`; ub.classList.remove('hidden'); }
+        else ub.classList.add('hidden');
+      }
+      if (!activeList.length) {
         const logoHtml = currentStore?.logo_url
           ? `<img src="${escapeHtml(currentStore.logo_url)}" alt="" class="w-20 h-20 object-contain rounded-2xl border border-slate-200 bg-white p-1" />`
           : `<div style="background-color: var(--pdv-soft); color: var(--pdv-primary-dark);" class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-black">PDV</div>`;
-        el.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center py-8 text-slate-400 space-y-2">${logoHtml}<div class="text-xs font-bold">Nenhum pedido do App hoje</div></div>`;
+        el.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center py-8 text-slate-400 space-y-2">${logoHtml}<div class="text-xs font-bold">Nenhuma entrega ativa</div></div>`;
         return;
       }
-      el.innerHTML = appOrders.map((o, i) => `
-        <div style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="border rounded-2xl p-2.5 space-y-1.5">
-          <div style="color: var(--pdv-primary-dark);" class="flex items-center justify-between text-xs font-black">
-            <span class="truncate">${escapeHtml(o.customer_name || 'Cliente App')}</span>
-            <span class="shrink-0">${brl(o.total)}</span>
+      const sorted = sortDeliveriesSmart(activeList);
+      el.innerHTML = sorted.map(o => {
+        const idx = appOrders.indexOf(o);
+        const urg = isDeliveryEffectivelyUrgent(o);
+        const cod = (o.pay_status || 'cod') === 'cod';
+        const schedQuiet = isDeliveryScheduledQuiet(o);
+        const borderCls = urg ? 'border-l-4 border-red-600 bg-red-50/50' : (schedQuiet ? 'border-l-4 border-purple-500 bg-purple-50/40' : (cod ? 'border-l-4 border-orange-500 bg-orange-50/40' : 'border-l-4 border-blue-600 bg-blue-50/40'));
+        const origLbl = o.origin === 'whats' ? '💬' : (o.origin === 'balcao' ? '🏪' : '📱');
+        const tag = urg ? '🚨 URGENTE' : (schedQuiet ? `⏰ ${escapeHtml(o.scheduled_time)}` : (cod ? '🟠 A Cobrar' : '🔵 Já Pago'));
+        return `
+        <div class="border border-slate-200 ${borderCls} rounded-2xl p-2.5 space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] font-black text-slate-900">
+            <span class="truncate">${origLbl} ${escapeHtml(o.customer_name || 'Cliente')}</span>
+            <span class="shrink-0 text-[10px]">${tag}</span>
           </div>
-          <div class="text-[10px] font-semibold text-slate-500">${new Date(o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-          <button onclick="pullAppOrder(${i})" style="background-color: var(--pdv-primary);" class="w-full py-1.5 rounded-xl text-white text-[11px] font-black cursor-pointer">📥 Puxar p/ Caixa</button>
-        </div>`).join('');
+          <div class="flex items-center justify-between text-[10px] font-bold text-slate-500">
+            <span>${new Date(o.order_date || o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+            <span>${o.delivery_status === 'out' ? '🛵 Na rua' : '📦 Na fila'}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1">
+            <button onclick="openMotoboyModal()" style="background-color: var(--pdv-primary);" class="py-1 rounded-lg text-white text-[10px] font-black cursor-pointer">🛵 Painel</button>
+            <button onclick="pullAppOrder(${idx})" class="py-1 rounded-lg bg-white border border-slate-300 text-slate-800 text-[10px] font-black cursor-pointer">📥 Caixa</button>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     function pullAppOrder(idx) {
@@ -1441,6 +1790,18 @@
       }
       pendingVoucherCode = '';
       const saved = await persistSale(salePayload);
+      if (salePayload.app_order_id && navigator.onLine && sb && currentStore) {
+        const firstPay = normalizePayMethod(salePayload.payments?.[0]?.method || 'Dinheiro');
+        await sb.from('customer_orders').update({
+          pay_status: 'paid',
+          original_pay_status: 'paid',
+          pay_method: firstPay,
+          payment: firstPay,
+          linked_sale_id: (saved && typeof saved.id === 'number') ? saved.id : null,
+          stock_deducted: true
+        }).eq('id', salePayload.app_order_id);
+        loadAppOrders();
+      }
       const record = {
         id: saved?.id || salePayload.local_uid,
         time: nowStr,
@@ -2087,10 +2448,21 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       let grandTotal = 0;
       salesHistory.forEach(s => {
         grandTotal += s.total;
-        (s.payments || []).forEach(p => { byMethod[p.method] = (byMethod[p.method] || 0) + Number(p.amount || 0); });
+        (s.payments || []).forEach(p => {
+          const mKey = (String(p.method || '').toUpperCase() === 'PIX') ? 'PIX' : p.method;
+          byMethod[mKey] = (byMethod[mKey] || 0) + Number(p.amount || 0);
+        });
       });
+      const pendingCodDeliveries = appOrders.filter(o => (o.delivery_status || 'waiting') !== 'done' && (o.delivery_status || 'waiting') !== 'cancelled' && (o.pay_status || 'cod') === 'cod');
+      const pendingCodTotal = pendingCodDeliveries.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+      const pendingCodAlertHtml = pendingCodDeliveries.length ? `
+        <div class="bg-red-50 border-2 border-red-300 rounded-2xl p-3 space-y-1.5 text-red-900">
+          <div class="text-xs font-black">⚠️ Atenção: ${pendingCodDeliveries.length} entrega(s) a cobrar sem acerto do motoboy (${brl(pendingCodTotal)})</div>
+          <button type="button" onclick="closeModal('modal-f12'); openMotoboyModal(); setMbStatusFilter('cod');" class="px-3 py-1.5 rounded-xl bg-red-600 text-white text-[11px] font-black cursor-pointer">🛵 Abrir Pendências do Motoboy</button>
+        </div>` : '';
       const expectedCash = Math.max(0, +(byMethod.Dinheiro + totalSuprimento - totalSangria - totalRefund).toFixed(2));
       document.getElementById('f12-body').innerHTML = `
+        ${pendingCodAlertHtml}
         <div class="grid grid-cols-2 gap-2">
           <div style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="border rounded-2xl p-3 text-center">
             <div class="text-[10px] font-bold text-slate-500">ATENDIMENTOS HOJE</div>
@@ -2596,6 +2968,804 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       console.error('[bootPdv error]', err);
       showGateLogin('Faça login com a conta de Gestor para abrir o PDV.');
     });
+
+    // ==================== ETAPA 5: PAINEL MOTOBOY / ENTREGAS + CLIENTES ====================
+    let storeCustomersList = [];
+    let mbStatusFilter = 'active';
+    let mbOriginFilter = 'all';
+    let mbSelectedBatch = new Set();
+    let mbAlertedIds = new Set();
+    let delivCheckoutMode = 'paid';
+    let delivEditId = null;
+    let delivSettleId = null;
+    let activeSelectedCustomer = null;
+    let deliveryActionBusy = false;
+
+    function normalizePayMethod(m) {
+      const s = String(m || '').trim();
+      if (/pix/i.test(s)) return 'PIX';
+      if (/d[eé]bito/i.test(s)) return 'Débito';
+      if (/cr[eé]dito/i.test(s)) return 'Crédito';
+      return 'Dinheiro';
+    }
+
+    function hmToMins(hm) {
+      if (!hm || !/^\d{2}:\d{2}$/.test(hm)) return null;
+      const [h, m] = hm.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function getLocalNowMins() {
+      const n = new Date();
+      return n.getHours() * 60 + n.getMinutes();
+    }
+
+    function isDeliveryScheduledAlert(o) {
+      const st = o.delivery_status || 'waiting';
+      if (!o.scheduled_time || st === 'done' || st === 'cancelled') return false;
+      const target = hmToMins(o.scheduled_time);
+      if (target == null) return false;
+      return (target - getLocalNowMins()) <= (parseInt(o.alert_mins, 10) || 30);
+    }
+
+    function isDeliveryScheduledQuiet(o) {
+      const st = o.delivery_status || 'waiting';
+      return Boolean(o.scheduled_time && st !== 'done' && st !== 'cancelled' && !isDeliveryScheduledAlert(o));
+    }
+
+    function isDeliveryEffectivelyUrgent(o) {
+      const st = o.delivery_status || 'waiting';
+      if (st === 'done' || st === 'cancelled') return false;
+      return Boolean(o.is_urgent || isDeliveryScheduledAlert(o));
+    }
+
+    function sortDeliveriesSmart(list) {
+      return [...list].sort((a, b) => {
+        const rank = (o) => {
+          const st = o.delivery_status || 'waiting';
+          if (st === 'cancelled') return 5;
+          if (st === 'done') return 4;
+          if (isDeliveryScheduledAlert(o)) return 0;
+          if (o.is_urgent) return 1;
+          if (isDeliveryScheduledQuiet(o)) return 3;
+          return 2;
+        };
+        const ra = rank(a), rb = rank(b);
+        if (ra !== rb) return ra - rb;
+        return new Date(b.order_date || b.created_at) - new Date(a.order_date || a.created_at);
+      });
+    }
+
+    function playDeliveryAlertBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.18);
+      } catch (e) {}
+    }
+
+    function checkScheduledDeliveryAlerts() {
+      let triggered = null;
+      appOrders.forEach(o => {
+        if (isDeliveryScheduledAlert(o) && !mbAlertedIds.has(o.id)) {
+          mbAlertedIds.add(o.id);
+          triggered = o;
+        } else if (!isDeliveryScheduledAlert(o)) {
+          mbAlertedIds.delete(o.id);
+        }
+      });
+      if (triggered) {
+        playDeliveryAlertBeep();
+        showToast(`⏰ ALERTA: Entrega de ${triggered.customer_name || 'Cliente'} (${triggered.scheduled_time}) subiu pro TOPO!`);
+        renderAppOrders();
+        if (!document.getElementById('modal-motoboy')?.classList.contains('hidden')) renderMotoboyPanel();
+      }
+    }
+    setInterval(checkScheduledDeliveryAlerts, 30000);
+
+    async function loadStoreCustomers() {
+      if (!navigator.onLine || !sb || !currentStore) return;
+      const { data, error } = await sb.from('store_customers')
+        .select('*')
+        .eq('store_id', currentStore.id)
+        .order('last_order_at', { ascending: false })
+        .limit(300);
+      if (!error && Array.isArray(data)) storeCustomersList = data;
+    }
+
+    async function upsertStoreCustomer(phoneRaw, name, address, itemsArr) {
+      const digits = String(phoneRaw || '').replace(/\D/g, '');
+      if (!digits || digits.length < 8 || !navigator.onLine || !sb || !currentStore) return;
+      const payload = {
+        store_id: currentStore.id,
+        phone: digits,
+        name: name || 'Cliente',
+        address: address || '',
+        last_items: itemsArr || [],
+        last_order_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      await sb.from('store_customers').upsert(payload, { onConflict: 'store_id,phone' });
+      loadStoreCustomers();
+    }
+
+    function lookupStoreCustomerByPhone(val) {
+      const digits = String(val || '').replace(/\D/g, '');
+      const badge = document.getElementById('deliv-co-match');
+      if (digits.length < 8) { badge?.classList.add('hidden'); return; }
+      const found = storeCustomersList.find(c => String(c.phone || '').replace(/\D/g, '') === digits);
+      if (found) {
+        document.getElementById('deliv-co-name').value = found.name || '';
+        document.getElementById('deliv-co-address').value = found.address || '';
+        badge?.classList.remove('hidden');
+      } else {
+        badge?.classList.add('hidden');
+      }
+    }
+
+    function openClientsModal() {
+      openModal('modal-clients');
+      loadStoreCustomers().then(renderClientsModal);
+    }
+
+    function renderClientsModal() {
+      const q = normText((document.getElementById('clients-search')?.value || '').trim());
+      const grid = document.getElementById('clients-list-grid');
+      const filtered = storeCustomersList.filter(c => !q || normText(`${c.name} ${c.phone} ${c.address}`).includes(q));
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="col-span-2 py-8 text-center text-xs font-bold text-slate-400">Nenhum cliente salvo ainda. Eles são cadastrados automaticamente ao enviar entregas pelo PDV.</div>';
+        return;
+      }
+      grid.innerHTML = filtered.slice(0, 80).map(c => {
+        const lastItems = Array.isArray(c.last_items) ? c.last_items : [];
+        const lastTxt = lastItems.map(it => `${it.qty}x ${it.name}`).join(' + ') || 'Sem itens salvos';
+        const daysAgo = c.last_order_at ? Math.max(0, Math.floor((Date.now() - new Date(c.last_order_at).getTime()) / 86400000)) : 0;
+        return `
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex flex-col justify-between gap-2 text-xs">
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-black text-slate-900 truncate">${escapeHtml(c.name)}</span>
+                <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-black shrink-0">${daysAgo === 0 ? 'Hoje' : `Há ${daysAgo}d`}</span>
+              </div>
+              <div class="font-bold text-slate-500">📱 ${escapeHtml(c.phone)}</div>
+              <div class="font-bold text-slate-700">📍 ${escapeHtml(c.address || 'Sem endereço')}</div>
+              <div class="text-[11px] font-bold text-slate-500 truncate">Última: <span class="text-slate-800">${escapeHtml(lastTxt)}</span></div>
+            </div>
+            <div class="flex gap-1.5 pt-1">
+              <button type="button" onclick="repeatStoreCustomerOrder(${c.id})" class="flex-1 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black cursor-pointer">🔁 Repetir no Caixa</button>
+              <button type="button" onclick="openClientRebuyWhats('${escapeHtml(c.phone)}', '${escapeHtml(c.name)}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black cursor-pointer">💬</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function repeatStoreCustomerOrder(custId) {
+      const c = storeCustomersList.find(x => x.id === custId);
+      if (!c) return;
+      activeSelectedCustomer = c;
+      document.getElementById('top-client-name').textContent = c.name || 'Consumidor';
+      const items = Array.isArray(c.last_items) ? c.last_items : [];
+      items.forEach(it => {
+        const match = catalog.find(p => String(p.id) === String(it.product_id) || p.name.toLowerCase() === String(it.name || '').toLowerCase());
+        if (match) addToCupom(match, Number(it.qty) || 1);
+      });
+      closeModal('modal-clients');
+      showToast(`🔁 Último pedido de ${c.name} carregado no caixa!`);
+    }
+
+    function openClientRebuyWhats(phone, name) {
+      const digits = String(phone || '').replace(/\D/g, '');
+      if (digits.length < 10) return;
+      const first = (name || 'cliente').split(' ')[0];
+      const msg = `Olá, ${first}! 😊 Passando para saber se está precisando repor algum item hoje. Se quiser, já separamos para entrega!`;
+      window.open(`https://wa.me/${digits.startsWith('55') ? digits : '55' + digits}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+    }
+
+    function openDeliveryCheckoutModal(mode) {
+      if (!cupom.length) { showToast('⚠️ Lance pelo menos 1 produto no caixa primeiro.'); return; }
+      delivCheckoutMode = mode;
+      const tot = getCupomNetTotal();
+      const hdr = document.getElementById('deliv-co-header');
+      const ttl = document.getElementById('deliv-co-title');
+      if (mode === 'paid') {
+        hdr.className = 'px-5 py-3.5 bg-blue-600 text-white flex items-center justify-between';
+        ttl.textContent = '🔵 Receber no Caixa + Enviar p/ Entrega (Já Pago)';
+        document.querySelector('input[name="deliv-co-origin"][value="balcao"]').checked = true;
+        document.getElementById('deliv-co-method-lbl').textContent = 'Forma recebida no caixa';
+        document.getElementById('deliv-co-change-wrap').classList.add('hidden');
+      } else {
+        hdr.className = 'px-5 py-3.5 bg-orange-500 text-white flex items-center justify-between';
+        ttl.textContent = '🟠 Salvar na Fila (Cobrar na Entrega)';
+        document.querySelector('input[name="deliv-co-origin"][value="whats"]').checked = true;
+        document.getElementById('deliv-co-method-lbl').textContent = 'Como o motoboy vai cobrar';
+        document.getElementById('deliv-co-change-wrap').classList.remove('hidden');
+      }
+      const summaryTxt = cupom.map(it => `${it.qty}x ${it.name}`).join(' + ');
+      document.getElementById('deliv-co-summary').innerHTML = `🛒 ${escapeHtml(summaryTxt)}<div class="text-sm font-black text-slate-900 mt-1">Total: ${brl(tot)}</div>`;
+      ['deliv-co-phone','deliv-co-name','deliv-co-address','deliv-co-change','deliv-co-sched','deliv-co-deadline'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('deliv-co-alert').value = '30';
+      document.getElementById('deliv-co-urgent').checked = false;
+      document.getElementById('deliv-co-match').classList.add('hidden');
+      if (activeSelectedCustomer) {
+        document.getElementById('deliv-co-phone').value = activeSelectedCustomer.phone || '';
+        document.getElementById('deliv-co-name').value = activeSelectedCustomer.name || '';
+        document.getElementById('deliv-co-address').value = activeSelectedCustomer.address || '';
+      }
+      openModal('modal-delivery-checkout');
+    }
+
+    async function confirmDeliveryCheckout() {
+      if (deliveryActionBusy) return;
+      if (!navigator.onLine || !sb || !currentStore) { showToast('🟠 Conecte à internet para salvar entregas na fila.'); return; }
+      deliveryActionBusy = true;
+      try {
+      const tot = getCupomNetTotal();
+      const sub = getCupomSubtotal();
+      const origin = document.querySelector('input[name="deliv-co-origin"]:checked')?.value || 'whats';
+      const clientName = document.getElementById('deliv-co-name').value.trim() || 'Cliente';
+      const phone = document.getElementById('deliv-co-phone').value.trim();
+      const address = document.getElementById('deliv-co-address').value.trim();
+      const method = normalizePayMethod(document.getElementById('deliv-co-method').value);
+      const changeFor = delivCheckoutMode === 'cod' ? parseBrNumber(document.getElementById('deliv-co-change').value) : 0;
+      const schedTime = document.getElementById('deliv-co-sched').value || '';
+      const alertMins = parseInt(document.getElementById('deliv-co-alert').value, 10) || 30;
+      const isUrgent = document.getElementById('deliv-co-urgent').checked;
+      const deadline = document.getElementById('deliv-co-deadline').value.trim();
+      const itemsJson = cupom.map(it => ({ product_id: it.product_id || null, name: it.name, qty: Number(it.qty) || 1, price: Number(it.unit_price) || 0, subtotal: Number(it.subtotal) || 0 }));
+
+      let linkedSaleId = null;
+      if (delivCheckoutMode === 'paid') {
+        const salePayload = {
+          store_id: currentStore.id,
+          client_name: clientName,
+          operator_email: currentUser?.email || '',
+          items: itemsJson,
+          payments: [{ method, amount: tot }],
+          subtotal: sub,
+          discount_amount: discountAmount || 0,
+          extra_amount: extraAmount || 0,
+          total: tot,
+          status: 'completed',
+          origin: origin === 'balcao' ? 'pdv' : origin,
+          local_uid: 'deliv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+        };
+        const { data: saleRes, error: saleErr } = await sb.from('pdv_sales').insert(salePayload).select('id').single();
+        if (saleErr) { showToast('❌ Erro ao gravar venda no caixa: ' + saleErr.message); return; }
+        linkedSaleId = saleRes?.id || null;
+      }
+
+      // Baixa / reserva estoque 1 única vez
+      for (const it of itemsJson) {
+        if (it.product_id && it.qty > 0) {
+          await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: -Math.abs(it.qty) });
+        }
+      }
+
+      const orderPayload = {
+        store_id: currentStore.id,
+        customer_name: clientName,
+        phone: phone || '',
+        customer_phone: phone || '',
+        address: address || '',
+        customer_address: address || '',
+        payment: method,
+        order_date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        items: itemsJson,
+        total: tot,
+        origin,
+        pay_status: delivCheckoutMode,
+        original_pay_status: delivCheckoutMode,
+        pay_method: method,
+        change_for: changeFor,
+        delivery_status: 'waiting',
+        is_urgent: isUrgent,
+        urgent_deadline: deadline,
+        scheduled_time: schedTime,
+        alert_mins: alertMins,
+        linked_sale_id: linkedSaleId,
+        stock_deducted: true
+      };
+      const { error: ordErr } = await sb.from('customer_orders').insert(orderPayload);
+      if (ordErr) {
+        showToast('⚠️ Rode o SQL da Etapa 5 no Supabase! (' + ordErr.message + ')');
+        return;
+      }
+
+      await upsertStoreCustomer(phone, clientName, address, itemsJson);
+      cupom = []; discountAmount = 0; extraAmount = 0; activeSelectedCustomer = null;
+      document.getElementById('top-client-name').textContent = 'Consumidor';
+      renderCupom();
+      closeModal('modal-delivery-checkout');
+      await Promise.all([loadCatalog(), loadAppOrders(), loadTodaySales()]);
+      openMotoboyModal();
+      showToast(delivCheckoutMode === 'paid' ? '🔵 Venda recebida no caixa e enviada para a fila de entregas!' : '🟠 Pedido salvo na fila (Cobrar na Entrega) · Estoque reservado!');
+      } finally { deliveryActionBusy = false; }
+    }
+
+    function openMotoboyModal() {
+      openModal('modal-motoboy');
+      loadAppOrders().then(renderMotoboyPanel);
+    }
+
+    function setMbStatusFilter(st) { mbStatusFilter = st; renderMotoboyPanel(); }
+    function setMbOriginFilter(og) { mbOriginFilter = og; renderMotoboyPanel(); }
+
+    function toggleMbBatch(id) {
+      if (mbSelectedBatch.has(id)) mbSelectedBatch.delete(id); else mbSelectedBatch.add(id);
+      const btn = document.getElementById('mb-batch-btn');
+      if (mbSelectedBatch.size > 0) {
+        btn.classList.remove('hidden');
+        btn.textContent = `🛵 Despachar ${mbSelectedBatch.size} Selecionado(s) + Rota`;
+      } else btn.classList.add('hidden');
+    }
+
+    async function dispatchSelectedDeliveries() {
+      if (deliveryActionBusy) return;
+      const ids = [...mbSelectedBatch];
+      const targets = appOrders.filter(o => ids.includes(o.id) && (o.delivery_status || 'waiting') === 'waiting');
+      if (!targets.length) return;
+      deliveryActionBusy = true;
+      try {
+        for (const o of targets) {
+          const { error } = await sb.from('customer_orders').update({ delivery_status: 'out' }).eq('id', o.id);
+          if (error) { showToast('❌ Erro ao despachar #' + o.id + ': ' + error.message); return; }
+        }
+        mbSelectedBatch.clear();
+        document.getElementById('mb-batch-btn').classList.add('hidden');
+        await loadAppOrders();
+        printMotoboyRoute(true, targets);
+        showToast(`🛵 ${targets.length} entrega(s) despachadas em lote!`);
+      } finally { deliveryActionBusy = false; }
+    }
+
+    function renderMotoboyPanel() {
+      const active = appOrders.filter(o => (o.delivery_status || 'waiting') !== 'done' && (o.delivery_status || 'waiting') !== 'cancelled');
+      const urgents = active.filter(o => isDeliveryEffectivelyUrgent(o));
+      const cods = active.filter(o => (o.pay_status || 'cod') === 'cod');
+      const paids = active.filter(o => (o.pay_status || 'cod') === 'paid');
+      const dones = appOrders.filter(o => o.delivery_status === 'done');
+      const schedAlerts = active.filter(o => isDeliveryScheduledAlert(o));
+
+      document.getElementById('mb-kpi-urgent').textContent = String(urgents.length);
+      document.getElementById('mb-kpi-cod').textContent = String(cods.length);
+      document.getElementById('mb-kpi-cod-lbl').textContent = cods.length === 1 ? '1 pendência de acerto' : `${cods.length} pendências de acerto`;
+      document.getElementById('mb-kpi-paid').textContent = String(paids.length);
+      document.getElementById('mb-kpi-done').textContent = String(dones.length);
+
+      const bnr = document.getElementById('mb-sched-banner');
+      if (schedAlerts.length) {
+        bnr.classList.remove('hidden');
+        document.getElementById('mb-sched-banner-text').textContent = schedAlerts.map(o => `${o.customer_name || 'Cliente'} (marcado p/ ${o.scheduled_time})`).join(' · ');
+      } else bnr.classList.add('hidden');
+
+      document.querySelectorAll('.mb-st-pill').forEach(btn => {
+        btn.className = 'mb-st-pill px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer ' +
+          (btn.dataset.mbst === mbStatusFilter ? 'bg-slate-900 text-white shadow' : 'bg-slate-100 hover:bg-slate-200 text-slate-700');
+      });
+      document.querySelectorAll('.mb-og-pill').forEach(btn => {
+        btn.className = 'mb-og-pill px-2.5 py-1.5 rounded-xl text-xs font-black cursor-pointer ' +
+          (btn.dataset.mbog === mbOriginFilter ? 'bg-indigo-600 text-white shadow' : 'bg-slate-100 hover:bg-slate-200 text-slate-700');
+      });
+
+      const q = normText((document.getElementById('mb-search')?.value || '').trim());
+      let list = appOrders.filter(o => {
+        const st = o.delivery_status || 'waiting';
+        const og = o.origin || 'app';
+        const ps = o.pay_status || 'cod';
+        if (mbOriginFilter !== 'all' && og !== mbOriginFilter) return false;
+        if (mbStatusFilter === 'active' && (st === 'done' || st === 'cancelled')) return false;
+        if (mbStatusFilter === 'urgent' && !isDeliveryEffectivelyUrgent(o)) return false;
+        if (mbStatusFilter === 'scheduled' && !(o.scheduled_time && st !== 'done' && st !== 'cancelled')) return false;
+        if (mbStatusFilter === 'cod' && !(ps === 'cod' && st !== 'done' && st !== 'cancelled')) return false;
+        if (mbStatusFilter === 'paid' && !(ps === 'paid' && st !== 'done' && st !== 'cancelled')) return false;
+        if (mbStatusFilter === 'out' && st !== 'out') return false;
+        if (mbStatusFilter === 'done' && st !== 'done') return false;
+        if (mbStatusFilter === 'cancelled' && st !== 'cancelled') return false;
+        if (q) {
+          const itemsStr = (Array.isArray(o.items) ? o.items : []).map(it => it.name).join(' ');
+          if (!normText(`${o.customer_name} ${o.customer_phone} ${o.customer_address} ${itemsStr} #${o.id}`).includes(q)) return false;
+        }
+        return true;
+      });
+      list = sortDeliveriesSmart(list);
+
+      const box = document.getElementById('mb-orders-list');
+      if (!list.length) {
+        box.innerHTML = '<div class="bg-white border border-slate-200 rounded-2xl p-8 text-center text-xs font-black text-slate-400">Nenhum pedido neste filtro.</div>';
+        return;
+      }
+
+      const ogMap = {
+        app: '<span class="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-900 font-black">📱 APP</span>',
+        whats: '<span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-900 font-black">💬 WHATS</span>',
+        balcao: '<span class="px-2 py-0.5 rounded-lg bg-slate-200 text-slate-900 font-black">🏪 BALCÃO</span>'
+      };
+
+      box.innerHTML = list.map(o => {
+        const st = o.delivery_status || 'waiting';
+        const isDone = st === 'done';
+        const isCanc = st === 'cancelled';
+        const isCod = (o.pay_status || 'cod') === 'cod' && !isDone && !isCanc;
+        const schedAlert = isDeliveryScheduledAlert(o);
+        const schedQuiet = isDeliveryScheduledQuiet(o);
+        const isUrg = isDeliveryEffectivelyUrgent(o);
+        const method = normalizePayMethod(o.pay_method);
+        const changeFor = parseFloat(o.change_for) || 0;
+        const itemsArr = Array.isArray(o.items) ? o.items : [];
+        const itemsTxt = itemsArr.map(it => `${it.qty}x ${it.name}`).join(' + ') || 'Itens do pedido';
+        const timeStr = new Date(o.order_date || o.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const waitMins = Math.max(0, Math.floor((Date.now() - new Date(o.order_date || o.created_at).getTime()) / 60000));
+        const waitCls = waitMins >= 40 ? 'bg-red-100 text-red-800' : (waitMins >= 20 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800');
+        const waitPill = (!isDone && !isCanc && !schedQuiet) ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black ${waitCls}">⏱️ ${waitMins} min</span>` : '';
+
+        let borderCls = 'border-blue-500 bg-white', barCls = 'bg-blue-600 text-white';
+        let barTxt = `🔵 JÁ PAGO (${method}) — SÓ ENTREGAR · NÃO COBRAR`;
+        if (isCanc) { borderCls = 'border-slate-300 bg-slate-100 opacity-75'; barCls = 'bg-slate-600 text-white'; barTxt = '❌ CANCELADO — ESTOQUE DEVOLVIDO'; }
+        else if (isDone) { borderCls = 'border-emerald-500 bg-emerald-50/40'; barCls = 'bg-emerald-600 text-white'; barTxt = `🟢 CONCLUÍDO (${method})`; }
+        else if (schedAlert) { borderCls = 'border-red-600 bg-red-50/50 alarm-shake'; barCls = 'bg-red-600 text-white'; barTxt = `⏰🔔 HORÁRIO MARCADO VIRANDO URGENTE (${escapeHtml(o.scheduled_time)})`; }
+        else if (o.is_urgent) { borderCls = 'border-red-600 bg-red-50/30 urgent-glow'; barCls = 'bg-red-600 text-white'; barTxt = `🔴 🚨 ENTREGA URGENTE ${o.urgent_deadline ? '· ' + escapeHtml(o.urgent_deadline.toUpperCase()) : ''}`; }
+        else if (schedQuiet) { borderCls = 'border-purple-400 bg-purple-50/30'; barCls = 'bg-purple-700 text-white'; barTxt = `⏰ AGENDADO PARA ${escapeHtml(o.scheduled_time)} (Avisa ${o.alert_mins || 30} min antes)`; }
+        else if (isCod) { borderCls = 'border-orange-500 bg-orange-50/30'; barCls = 'bg-orange-500 text-white'; barTxt = `🟠 COBRAR NA ENTREGA: ${brl(o.total)} · ${method}${changeFor ? ' (Troco p/ ' + brl(changeFor) + ')' : ''}`; }
+
+        const extraPayPill = (isUrg || schedQuiet) && !isDone && !isCanc
+          ? (isCod ? `<span class="px-2.5 py-1 rounded-xl bg-orange-500 text-white text-[11px] font-black">💰 COBRAR ${brl(o.total)} (${method}${changeFor ? ' · Troco p/ ' + brl(changeFor) : ''})</span>`
+                   : `<span class="px-2.5 py-1 rounded-xl bg-blue-600 text-white text-[11px] font-black">✅ JÁ PAGO (${method}) — NÃO COBRAR</span>`)
+          : '';
+
+        const batchChk = st === 'waiting' ? `<input type="checkbox" ${mbSelectedBatch.has(o.id) ? 'checked' : ''} onchange="toggleMbBatch(${o.id})" class="w-4 h-4 accent-amber-500 cursor-pointer" />` : '';
+        const roadBadge = st === 'out' ? '<span class="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black">🛵 NA RUA</span>' : (st === 'waiting' ? '<span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-black">📦 NA FILA</span>' : '');
+
+        return `
+          <div class="rounded-2xl border-2 ${borderCls} shadow-sm overflow-hidden">
+            <div class="px-4 py-2 ${barCls} flex flex-wrap items-center justify-between gap-2 text-xs font-black">
+              <div class="flex items-center gap-2">${batchChk}<span>${barTxt}</span></div>
+              <span class="opacity-90">#${o.id} · ${timeStr}</span>
+            </div>
+            <div class="p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div class="space-y-1 flex-1 text-xs">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  ${ogMap[o.origin || 'app'] || ogMap.app}
+                  ${roadBadge}
+                  ${waitPill}
+                  <span class="font-black text-slate-900 text-sm">${escapeHtml(o.customer_name || 'Cliente')}</span>
+                  ${(o.customer_phone || o.phone) ? `<span class="text-slate-500 font-bold">📱 ${escapeHtml(o.customer_phone || o.phone)}</span>` : ''}
+                </div>
+                ${(o.customer_address || o.address) ? `<div class="font-extrabold text-slate-700">📍 ${escapeHtml(o.customer_address || o.address)}</div>` : ''}
+                <div class="font-bold text-slate-600">🛒 ${escapeHtml(itemsTxt)} — <span class="font-black text-slate-900">${brl(o.total)}</span></div>
+                ${extraPayPill ? `<div class="pt-1">${extraPayPill}</div>` : ''}
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                ${!isCanc && !isDone ? `
+                  <button type="button" onclick="openDeliveryEditModal(${o.id})" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-xs font-black cursor-pointer">✏️ Editar</button>
+                  <button type="button" onclick="toggleDeliveryUrgent(${o.id})" class="px-2.5 py-1.5 rounded-xl text-xs font-black cursor-pointer ${o.is_urgent ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-red-600 hover:bg-red-700 text-white'}">${o.is_urgent ? 'Tirar Urg.' : '🚨 Urgente'}</button>
+                  ${st === 'waiting'
+                    ? `<button type="button" onclick="markDeliveryOut(${o.id})" class="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black shadow cursor-pointer">🛵 Saiu + Whats</button>`
+                    : `<button type="button" onclick="returnDeliveryToQueue(${o.id})" class="px-2.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-900 text-xs font-black cursor-pointer">↩️ Voltar p/ Fila</button>
+                       <button type="button" onclick="openDeliveryWhats(${o.id})" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-black cursor-pointer">💬 Whats</button>`}
+                  ${isCod
+                    ? `<button type="button" onclick="openDeliverySettleModal(${o.id})" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow cursor-pointer">💵 Confirmar Acerto</button>`
+                    : `<button type="button" onclick="markPaidDeliveryDone(${o.id})" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow cursor-pointer">✅ Entregue</button>`}
+                  <button type="button" onclick="cancelDeliveryOrder(${o.id})" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-black cursor-pointer">❌ Cancelar</button>
+                ` : ''}
+                ${isDone ? `
+                  <button type="button" onclick="openDeliveryEditModal(${o.id})" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-xs font-black cursor-pointer">✏️ Editar</button>
+                  <button type="button" onclick="returnDeliveryToQueue(${o.id})" class="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black cursor-pointer">↩️ Voltar p/ Fila</button>
+                  <button type="button" onclick="cancelDeliveryOrder(${o.id})" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-black cursor-pointer">❌ Cancelar</button>
+                ` : ''}
+                ${!isCanc ? `<button type="button" onclick="printSingleDeliverySlip(${o.id})" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black cursor-pointer">🖨️</button>` : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function openDeliveryWhats(id) {
+      const o = appOrders.find(x => x.id === id); if (!o) return;
+      const digits = String(o.customer_phone || o.phone || '').replace(/\D/g, '');
+      if (digits.length < 10) { showToast('⚠️ Cliente sem número de WhatsApp cadastrado.'); return; }
+      const first = (o.customer_name || 'cliente').split(' ')[0];
+      const msg = `Olá, ${first}! 😊 Sua entrega acabou de sair da loja e está a caminho. Muito obrigado pela preferência e tenha um ótimo dia!`;
+      window.open(`https://wa.me/${digits.startsWith('55') ? digits : '55' + digits}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+    }
+
+    async function markDeliveryOut(id) {
+      if (deliveryActionBusy) return;
+      deliveryActionBusy = true;
+      try {
+        const { error } = await sb.from('customer_orders').update({ delivery_status: 'out' }).eq('id', id);
+        if (error) { showToast('❌ Erro ao atualizar entrega: ' + error.message); return; }
+        mbSelectedBatch.delete(id);
+        await loadAppOrders();
+        openDeliveryWhats(id);
+        showToast('🛵 Pedido marcado NA RUA e WhatsApp aberto!');
+      } finally { deliveryActionBusy = false; }
+    }
+
+    async function toggleDeliveryUrgent(id) {
+      const o = appOrders.find(x => x.id === id); if (!o || deliveryActionBusy) return;
+      deliveryActionBusy = true;
+      try {
+        let res;
+        if (!o.is_urgent) {
+          const dl = prompt('Horário limite ou motivo da urgência (opcional):', 'Cliente sai às 12:00');
+          res = await sb.from('customer_orders').update({ is_urgent: true, urgent_deadline: (dl || '').trim() }).eq('id', id);
+          if (!res.error) showToast('🚨 Pedido movido para o TOPO como Entrega urgente!');
+        } else {
+          res = await sb.from('customer_orders').update({ is_urgent: false, urgent_deadline: '' }).eq('id', id);
+        }
+        if (res?.error) { showToast('❌ Erro ao alterar urgência: ' + res.error.message); return; }
+        await loadAppOrders();
+      } finally { deliveryActionBusy = false; }
+    }
+
+    async function markPaidDeliveryDone(id) {
+      if (deliveryActionBusy) return;
+      deliveryActionBusy = true;
+      try {
+        const { error } = await sb.from('customer_orders').update({ delivery_status: 'done', is_urgent: false }).eq('id', id);
+        if (error) { showToast('❌ Erro ao concluir entrega: ' + error.message); return; }
+        await loadAppOrders();
+        showToast('✅ Entrega concluída!');
+      } finally { deliveryActionBusy = false; }
+    }
+
+    async function returnDeliveryToQueue(id) {
+      const o = appOrders.find(x => x.id === id); if (!o || deliveryActionBusy) return;
+      deliveryActionBusy = true;
+      try {
+        const wasDone = o.delivery_status === 'done';
+        const restoredPay = wasDone ? (o.original_pay_status || o.pay_status || 'cod') : (o.pay_status || 'cod');
+        const upd = { delivery_status: 'waiting', pay_status: restoredPay };
+        // Se estava concluído e volta para A Cobrar, estorna a venda vinculada no F12 para não duplicar no próximo acerto
+        if (wasDone && restoredPay === 'cod' && o.linked_sale_id) {
+          await sb.from('pdv_sales').update({ status: 'cancelled' }).eq('id', o.linked_sale_id);
+          upd.linked_sale_id = null;
+        }
+        const { error } = await sb.from('customer_orders').update(upd).eq('id', id);
+        if (error) { showToast('❌ Erro ao voltar p/ fila: ' + error.message); return; }
+        mbStatusFilter = 'active';
+        await Promise.all([loadAppOrders(), loadTodaySales()]);
+        showToast(`↩️ Pedido voltou para a Fila Ativa (${restoredPay === 'cod' ? '🟠 A Cobrar' : '🔵 Já Pago'}).`);
+      } finally { deliveryActionBusy = false; }
+    }
+
+    async function cancelDeliveryOrder(id) {
+      const o = appOrders.find(x => x.id === id); if (!o || deliveryActionBusy) return;
+      const hasLinkedSale = Boolean(o.linked_sale_id);
+      if (!confirm(`Cancelar o pedido #${o.id} de ${o.customer_name || 'Cliente'}?\n\nOs produtos voltarão para o estoque automaticamente${hasLinkedSale ? ' e o valor será estornado do caixa' : ''}.`)) return;
+      deliveryActionBusy = true;
+      try {
+        if (hasLinkedSale) {
+          const { error: sErr } = await sb.from('pdv_sales').update({ status: 'cancelled' }).eq('id', o.linked_sale_id);
+          if (sErr) { showToast('❌ Erro ao estornar venda: ' + sErr.message); return; }
+        }
+        if (o.stock_deducted) {
+          for (const it of (Array.isArray(o.items) ? o.items : [])) {
+            if (it.product_id && Number(it.qty) > 0) {
+              await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: Math.abs(Number(it.qty)) });
+            }
+          }
+        }
+        const { error } = await sb.from('customer_orders').update({ delivery_status: 'cancelled', is_urgent: false, stock_deducted: false, linked_sale_id: null }).eq('id', id);
+        if (error) { showToast('❌ Erro ao cancelar pedido: ' + error.message); return; }
+        await Promise.all([loadCatalog(), loadAppOrders(), loadTodaySales()]);
+        showToast(hasLinkedSale
+          ? '❌ Pedido cancelado · Estornado do caixa e produtos devolvidos ao estoque.'
+          : '❌ Pedido cancelado · Produtos devolvidos ao estoque automaticamente.');
+      } finally { deliveryActionBusy = false; }
+    }
+
+    function openDeliverySettleModal(id) {
+      const o = appOrders.find(x => x.id === id); if (!o) return;
+      delivSettleId = id;
+      const itemsTxt = (Array.isArray(o.items) ? o.items : []).map(it => `${it.qty}x ${it.name}`).join(' + ');
+      document.getElementById('deliv-settle-summary').innerHTML = `
+        <div class="text-sm font-black text-slate-900">#${o.id} — ${escapeHtml(o.customer_name || 'Cliente')}</div>
+        <div class="text-slate-600">${escapeHtml(itemsTxt)}</div>
+        <div class="text-base font-black text-orange-600 pt-1">Total: ${brl(o.total)}</div>`;
+      document.getElementById('deliv-settle-method').value = normalizePayMethod(o.pay_method);
+      openModal('modal-delivery-settle');
+    }
+
+    async function confirmDeliverySettle() {
+      const o = appOrders.find(x => x.id === delivSettleId); if (!o || deliveryActionBusy) return;
+      deliveryActionBusy = true;
+      try {
+      const method = normalizePayMethod(document.getElementById('deliv-settle-method').value);
+      const tot = parseFloat(o.total) || 0;
+      const itemsJson = Array.isArray(o.items) ? o.items : [];
+      let linkedSaleId = o.linked_sale_id || null;
+
+      if (!linkedSaleId) {
+        const { data: saleRes, error: saleErr } = await sb.from('pdv_sales').insert({
+          store_id: currentStore.id,
+          client_name: o.customer_name || 'Cliente Entrega',
+          operator_email: currentUser?.email || '',
+          items: itemsJson,
+          payments: [{ method, amount: tot }],
+          subtotal: tot,
+          discount_amount: 0,
+          extra_amount: 0,
+          total: tot,
+          status: 'completed',
+          origin: o.origin || 'app',
+          app_order_id: o.id,
+          local_uid: 'settle_' + o.id + '_' + Date.now()
+        }).select('id').single();
+        if (saleErr) { showToast('❌ Erro ao registrar acerto no caixa: ' + saleErr.message); return; }
+        linkedSaleId = saleRes?.id || null;
+      }
+
+      // Se era pedido do App que ainda não teve estoque baixado, baixa agora 1 vez
+      let stockDed = Boolean(o.stock_deducted);
+      if (!stockDed) {
+        for (const it of itemsJson) {
+          if (it.product_id && Number(it.qty) > 0) {
+            await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: -Math.abs(Number(it.qty)) });
+          }
+        }
+        stockDed = true;
+      }
+
+      await sb.from('customer_orders').update({
+        pay_status: 'paid',
+        pay_method: method,
+        delivery_status: 'done',
+        is_urgent: false,
+        linked_sale_id: linkedSaleId,
+        stock_deducted: stockDed
+      }).eq('id', o.id);
+
+      closeModal('modal-delivery-settle');
+      await Promise.all([loadCatalog(), loadAppOrders(), loadTodaySales()]);
+      showToast(`💵 Acerto confirmado (${method}) e lançado no caixa!`);
+      } finally { deliveryActionBusy = false; }
+    }
+
+    function toggleDelivEditChange() {
+      const st = document.querySelector('input[name="deliv-ed-paystatus"]:checked')?.value || 'cod';
+      document.getElementById('deliv-ed-change-wrap').classList.toggle('hidden', st === 'paid');
+    }
+
+    function openDeliveryEditModal(id) {
+      const o = appOrders.find(x => x.id === id); if (!o) return;
+      delivEditId = id;
+      document.getElementById('deliv-ed-title').textContent = `✏️ Editar Pedido #${o.id}`;
+      const rad = document.querySelector(`input[name="deliv-ed-paystatus"][value="${(o.pay_status || 'cod') === 'paid' ? 'paid' : 'cod'}"]`);
+      if (rad) rad.checked = true;
+      toggleDelivEditChange();
+      document.getElementById('deliv-ed-method').value = normalizePayMethod(o.pay_method);
+      document.getElementById('deliv-ed-change').value = o.change_for ? String(o.change_for).replace('.', ',') : '';
+      document.getElementById('deliv-ed-name').value = o.customer_name || '';
+      document.getElementById('deliv-ed-phone').value = o.customer_phone || o.phone || '';
+      document.getElementById('deliv-ed-address').value = o.customer_address || o.address || '';
+      document.getElementById('deliv-ed-sched').value = o.scheduled_time || '';
+      document.getElementById('deliv-ed-alert').value = String(o.alert_mins || 30);
+      document.getElementById('deliv-ed-urgent').checked = Boolean(o.is_urgent);
+      document.getElementById('deliv-ed-deadline').value = o.urgent_deadline || '';
+      openModal('modal-delivery-edit');
+    }
+
+    async function saveDeliveryEdit() {
+      const o = appOrders.find(x => x.id === delivEditId); if (!o || deliveryActionBusy) return;
+      deliveryActionBusy = true;
+      try {
+        const payStatus = document.querySelector('input[name="deliv-ed-paystatus"]:checked')?.value || 'cod';
+        const method = normalizePayMethod(document.getElementById('deliv-ed-method').value);
+        const changeFor = payStatus === 'cod' ? parseBrNumber(document.getElementById('deliv-ed-change').value) : 0;
+        const tot = parseFloat(o.total) || 0;
+        const upd = {
+          pay_status: payStatus,
+          pay_method: method,
+          change_for: changeFor,
+          customer_name: document.getElementById('deliv-ed-name').value.trim() || o.customer_name,
+          phone: document.getElementById('deliv-ed-phone').value.trim(),
+          customer_phone: document.getElementById('deliv-ed-phone').value.trim(),
+          address: document.getElementById('deliv-ed-address').value.trim(),
+          customer_address: document.getElementById('deliv-ed-address').value.trim(),
+          payment: method,
+          scheduled_time: document.getElementById('deliv-ed-sched').value || '',
+          alert_mins: parseInt(document.getElementById('deliv-ed-alert').value, 10) || 30,
+          is_urgent: document.getElementById('deliv-ed-urgent').checked,
+          urgent_deadline: document.getElementById('deliv-ed-deadline').value.trim()
+        };
+        if (o.delivery_status !== 'done') upd.original_pay_status = payStatus;
+
+        // Sincronia contábil total com F12 (pdv_sales)
+        if (payStatus === 'paid' && !o.linked_sale_id) {
+          const { data: sRes, error: sErr } = await sb.from('pdv_sales').insert({
+            store_id: currentStore.id,
+            client_name: upd.customer_name || 'Cliente Entrega',
+            operator_email: currentUser?.email || '',
+            items: Array.isArray(o.items) ? o.items : [],
+            payments: [{ method, amount: tot }],
+            subtotal: tot, discount_amount: 0, extra_amount: 0, total: tot,
+            status: 'completed', origin: o.origin || 'app', app_order_id: o.id,
+            local_uid: 'editpaid_' + o.id + '_' + Date.now()
+          }).select('id').single();
+          if (sErr) { showToast('❌ Erro ao lançar pagamento no caixa: ' + sErr.message); return; }
+          upd.linked_sale_id = sRes?.id || null;
+        } else if (payStatus === 'paid' && o.linked_sale_id) {
+          await sb.from('pdv_sales').update({ payments: [{ method, amount: tot }] }).eq('id', o.linked_sale_id);
+        } else if (payStatus === 'cod' && o.linked_sale_id) {
+          await sb.from('pdv_sales').update({ status: 'cancelled' }).eq('id', o.linked_sale_id);
+          upd.linked_sale_id = null;
+        }
+
+        const { error } = await sb.from('customer_orders').update(upd).eq('id', o.id);
+        if (error) { showToast('❌ Erro ao salvar edição: ' + error.message); return; }
+        closeModal('modal-delivery-edit');
+        await Promise.all([loadAppOrders(), loadTodaySales()]);
+        showToast(`💾 Pedido #${o.id} atualizado e sincronizado com o caixa!`);
+      } finally { deliveryActionBusy = false; }
+    }
+
+    function openMotoboySummaryModal() {
+      const pendingCod = appOrders.filter(o => (o.delivery_status || 'waiting') !== 'done' && (o.delivery_status || 'waiting') !== 'cancelled' && (o.pay_status || 'cod') === 'cod');
+      const byM = { Dinheiro: 0, Débito: 0, Crédito: 0, PIX: 0 };
+      pendingCod.forEach(o => { const k = normalizePayMethod(o.pay_method); byM[k] = (byM[k] || 0) + (parseFloat(o.total) || 0); });
+      const tot = pendingCod.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+      document.getElementById('mb-summary-body').innerHTML = `
+        <p class="font-bold text-slate-500">Conferência privada do malote (não fica exposta no balcão).</p>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5"><div class="text-[11px] font-bold text-slate-500">💵 Dinheiro</div><div class="text-base font-black text-slate-900">${brl(byM.Dinheiro)}</div></div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5"><div class="text-[11px] font-bold text-slate-500">💳 Débito</div><div class="text-base font-black text-slate-900">${brl(byM.Débito)}</div></div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5"><div class="text-[11px] font-bold text-slate-500">💳 Crédito</div><div class="text-base font-black text-slate-900">${brl(byM.Crédito)}</div></div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5"><div class="text-[11px] font-bold text-slate-500">💠 Pix</div><div class="text-base font-black text-slate-900">${brl(byM.PIX)}</div></div>
+        </div>
+        <div class="bg-orange-50 border border-orange-200 rounded-2xl p-3 flex items-center justify-between">
+          <span class="font-black text-orange-950">Total pendente (${pendingCod.length} pedidos):</span>
+          <span class="text-lg font-black text-orange-700">${brl(tot)}</span>
+        </div>`;
+      openModal('modal-motoboy-summary');
+    }
+
+    function formatThermalDeliveryBlock(o) {
+      const lines = [];
+      if (isDeliveryEffectivelyUrgent(o)) lines.push('*** 🚨 ENTREGA URGENTE ***');
+      if (o.scheduled_time) lines.push(`HORARIO MARCADO: ${o.scheduled_time}`);
+      if (o.urgent_deadline) lines.push(`PRAZO: ${o.urgent_deadline.toUpperCase()}`);
+      lines.push(`PEDIDO #${o.id} [${(o.origin || 'app').toUpperCase()}]`);
+      lines.push(`CLIENTE: ${o.customer_name || 'Cliente'} ${(o.customer_phone || o.phone) ? '| ' + (o.customer_phone || o.phone) : ''}`);
+      if (o.customer_address || o.address) lines.push(`END:     ${o.customer_address || o.address}`);
+      const itemsTxt = (Array.isArray(o.items) ? o.items : []).map(it => `${it.qty}x ${it.name}`).join(' + ');
+      lines.push(`ITENS:   ${itemsTxt}`);
+      const method = normalizePayMethod(o.pay_method);
+      if ((o.pay_status || 'cod') === 'paid') {
+        lines.push(`>>> ✅ JA PAGO (${method}) - NAO COBRAR <<<`);
+      } else {
+        lines.push(`>>> 💰 COBRAR: ${brl(o.total)} (${method}) <<<`);
+        const ch = parseFloat(o.change_for) || 0;
+        if (ch > 0) lines.push(`>>> TROCO P/: ${brl(ch)} (Levar: ${brl(Math.max(0, ch - (parseFloat(o.total) || 0)))}) <<<`);
+      }
+      lines.push('----------------------------------------');
+      return lines.join('\n');
+    }
+
+    function printThermalText(title, bodyText) {
+      const w = window.open('', '_blank', 'width=360,height=600');
+      if (!w) { showToast('⚠️ Libere popups para imprimir a ficha térmica.'); return; }
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body{font-family:'Courier New',monospace;font-size:12px;margin:8px;white-space:pre-wrap;}</style></head><body>${escapeHtml(bodyText)}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+      w.document.close();
+    }
+
+    function printSingleDeliverySlip(id) {
+      const o = appOrders.find(x => x.id === id); if (!o) return;
+      const txt = `${(currentStore?.name || 'LOJA').toUpperCase()}\nFICHA DE ENTREGA - MOTOBOY\n========================================\n${formatThermalDeliveryBlock(o)}`;
+      printThermalText(`Ficha #${o.id}`, txt);
+    }
+
+    function printMotoboyRoute(isBatch, customList) {
+      const list = customList || sortDeliveriesSmart(appOrders.filter(o => (o.delivery_status || 'waiting') !== 'done' && (o.delivery_status || 'waiting') !== 'cancelled' && !isDeliveryScheduledQuiet(o)));
+      if (!list.length) { showToast('Nenhuma entrega imediata para imprimir na rota.'); return; }
+      const codSum = list.filter(o => (o.pay_status || 'cod') === 'cod').reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+      const txt = `${(currentStore?.name || 'LOJA').toUpperCase()}\n${isBatch ? 'LOTE DE SAIDA' : 'FOLHA DE ROTA'} - MOTOBOY (${list.length} entregas)\nTOTAL A COBRAR NA RUA: ${brl(codSum)}\n========================================\n` + list.map(formatThermalDeliveryBlock).join('\n');
+      printThermalText('Rota Motoboy', txt);
+    }
   </script>
 </body>
 </html>
