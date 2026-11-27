@@ -99,10 +99,10 @@
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
         <button id="gtb-btn-gestor" type="button" onclick="openManagerLoginModal()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">⚙️ Gestor</button>
-        <button id="gtb-btn-pdv" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../pdv.html' : 'pdv.html') + '?loja=' + encodeURIComponent(storeSlug)" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🖥️ PDV</button>
-        <button id="gtb-btn-entregas" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../pdv.html' : 'pdv.html') + '?loja=' + encodeURIComponent(storeSlug) + '&open=motoboy'" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛵 Entregas</button>
+        <button id="gtb-btn-pdv" type="button" onclick="window.location.href='pdv.html' + '?loja=' + encodeURIComponent(storeSlug)" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🖥️ PDV</button>
+        <button id="gtb-btn-entregas" type="button" onclick="window.location.href='pdv.html' + '?loja=' + encodeURIComponent(storeSlug) + '&open=motoboy'" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛵 Entregas</button>
         <button id="gtb-btn-vitrine" type="button" onclick="switchToClient()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛍️ Vitrine</button>
-        <button id="gtb-btn-admin" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../admin.html' : 'admin.html')" class="hidden px-2.5 py-1 rounded-xl text-xs font-black bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer">👑 Contas</button>
+        <button id="gtb-btn-admin" type="button" onclick="window.location.href='admin.html'" class="hidden px-2.5 py-1 rounded-xl text-xs font-black bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer">👑 Contas</button>
         <button type="button" onclick="logoutManager()" title="Sair do modo Gestor" class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600/90 hover:bg-rose-600 text-white cursor-pointer ml-1">🚪 Sair</button>
       </div>
     </div>
@@ -9438,7 +9438,7 @@
     function switchGlobalStore(newSlug) {
       if (!newSlug || newSlug === storeSlug) return;
       const inManager = !document.getElementById('manager-view')?.classList.contains('hidden');
-      const basePath = location.pathname.endsWith('/') ? '../index.html' : location.pathname;
+      const basePath = 'index.html';
       window.location.href = `${basePath}?loja=${encodeURIComponent(newSlug)}${inManager ? '#gestor' : ''}`;
     }
   </script>
