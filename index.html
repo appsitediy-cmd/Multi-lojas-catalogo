@@ -1502,6 +1502,9 @@
                   <button type="button" id="edit-mix-search-clear" onclick="document.getElementById('edit-mix-search').value=''; renderWholesaleMixPicker('edit');" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-[11px] font-black">✕</button>
                 </div>
                 <div id="edit-mix-candidates" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
+                <div id="edit-mix-clear-all-wrap" class="hidden pt-2 border-t border-rose-100">
+                  <button type="button" onclick="disableWholesaleForAllMixGroup()" class="w-full py-1.5 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-[10px] font-black transition">🗑️ Desativar Atacado e Mix de TODOS os sabores deste grupo</button>
+                </div>
               </div>
             </div>
           </div>
@@ -3339,6 +3342,7 @@
       document.getElementById('client-view').classList.add('hidden');
       document.getElementById('store-header')?.classList.add('hidden');
       document.getElementById('manager-view').classList.remove('hidden');
+      document.getElementById('floating-cart-bar')?.classList.add('hidden');
       if (typeof loadProductCostsFromCloud === 'function') loadProductCostsFromCloud();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       showToast("🔓 Painel Gestor desbloqueado!");
@@ -3358,6 +3362,7 @@
       document.getElementById('manager-view').classList.add('hidden');
       document.getElementById('store-header')?.classList.remove('hidden');
       document.getElementById('client-view').classList.remove('hidden');
+      if (typeof updateCartBadge === 'function') updateCartBadge();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -4163,7 +4168,13 @@
                   ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 hover:border-emerald-400 text-emerald-900'
                   : 'bg-amber-50 hover:bg-amber-100 border-amber-300 hover:border-amber-400 text-amber-900';
                 const pillColors = whDone ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white';
-                return `<button type="button" onclick="addWholesalePack(${p.id})" class="w-full text-left ${btnColors} active:scale-95 border-2 rounded-xl px-2.5 py-1.5 text-[10px] font-black mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5" title="${whDone ? 'Atacado ativo! Clique para adicionar +1 unidade já com desconto' : 'Clique para completar o kit atacado no carrinho'}"><span>${p.wholesaleGroup ? '🎨 Atacado Mix (pode misturar):' : '📦 Atacado:'} ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} <span class="font-bold opacity-80">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span></span><span class="${pillColors} text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">${pillTxt}</span></button>`;
+                const isMixProd = !!p.wholesaleGroup;
+                const clickHandler = isMixProd ? `openClientMixModal(${p.id})` : `addWholesalePack(${p.id})`;
+                const pillLabel = isMixProd ? (whDone ? '✅ Mix' : (effQty > 0 ? `+${missing} Mix` : 'Escolher')) : pillTxt;
+                const subHint = isMixProd
+                  ? `<span class="block text-[9px] font-bold opacity-80">${whDone ? 'Atacado Mix ativo • toque p/ ajustar sabores' : (effQty > 0 ? `Falta${missing > 1 ? 'm' : ''} ${missing} un — toque p/ misturar sabores` : 'Toque p/ escolher sabores e quantidades')}</span>`
+                  : `<span class="font-bold opacity-80">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span>`;
+                return `<button type="button" onclick="${clickHandler}" class="w-full text-left ${btnColors} active:scale-95 border-2 rounded-xl px-2.5 py-1.5 text-[10px] font-black mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5"><span>${isMixProd ? '🎨 Montar Kit Mix:' : '📦 Atacado:'} ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} ${subHint}</span><span class="${pillColors} text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">${pillLabel}</span></button>`;
               })() : ''}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
               ${actionArea}
@@ -4251,8 +4262,130 @@
     function updateCartBadge() {
       const totalCount = Object.values(cart).reduce((a, b) => a + b, 0);
       const badge = document.getElementById('cart-badge');
-      badge.textContent = totalCount;
-      badge.classList.toggle('hidden', totalCount === 0);
+      if (badge) {
+        badge.textContent = totalCount;
+        badge.classList.toggle('hidden', totalCount === 0);
+      }
+      const fcBar = document.getElementById('floating-cart-bar');
+      if (fcBar) {
+        const inManager = !document.getElementById('manager-view')?.classList.contains('hidden');
+        const showFc = totalCount > 0 && !inManager;
+        fcBar.classList.toggle('hidden', !showFc);
+        const topoBtn = document.getElementById('scroll-top-btn');
+        if (topoBtn) topoBtn.style.bottom = showFc ? '84px' : '';
+        if (totalCount > 0) {
+          let totalVal = 0;
+          let anyMix = false;
+          Object.keys(cart).forEach(cid => {
+            const q = Number(cart[cid]) || 0;
+            if (q <= 0) return;
+            const prod = products.find(x => String(x.id) === String(cid));
+            if (!prod) return;
+            const pr = getCartLinePricing(prod, q, cartFulfillmentMode || 'delivery');
+            totalVal += pr.lineTotal;
+            if (pr.isWholesaleMix) anyMix = true;
+          });
+          const fcB = document.getElementById('fc-badge');
+          const fcS = document.getElementById('fc-sub');
+          const fcT = document.getElementById('fc-total');
+          if (fcB) fcB.textContent = totalCount;
+          if (fcS) fcS.textContent = `${totalCount} ${totalCount === 1 ? 'item' : 'itens'}${anyMix ? ' • 🎉 Atacado Mix' : ' no carrinho'}`;
+          if (fcT) fcT.textContent = `R$ ${totalVal.toFixed(2).replace('.', ',')}`;
+        }
+      }
+    }
+
+    let activeClientMixGroupKey = '';
+    let activeClientMixRefProdId = null;
+
+    function openClientMixModal(productId) {
+      const ref = products.find(x => Number(x.id) === Number(productId));
+      if (!ref || !ref.wholesaleGroup || !hasValidWholesale(ref)) return;
+      try { trackAnalyticsEvent('product_click', ref.name); } catch (e) {}
+      activeClientMixRefProdId = ref.id;
+      activeClientMixGroupKey = ref.wholesaleGroup.trim().toLowerCase();
+      renderClientMixModal();
+      const m = document.getElementById('client-mix-modal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+
+    function closeClientMixModal() {
+      const m = document.getElementById('client-mix-modal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    function changeMixModalQty(productId, delta) {
+      const next = Math.max(0, (Number(cart[productId]) || 0) + delta);
+      if (next === 0) delete cart[productId];
+      else cart[productId] = next;
+      updateCartBadge();
+      filterProducts();
+      renderClientMixModal();
+    }
+
+    function renderClientMixModal() {
+      if (!activeClientMixGroupKey) return;
+      const items = products.filter(p => p.active !== false && p.showInCatalog !== false && String(p.wholesaleGroup || '').trim().toLowerCase() === activeClientMixGroupKey);
+      const ref = items.find(p => p.id === activeClientMixRefProdId) || items[0];
+      if (!ref || !hasValidWholesale(ref)) { closeClientMixModal(); return; }
+
+      const mixQty = ref.wholesaleQty;
+      const mixPrice = ref.wholesalePrice;
+      const mixUnit = mixPrice / mixQty;
+      const totalQty = getWholesaleGroupCartQty(ref.wholesaleGroup);
+      const mixActive = totalQty >= mixQty;
+      const missing = Math.max(0, mixQty - totalQty);
+      const pct = Math.min(100, Math.round((totalQty / mixQty) * 100));
+
+      document.getElementById('cmix-title').textContent = ref.wholesaleGroup;
+      document.getElementById('cmix-rule').innerHTML = `Leve <strong>${mixQty} un</strong> por <strong>R$ ${mixPrice.toFixed(2).replace('.', ',')}</strong> (R$ ${mixUnit.toFixed(2).replace('.', ',')}/un)`;
+      document.getElementById('cmix-count').textContent = `${totalQty} / ${mixQty}`;
+      const bar = document.getElementById('cmix-bar');
+      bar.style.width = `${pct}%`;
+      bar.className = `h-full rounded-full transition-all duration-300 ${mixActive ? 'bg-emerald-500' : 'bg-amber-500'}`;
+
+      const msgEl = document.getElementById('cmix-msg');
+      if (mixActive) {
+        msgEl.textContent = `🎉 Atacado Mix ativado! Sai por R$ ${mixUnit.toFixed(2).replace('.', ',')}/un`;
+        msgEl.className = 'font-black text-emerald-700';
+      } else if (totalQty === 0) {
+        msgEl.textContent = `Escolha ${mixQty} unidades (pode misturar os sabores abaixo)`;
+        msgEl.className = 'font-black text-slate-700';
+      } else {
+        msgEl.textContent = missing === 1
+          ? '🔥 Falta só 1 unidade para pagar preço de atacado!'
+          : `💡 Faltam ${missing} unidades para pagar preço de atacado!`;
+        msgEl.className = 'font-black text-amber-800';
+      }
+
+      let groupSubtotal = 0;
+      document.getElementById('cmix-list').innerHTML = items.map(p => {
+        const q = Number(cart[p.id]) || 0;
+        const pr = getCartLinePricing(p, Math.max(1, q), cartFulfillmentMode || 'delivery');
+        const unitShow = mixActive ? mixUnit : getEffectiveProductPrice(p);
+        if (q > 0) groupSubtotal += getCartLinePricing(p, q, cartFulfillmentMode || 'delivery').lineTotal;
+        const imgSrc = (p.image && p.image.trim()) ? p.image : DEFAULT_PRODUCT_IMG;
+        return `
+          <div class="flex items-center justify-between gap-2.5 p-2 rounded-2xl border ${q > 0 ? 'bg-emerald-50/60 border-emerald-300' : 'bg-slate-50 border-slate-200'}">
+            <div class="flex items-center gap-2 min-w-0">
+              <img src="${imgSrc}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src=DEFAULT_PRODUCT_IMG;" class="w-11 h-11 rounded-xl object-contain bg-white border border-slate-100 p-0.5 shrink-0">
+              <div class="min-w-0">
+                <div class="text-xs font-extrabold text-slate-800 leading-snug line-clamp-2">${escapeHtml(p.name)}</div>
+                <div class="text-[11px] font-bold ${mixActive ? 'text-emerald-700' : 'text-slate-500'}">
+                  ${mixActive ? `<span class="line-through text-slate-400 mr-1">R$ ${p.price.toFixed(2).replace('.', ',')}</span>R$ ${unitShow.toFixed(2).replace('.', ',')}/un (Mix)` : `R$ ${unitShow.toFixed(2).replace('.', ',')}/un`}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button type="button" onclick="changeMixModalQty(${p.id}, -1)" class="w-8 h-8 rounded-xl bg-white border border-slate-300 font-black text-slate-700">-</button>
+              <span class="w-6 text-center text-xs font-black">${q}</span>
+              <button type="button" onclick="changeMixModalQty(${p.id}, 1)" style="background-color: var(--brand-primary);" class="w-8 h-8 rounded-xl text-white font-black">+</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('cmix-footer-sub').textContent = `${totalQty} ${totalQty === 1 ? 'unidade selecionada' : 'unidades selecionadas'}${mixActive ? ' (com desconto Mix)' : ''}`;
+      document.getElementById('cmix-footer-total').textContent = `R$ ${groupSubtotal.toFixed(2).replace('.', ',')}`;
     }
 
     let cartFulfillmentMode = 'delivery';
@@ -5396,6 +5529,10 @@
         chips.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 text-[10px] font-extrabold">${escapeHtml(o.name)}<button type="button" onclick="toggleWholesaleMixItem('${prefix}', ${o.id})" class="text-emerald-700 hover:text-rose-600 font-black ml-0.5">✕</button></span>`);
       });
       chipsEl.innerHTML = chips.join('');
+      if (prefix === 'edit') {
+        const clrWrap = document.getElementById('edit-mix-clear-all-wrap');
+        if (clrWrap) clrWrap.classList.toggle('hidden', selSet.size === 0);
+      }
 
       const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
       const baseWords = norm(curName).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !['unitario','unidade','sache','racao','para','caes','gatos'].includes(w)).slice(0, 3);
@@ -5424,6 +5561,42 @@
           <span class="text-[10px] font-extrabold text-slate-500 shrink-0">R$ ${o.price.toFixed(2).replace('.', ',')}</span>
         </label>`;
       }).join('') : '<div class="text-[10px] text-slate-400 font-bold text-center py-2">Nenhum outro produto encontrado.</div>';
+    }
+
+    async function disableWholesaleForAllMixGroup() {
+      const curId = Number(document.getElementById('edit-product-id')?.value || currentEditMixProductId || 0);
+      const curProd = products.find(x => Number(x.id) === curId);
+      if (!curProd || !sb) return;
+      const gKey = String(curProd.wholesaleGroup || '').trim().toLowerCase();
+      const targetIds = new Set([curId, ...Array.from(draftMixLinkedIds.edit || []).map(Number)]);
+      if (gKey) {
+        products.forEach(p => { if (String(p.wholesaleGroup || '').trim().toLowerCase() === gKey) targetIds.add(Number(p.id)); });
+      }
+      const idsArr = Array.from(targetIds);
+      if (!confirm(`Desativar o Preço de Atacado e o vínculo Mix de TODOS os ${idsArr.length} produtos deste grupo de uma vez?`)) return;
+      const { error } = await sb.from('products').update({
+        wholesale_qty: null,
+        wholesale_price: null,
+        wholesale_group: null
+      }).in('id', idsArr);
+      if (error) {
+        showToast('⚠️ Erro ao desativar atacado do grupo: ' + error.message);
+        return;
+      }
+      idsArr.forEach(aid => {
+        const item = products.find(x => Number(x.id) === aid);
+        if (item) { item.wholesaleQty = null; item.wholesalePrice = null; item.wholesaleGroup = ''; }
+      });
+      draftMixLinkedIds.edit = new Set();
+      if (document.getElementById('edit-wholesale-enabled')) document.getElementById('edit-wholesale-enabled').checked = false;
+      if (document.getElementById('edit-wholesale-qty')) document.getElementById('edit-wholesale-qty').value = '';
+      if (document.getElementById('edit-wholesale-price')) document.getElementById('edit-wholesale-price').value = '';
+      if (document.getElementById('edit-mix-enabled')) document.getElementById('edit-mix-enabled').checked = false;
+      toggleWholesaleInput('edit-wholesale-enabled', 'edit-wholesale-wrap');
+      toggleWholesaleMixPicker('edit');
+      filterProducts();
+      renderManagerProducts();
+      showToast(`🗑️ Atacado e Mix desativados em todos os ${idsArr.length} produtos de uma vez!`);
     }
 
     function computeCleanMixGroupName(namesList) {
@@ -9173,6 +9346,57 @@
     }, 1000);
 
   </script>
+
+  <!-- CARRINHO FLUTUANTE FIXO NO RODAPÉ DA VITRINE (SÓ APARECE COM ITENS) -->
+  <div id="floating-cart-bar" class="hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-md">
+    <button type="button" onclick="openCartModal()" class="w-full bg-slate-950 hover:bg-slate-900 text-white rounded-2xl px-3.5 py-2.5 shadow-2xl border border-white/15 flex items-center justify-between gap-2.5 cursor-pointer active:scale-[0.99] transition">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span style="background-color: var(--brand-primary);" class="relative inline-flex items-center justify-center w-9 h-9 rounded-xl text-white text-base font-black shrink-0">
+          🛒
+          <span id="fc-badge" class="absolute -top-1.5 -right-1.5 bg-[#FCD40F] text-slate-950 text-[10px] font-black min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center shadow">0</span>
+        </span>
+        <div class="text-left min-w-0">
+          <div id="fc-sub" class="text-[10px] font-bold text-slate-300 leading-tight truncate">0 itens no carrinho</div>
+          <div id="fc-total" class="text-sm sm:text-base font-black text-white leading-tight">R$ 0,00</div>
+        </div>
+      </div>
+      <span class="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-[11px] shrink-0">Ver Carrinho →</span>
+    </button>
+  </div>
+
+  <!-- MODAL: 🎨 MONTADOR DE KIT ATACADO MIX (VITRINE DO CLIENTE) -->
+  <div id="client-mix-modal" class="fixed inset-0 z-50 bg-slate-900/75 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 py-3.5 border-b border-slate-100 flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black mb-1">🎨 ATACADO MIX — PODE MISTURAR</div>
+          <h3 id="cmix-title" class="text-sm font-black text-slate-900 truncate">Monte seu Kit Mix</h3>
+          <p id="cmix-rule" class="text-[11px] font-semibold text-slate-500"></p>
+        </div>
+        <button type="button" onclick="closeClientMixModal()" class="text-slate-400 hover:text-slate-800 font-black text-lg px-1">✕</button>
+      </div>
+      <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 space-y-1.5">
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <span id="cmix-msg" class="font-black text-amber-900"></span>
+          <span id="cmix-count" class="font-black text-slate-700 shrink-0">0 / 0</span>
+        </div>
+        <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+          <div id="cmix-bar" style="width:0%" class="h-full bg-amber-500 rounded-full transition-all duration-300"></div>
+        </div>
+      </div>
+      <div id="cmix-list" class="p-3.5 space-y-2 overflow-y-auto flex-1"></div>
+      <div class="p-3.5 border-t border-slate-200 bg-white space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-600">
+          <span id="cmix-footer-sub">0 unidades</span>
+          <span id="cmix-footer-total" class="text-lg font-black text-slate-900">R$ 0,00</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="closeClientMixModal()" class="py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs">Continuar comprando</button>
+          <button type="button" onclick="closeClientMixModal(); openCartModal();" class="py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow">🛒 Ir p/ Carrinho</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: 👑 PAINEL SUPER ADMIN (CONTROLE DE MÓDULOS SAAS POR LOJA) -->
   <div id="superadmin-modules-modal" class="fixed inset-0 z-50 bg-slate-900/70 hidden items-center justify-center p-3">
