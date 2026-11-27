@@ -191,6 +191,8 @@
         <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
           <button onclick="reprintLastSale()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🖨️ I — Imprimir Última Venda</button>
           <button onclick="openCaixaMoveModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">💵 Sangria / Suprimento</button>
+          <button onclick="openRepoModal()" class="px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-cyan-900 text-xs font-extrabold cursor-pointer">📦 Reposição &amp; Transferências</button>
+          <button onclick="openStockEntryModal()" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-extrabold cursor-pointer">📥 Entrada de Mercadoria / Nota</button>
           <button onclick="syncOfflineQueue(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🔄 Sincronizar</button>
         </div>
       </div>
@@ -502,6 +504,111 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: 📦 REPOSIÇÃO INTELIGENTE & TRANSFERÊNCIAS (3 ESTÁGIOS) ==================== -->
+  <div id="modal-repo" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 style="color: var(--pdv-primary-dark);" class="text-sm sm:text-base font-black">📦 Reposição Inteligente &amp; Transferências entre Lojas</h3>
+          <p class="text-[11px] font-semibold text-slate-500">Use as setas <kbd class="px-1 bg-slate-100 border rounded">↑</kbd> e <kbd class="px-1 bg-slate-100 border rounded">↓</kbd> nos campos de quantidade. Aceita vírgula ou ponto.</p>
+        </div>
+        <button onclick="closeModal('modal-repo')" class="font-black text-slate-400 hover:text-slate-800 text-lg cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto scroll-slim flex-1 space-y-4">
+        <!-- Filtros + Controles -->
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+          <div class="flex flex-wrap items-center gap-2 flex-1">
+            <input id="repo-search" type="text" oninput="renderRepoTable()" placeholder="🔍 Buscar produto (sem acento)..." class="min-w-[180px] flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold" />
+            <select id="repo-filter" onchange="renderRepoTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
+              <option value="low">⚠️ Abaixo do Mínimo / Zerados</option>
+              <option value="all">📋 Todos com Estoque</option>
+            </select>
+            <label class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
+              <span>Reforço %:</span>
+              <input id="repo-boost" type="text" inputmode="decimal" value="20" oninput="renderRepoTable()" class="w-12 text-center font-black text-slate-900 focus:outline-none" />
+            </label>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button onclick="autoFillRepoSuggestions()" style="background-color: var(--pdv-primary);" class="px-3 py-1.5 rounded-xl text-white text-xs font-black cursor-pointer">✨ Preencher Sugestão</button>
+            <button onclick="copyRepoOrderWhatsApp()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer">📋 Copiar Pedido</button>
+            <button onclick="clearRepoOrder()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-black cursor-pointer">🗑️ Limpar</button>
+          </div>
+        </div>
+
+        <!-- Tabela de Reposição -->
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase text-slate-500">
+              <tr>
+                <th class="py-2 px-3">Produto</th>
+                <th class="py-2 px-2 text-center">Estoque</th>
+                <th class="py-2 px-2 text-center">Mínimo</th>
+                <th class="py-2 px-2 text-center">Venda 7d</th>
+                <th class="py-2 px-2 text-center">Sugestão</th>
+                <th class="py-2 px-2 text-center">Pedir (↑/↓)</th>
+                <th class="py-2 px-3 text-right">Transferência</th>
+              </tr>
+            </thead>
+            <tbody id="repo-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+
+        <!-- Painel de Transferências em 3 Estágios -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h4 class="text-xs font-black text-slate-800">📩 Transferências entre Unidades (Alerta em 3 Estágios)</h4>
+            <select id="repo-from-unit" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-[11px] font-bold text-slate-700">
+              <option value="001 Osasco">Pedir de: 001 Osasco</option>
+              <option value="003 São Marcos">Pedir de: 003 São Marcos</option>
+            </select>
+          </div>
+          <div id="repo-transfers-list" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: 📥 ENTRADA DE MERCADORIA / NOTA FISCAL ==================== -->
+  <div id="modal-stock-entry" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 style="color: var(--pdv-primary-dark);" class="text-sm sm:text-base font-black">📥 Entrada de Mercadoria / Nota Fiscal</h3>
+          <p class="text-[11px] font-semibold text-slate-500">Soma no estoque e reativa automaticamente na vitrine produtos pausados por estoque zero.</p>
+        </div>
+        <button onclick="closeModal('modal-stock-entry')" class="font-black text-slate-400 hover:text-slate-800 text-lg cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto scroll-slim flex-1 space-y-3 text-xs">
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+          <input id="se-search" type="text" oninput="renderStockEntryOptions()" placeholder="🔍 Buscar produto ou bipar EAN/PLU (sem acento)..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          <select id="se-prod" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold"></select>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Qtd Recebida</label>
+              <input id="se-qty" type="text" inputmode="decimal" value="1" placeholder="Ex: 10 ou 15,5" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-black" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Custo Unit. (opcional)</label>
+              <input id="se-cost" type="text" inputmode="decimal" placeholder="Ex: 118,50" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-black" />
+            </div>
+            <div class="flex items-end">
+              <button onclick="addStockEntryItem()" style="background-color: var(--pdv-primary);" class="w-full py-2 rounded-xl text-white font-black cursor-pointer">+ Na Lista</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="se-list" class="space-y-1.5"></div>
+      </div>
+
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+        <span id="se-summary" class="text-xs font-extrabold text-slate-600">0 itens na entrada</span>
+        <button onclick="confirmStockEntryBatch()" class="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow cursor-pointer">✅ Confirmar Entrada no Estoque</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ÁREA OCULTA DE IMPRESSÃO TÉRMICA (80mm/58mm) -->
   <div id="thermal-receipt-area" class="hidden"></div>
 
@@ -735,6 +842,7 @@
             promoPrice: (p.promo && p.promo_price && parseFloat(p.promo_price) > 0) ? parseFloat(p.promo_price) : null,
             unit: (p.unit_type || 'UN').toUpperCase(),
             stock: p.stock_qty != null ? parseFloat(p.stock_qty) : null,
+            minStock: p.min_stock != null ? parseFloat(p.min_stock) : null,
             whQty: p.wholesale_qty ? parseInt(p.wholesale_qty, 10) : null,
             whPrice: p.wholesale_price ? parseFloat(p.wholesale_price) : null,
             whGroup: String(p.wholesale_group || '').trim(),
@@ -790,7 +898,7 @@
     // MODAIS & ATALHOS GLOBAIS
     function isAnyModalOpen() {
       return !document.getElementById('pdv-gate').classList.contains('hidden') ||
-        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move']
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry']
           .some(id => !document.getElementById(id).classList.contains('hidden'));
     }
 
@@ -823,7 +931,7 @@
       }
       const payOpen = !document.getElementById('modal-payment').classList.contains('hidden');
       if (e.key === 'Escape') {
-        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move'].forEach(closeModal);
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
         return;
       }
       if (payOpen) {
@@ -1678,33 +1786,332 @@
       openModal('modal-f12');
     }
 
-    // INSTALAÇÃO EM 1 CLIQUE NO PC (ÍCONE NA ÁREA DE TRABALHO + JANELA LIMPA)
-    let deferredPdvPrompt = null;
+
+    // ==================== ETAPA 4D: REPOSIÇÃO INTELIGENTE, TRANSFERÊNCIAS & ENTRADA DE MERCADORIA ====================
+    let repoOrderQtyMap = {};
+    let repoSold7dMap = {};
+    let pdvTransfersList = [];
+    let stockEntryDraft = [];
+
+    async function openRepoModal() {
+      openModal('modal-repo');
+      repoSold7dMap = {};
+      if (navigator.onLine && sb && currentStore) {
+        const d7 = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { data: sales7 } = await sb.from('pdv_sales')
+          .select('items')
+          .eq('store_id', currentStore.id)
+          .eq('status', 'completed')
+          .gte('created_at', d7)
+          .limit(1000);
+        (sales7 || []).forEach(s => {
+          (s.items || []).forEach(it => {
+            if (it.product_id) repoSold7dMap[it.product_id] = (repoSold7dMap[it.product_id] || 0) + (Number(it.qty) || 0);
+          });
+        });
+      }
+      await loadTransfers();
+      renderRepoTable();
+    }
+
+    function getRepoSuggestedQty(p) {
+      const boost = Math.max(0, parseBrNumber(document.getElementById('repo-boost')?.value || '20'));
+      const sold = repoSold7dMap[p.id] || 0;
+      const cur = p.stock != null ? p.stock : 0;
+      const min = p.minStock != null ? p.minStock : 0;
+      const baseTarget = Math.max(min, sold);
+      const target = Math.ceil(baseTarget * (1 + boost / 100));
+      return Math.max(0, Math.ceil(target - cur));
+    }
+
+    function getFilteredRepoItems() {
+      const q = normText((document.getElementById('repo-search')?.value || '').trim());
+      const flt = document.getElementById('repo-filter')?.value || 'low';
+      return catalog.filter(p => {
+        if (q && !normText(p.name).includes(q) && !p.ean.includes(q) && p.plu.toLowerCase() !== q) return false;
+        if (flt === 'low') {
+          if (p.stock == null) return false;
+          return p.stock <= 0 || (p.minStock != null && p.stock <= p.minStock);
+        }
+        return p.stock != null;
+      }).slice(0, 120);
+    }
+
+    function renderRepoTable() {
+      const items = getFilteredRepoItems();
+      const tb = document.getElementById('repo-tbody');
+      if (!items.length) {
+        tb.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-400 font-bold">Nenhum produto encontrado neste filtro.</td></tr>';
+        return;
+      }
+      tb.innerHTML = items.map((p, i) => {
+        const sold = +(repoSold7dMap[p.id] || 0).toFixed(2);
+        const sug = getRepoSuggestedQty(p);
+        const val = repoOrderQtyMap[p.id] != null ? repoOrderQtyMap[p.id] : '';
+        const isLow = p.stock <= 0 || (p.minStock != null && p.stock <= p.minStock);
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2 px-3 font-extrabold text-slate-800">${escapeHtml(p.name)}</td>
+            <td class="py-2 px-2 text-center font-black ${isLow ? 'text-rose-600' : 'text-slate-700'}">${p.stock} ${p.unit}</td>
+            <td class="py-2 px-2 text-center font-bold text-slate-500">${p.minStock != null ? p.minStock : '—'}</td>
+            <td class="py-2 px-2 text-center font-bold text-slate-600">${sold}</td>
+            <td class="py-2 px-2 text-center"><span class="px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 font-black">${sug}</span></td>
+            <td class="py-2 px-2 text-center">
+              <input id="repo-qty-${i}" type="text" inputmode="decimal" value="${val}" oninput="repoOrderQtyMap[${p.id}] = this.value" onkeydown="navRepoInput(event, ${i}, ${items.length})" placeholder="0" class="w-16 text-center bg-slate-50 border border-slate-300 rounded-lg py-1 font-black text-slate-900" />
+            </td>
+            <td class="py-2 px-3 text-right">
+              <button onclick="requestTransfer(${p.id})" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-[10px] font-black cursor-pointer">📩 Transferir</button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function navRepoInput(e, idx, total) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('repo-qty-' + Math.min(total - 1, idx + 1))?.focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); document.getElementById('repo-qty-' + Math.max(0, idx - 1))?.focus(); }
+    }
+
+    function autoFillRepoSuggestions() {
+      const items = getFilteredRepoItems();
+      items.forEach(p => {
+        const s = getRepoSuggestedQty(p);
+        if (s > 0) repoOrderQtyMap[p.id] = String(s);
+      });
+      renderRepoTable();
+      showToast('✨ Sugestões preenchidas com o reforço % aplicado!');
+    }
+
+    function clearRepoOrder() {
+      if (!confirm('Limpar todas as quantidades digitadas neste pedido de reposição?')) return;
+      repoOrderQtyMap = {};
+      renderRepoTable();
+      showToast('🗑️ Pedido de reposição limpo.');
+    }
+
+    function copyRepoOrderWhatsApp() {
+      const lines = [];
+      Object.entries(repoOrderQtyMap).forEach(([pid, raw]) => {
+        const q = parseBrNumber(raw);
+        if (q <= 0) return;
+        const p = catalog.find(x => String(x.id) === String(pid));
+        if (p) lines.push(`• ${q} ${p.unit} — ${p.name}`);
+      });
+      if (!lines.length) { showToast('⚠️ Preencha ao menos 1 quantidade antes de copiar.'); return; }
+      const txt = `📦 *Pedido de Reposição — ${currentStore?.name || storeSlug}*
+
+${lines.join('
+')}`;
+      navigator.clipboard?.writeText(txt);
+      showToast(`📋 Lista com ${lines.length} produto(s) copiada para o WhatsApp!`);
+    }
+
+    async function loadTransfers() {
+      if (!navigator.onLine || !sb || !currentStore) return;
+      const { data, error } = await sb.from('pdv_transfers')
+        .select('*')
+        .eq('store_id', currentStore.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) {
+        pdvTransfersList = [];
+        document.getElementById('repo-transfers-list').innerHTML = '<div class="col-span-2 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-2.5">⚠️ Rode o SQL da Etapa 4D (pdv_transfers) no Supabase para ativar transferências entre lojas.</div>';
+        return;
+      }
+      pdvTransfersList = data || [];
+      renderTransfersList();
+    }
+
+    function renderTransfersList() {
+      const el = document.getElementById('repo-transfers-list');
+      if (!pdvTransfersList.length) {
+        el.innerHTML = '<div class="col-span-2 text-[11px] text-slate-400 font-bold text-center py-3">Nenhuma transferência registrada ainda.</div>';
+        return;
+      }
+      const stMap = {
+        1: { txt: '1/3 Solicitado', cls: 'bg-amber-100 text-amber-900', btn: 'Marcar Em Trânsito →' },
+        2: { txt: '2/3 Em trânsito', cls: 'bg-indigo-100 text-indigo-900', btn: 'Confirmar Recebimento ✅' },
+        3: { txt: '3/3 Recebido ✅', cls: 'bg-emerald-100 text-emerald-900', btn: '' }
+      };
+      el.innerHTML = pdvTransfersList.map(tr => {
+        const st = stMap[tr.stage] || stMap[1];
+        return `
+          <div class="bg-white border border-slate-200 rounded-xl p-2.5 flex items-center justify-between gap-2 text-xs">
+            <div class="min-w-0">
+              <div class="font-black text-slate-800 truncate">${tr.qty}x ${escapeHtml(tr.product_name)}</div>
+              <div class="text-[10px] font-bold text-slate-500">${escapeHtml(tr.from_unit)} → ${escapeHtml(tr.to_unit)}</div>
+              <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-black ${st.cls}">${st.txt}</span>
+            </div>
+            ${st.btn ? `<button onclick="advanceTransferStage(${tr.id})" class="px-2.5 py-1.5 rounded-xl bg-slate-900 text-white text-[10px] font-black shrink-0 cursor-pointer">${st.btn}</button>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    async function requestTransfer(prodId) {
+      const p = catalog.find(x => x.id === prodId);
+      if (!p || !navigator.onLine || !sb) return;
+      const typed = parseBrNumber(repoOrderQtyMap[p.id]);
+      const qty = typed > 0 ? typed : Math.max(1, getRepoSuggestedQty(p));
+      const fromUnit = document.getElementById('repo-from-unit')?.value || '001 Osasco';
+      const { error } = await sb.from('pdv_transfers').insert({
+        store_id: currentStore.id, product_id: p.id, product_name: p.name,
+        qty, from_unit: fromUnit, to_unit: '002 Dom José', stage: 1,
+        operator_email: currentUser?.email || ''
+      });
+      if (error) { showToast('⚠️ Rode o SQL da Etapa 4D no Supabase para pedir transferências.'); return; }
+      await loadTransfers();
+      showToast(`📩 Transferência de ${qty}x ${p.name} solicitada!`);
+    }
+
+    async function advanceTransferStage(transferId) {
+      const tr = pdvTransfersList.find(x => x.id === transferId);
+      if (!tr || tr.stage >= 3 || !navigator.onLine || !sb) return;
+      const nextStage = tr.stage + 1;
+      // Update condicional (.eq('stage', tr.stage)) garante que recebimento nunca some estoque 2x!
+      const { data: upd, error } = await sb.from('pdv_transfers')
+        .update({ stage: nextStage, updated_at: new Date().toISOString() })
+        .eq('id', tr.id)
+        .eq('stage', tr.stage)
+        .select('id');
+      if (error || !upd || !upd.length) return;
+      if (nextStage === 3 && tr.product_id && Number(tr.qty) > 0) {
+        await sb.rpc('pdv_adjust_stock', { p_product_id: tr.product_id, p_delta: Math.abs(Number(tr.qty)) });
+        await loadCatalog();
+        renderRepoTable();
+      }
+      await loadTransfers();
+      showToast(nextStage === 3 ? `✅ ${tr.qty}x ${tr.product_name} recebido e somado ao estoque!` : '📦 Transferência marcada como Em Trânsito!');
+    }
+
+    // ENTRADA DE MERCADORIA / NOTA
+    function openStockEntryModal() {
+      stockEntryDraft = [];
+      document.getElementById('se-search').value = '';
+      document.getElementById('se-qty').value = '1';
+      document.getElementById('se-cost').value = '';
+      renderStockEntryOptions();
+      renderStockEntryDraft();
+      openModal('modal-stock-entry');
+      setTimeout(() => document.getElementById('se-search').focus(), 60);
+    }
+
+    function renderStockEntryOptions() {
+      const q = normText((document.getElementById('se-search')?.value || '').trim());
+      const list = catalog.filter(p => !q || normText(p.name).includes(q) || p.ean.includes(q) || p.plu.toLowerCase() === q).slice(0, 50);
+      document.getElementById('se-prod').innerHTML = list.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (Est: ${p.stock != null ? p.stock : 'Livre'})</option>`).join('');
+    }
+
+    function addStockEntryItem() {
+      const prodId = Number(document.getElementById('se-prod')?.value || 0);
+      const p = catalog.find(x => x.id === prodId);
+      const qty = parseBrNumber(document.getElementById('se-qty')?.value);
+      const cost = parseBrNumber(document.getElementById('se-cost')?.value);
+      if (!p || qty <= 0) { showToast('⚠️ Selecione o produto e informe uma quantidade válida.'); return; }
+      stockEntryDraft.push({ product_id: p.id, name: p.name, unit: p.unit, qty, cost: cost > 0 ? cost : null });
+      document.getElementById('se-qty').value = '1';
+      document.getElementById('se-cost').value = '';
+      renderStockEntryDraft();
+    }
+
+    function renderStockEntryDraft() {
+      const el = document.getElementById('se-list');
+      document.getElementById('se-summary').textContent = `${stockEntryDraft.length} ${stockEntryDraft.length === 1 ? 'item' : 'itens'} na entrada`;
+      el.innerHTML = stockEntryDraft.length ? stockEntryDraft.map((it, i) => `
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+          <div>
+            <div class="font-black text-slate-800">+${it.qty} ${it.unit} • ${escapeHtml(it.name)}</div>
+            ${it.cost ? `<div class="text-[10px] font-bold text-emerald-800">🔒 Novo Custo: ${brl(it.cost)}</div>` : ''}
+          </div>
+          <button onclick="stockEntryDraft.splice(${i},1); renderStockEntryDraft();" class="text-rose-600 font-black cursor-pointer">✕</button>
+        </div>`).join('') : '<div class="text-center py-4 text-slate-400 font-bold">Adicione acima os produtos que chegaram na nota.</div>';
+    }
+
+    async function confirmStockEntryBatch() {
+      if (!stockEntryDraft.length) { showToast('⚠️ Adicione ao menos 1 produto antes de confirmar.'); return; }
+      if (!navigator.onLine || !sb) { showToast('🟠 Conecte à internet para dar entrada no estoque.'); return; }
+      const costsToUpsert = [];
+      for (const it of stockEntryDraft) {
+        const p = catalog.find(x => x.id === it.product_id);
+        if (p && p.stock == null) {
+          await sb.from('products').update({ stock_qty: it.qty }).eq('id', it.product_id);
+        } else {
+          await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: Math.abs(it.qty) });
+        }
+        if (it.cost) {
+          costsToUpsert.push({ store_id: currentStore.id, product_id: it.product_id, cost_price: it.cost, updated_at: new Date().toISOString() });
+        }
+      }
+      if (costsToUpsert.length) {
+        await sb.from('product_costs').upsert(costsToUpsert, { onConflict: 'product_id' });
+      }
+      const totalItems = stockEntryDraft.length;
+      stockEntryDraft = [];
+      await loadCatalog();
+      closeModal('modal-stock-entry');
+      showToast(`✅ Entrada de ${totalItems} produto(s) lançada no estoque!`);
+    }
+
+    // INSTALAÇÃO TRADICIONAL NO WINDOWS (BAIXA INSTALADOR EM DOWNLOADS -> 2 CLIQUES -> ÍCONE NA ÁREA DE TRABALHO)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPdvPrompt = e;
-      document.getElementById('btn-install-pdv-pc')?.classList.remove('hidden');
-    });
-    window.addEventListener('appinstalled', () => {
-      deferredPdvPrompt = null;
-      document.getElementById('btn-install-pdv-pc')?.classList.add('hidden');
-      showToast('✅ PDV instalado na Área de Trabalho do computador!');
-    });
     if (window.matchMedia('(display-mode: standalone)').matches) {
       document.getElementById('btn-install-pdv-pc')?.classList.add('hidden');
     }
-    async function installPdvDesktop() {
-      if (deferredPdvPrompt) {
-        deferredPdvPrompt.prompt();
-        const { outcome } = await deferredPdvPrompt.userChoice;
-        if (outcome === 'accepted') showToast('✅ Instalando ícone do PDV na Área de Trabalho...');
-        deferredPdvPrompt = null;
-      } else {
-        showToast('💻 Clique no ícone de instalar na barra de endereço (canto superior direito) para criar o ícone na Área de Trabalho!');
-      }
+    function installPdvDesktop() {
+      const rawName = (currentStore?.name || storeSlug || 'Loja').trim();
+      const safeLabel = rawName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[<>:"/\\|?*]+/g, '').replace(/\s+/g, ' ').trim() || 'PDV';
+      const fileSafe = safeLabel.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 32) || 'PDV';
+      const pdvUrl = `${location.origin}${location.pathname}?loja=${encodeURIComponent(storeSlug)}`;
+
+      const lines = [
+        '@echo off',
+        'chcp 65001 >nul',
+        'title Instalador PDV - ' + safeLabel,
+        'echo.',
+        'echo ====================================================',
+        'echo   INSTALANDO ATALHO DO PDV NA AREA DE TRABALHO...',
+        'echo   Loja: ' + safeLabel,
+        'echo ====================================================',
+        'echo.',
+        'set "BROWSER="',
+        'if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" set "BROWSER=%ProgramFiles%\Google\Chrome\Application\chrome.exe"',
+        'if not defined BROWSER if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" set "BROWSER=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"',
+        'if not defined BROWSER if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" set "BROWSER=%LocalAppData%\Google\Chrome\Application\chrome.exe"',
+        'if not defined BROWSER if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" set "BROWSER=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"',
+        'if not defined BROWSER if exist "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" set "BROWSER=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"',
+        'set "PDV_URL=' + pdvUrl + '"',
+        'set "VBS=%TEMP%\instalar_pdv_' + fileSafe + '.vbs"',
+        '> "%VBS%" echo Set oWS = WScript.CreateObject("WScript.Shell")',
+        '>> "%VBS%" echo sDesktop = oWS.SpecialFolders("Desktop")',
+        '>> "%VBS%" echo Set oLink = oWS.CreateShortcut(sDesktop ^& "\PDV - ' + safeLabel + '.lnk")',
+        'if defined BROWSER (',
+        '  >> "%VBS%" echo oLink.TargetPath = "%BROWSER%"',
+        '  >> "%VBS%" echo oLink.Arguments = "--app=%PDV_URL%"',
+        '  >> "%VBS%" echo oLink.IconLocation = "%BROWSER%,0"',
+        ') else (',
+        '  >> "%VBS%" echo oLink.TargetPath = "%PDV_URL%"',
+        ')',
+        '>> "%VBS%" echo oLink.Description = "PDV - ' + safeLabel + '"',
+        '>> "%VBS%" echo oLink.Save',
+        'cscript //nologo "%VBS%"',
+        'del "%VBS%" >nul 2>&1',
+        'echo.',
+        'echo [OK] Icone "PDV - ' + safeLabel + '" criado na Area de Trabalho!',
+        'echo Abrindo o PDV em janela limpa...',
+        'if defined BROWSER ( start "" "%BROWSER%" --app="%PDV_URL%" ) else ( start "" "%PDV_URL%" )',
+        'timeout /t 3 >nul',
+        'exit'
+      ];
+
+      const batContent = lines.join('\r\n') + '\r\n';
+      const blob = new Blob([batContent], { type: 'application/octet-stream' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Instalar_PDV_${fileSafe}.bat`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      showToast(`⬇️ Instalador baixado! Abra "Instalar_PDV_${fileSafe}.bat" nos Downloads e dê 2 cliques.`);
     }
 
     bootPdv().catch((err) => {
