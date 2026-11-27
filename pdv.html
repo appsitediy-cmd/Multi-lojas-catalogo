@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PDV — Frente de Caixa</title>
+  <link rel="manifest" href="manifest-pdv.json" />
+  <link rel="icon" type="image/svg+xml" href="icon-pdv.svg" />
   <link rel="preconnect" href="https://pimqhnjyahykpewbzpum.supabase.co" crossorigin>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -102,6 +104,7 @@
     <div class="flex items-center gap-1.5">
       <button onclick="document.getElementById('main-barcode-input').focus()" style="color: var(--pdv-primary-dark);" class="px-2.5 py-1 rounded-lg bg-white font-black text-[11px] cursor-pointer shadow-xs">🖥️ PDV</button>
       <button onclick="goToAppClient()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] cursor-pointer">🛍️ App Cliente</button>
+      <button id="btn-install-pdv-pc" onclick="installPdvDesktop()" class="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] cursor-pointer shadow-xs" title="Criar ícone do PDV na Área de Trabalho do computador">💻 Instalar no PC</button>
       <button onclick="goToManager()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] cursor-pointer">⚙️ Painel Gestor</button>
     </div>
   </div>
@@ -345,7 +348,7 @@
       <div id="f3-results" class="space-y-1.5 max-h-60 overflow-y-auto scroll-slim"></div>
       <div id="f3-detail" style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="hidden border rounded-2xl p-3 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
-          <img id="f3-det-img" src="" alt="" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-200 p-1 shrink-0 hidden" />
+          <img id="f3-det-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-200 p-1 shrink-0 hidden" />
           <div class="min-w-0">
             <div id="f3-det-name" style="color: var(--pdv-primary-dark);" class="text-xs font-black truncate"></div>
             <div id="f3-det-desc" class="text-[11px] font-semibold text-slate-600 mt-0.5"></div>
@@ -512,8 +515,12 @@
     const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const storeSlug = (urlParams.get('loja') || localStorage.getItem('pdv_last_slug') || 'recanto').trim().toLowerCase();
-    try { localStorage.setItem('pdv_last_slug', storeSlug); } catch (e) {}
+    let storeSlug = (urlParams.get('loja') || localStorage.getItem('pdv_last_slug') || '').trim().toLowerCase();
+    if (!storeSlug) {
+      const asked = prompt('Informe o identificador da sua loja (ex: recanto):', '');
+      storeSlug = String(asked || '').trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+    }
+    if (storeSlug) { try { localStorage.setItem('pdv_last_slug', storeSlug); } catch (e) {} }
 
     let currentUser = null;
     let currentStore = null;
@@ -1393,11 +1400,14 @@
       let synced = 0;
       for (const sale of q) {
         try {
-          const { error } = await sb.from('pdv_sales').upsert(sale, { onConflict: 'store_id,local_uid', ignoreDuplicates: true });
+          const { data: upData, error } = await sb.from('pdv_sales').upsert(sale, { onConflict: 'store_id,local_uid', ignoreDuplicates: true }).select('id');
           if (error) throw error;
-          for (const it of (sale.items || [])) {
-            if (it.product_id && Number(it.qty) > 0) {
-              await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: -Math.abs(Number(it.qty)) });
+          // Só baixa estoque se a venda realmente foi inserida agora (evita baixa dupla em reconexão)
+          if (Array.isArray(upData) && upData.length > 0) {
+            for (const it of (sale.items || [])) {
+              if (it.product_id && Number(it.qty) > 0) {
+                await sb.rpc('pdv_adjust_stock', { p_product_id: it.product_id, p_delta: -Math.abs(Number(it.qty)) });
+              }
             }
           }
           synced++;
@@ -1657,7 +1667,39 @@
       openModal('modal-f12');
     }
 
-    bootPdv();
+    // INSTALAÇÃO EM 1 CLIQUE NO PC (ÍCONE NA ÁREA DE TRABALHO + JANELA LIMPA)
+    let deferredPdvPrompt = null;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPdvPrompt = e;
+      document.getElementById('btn-install-pdv-pc')?.classList.remove('hidden');
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredPdvPrompt = null;
+      document.getElementById('btn-install-pdv-pc')?.classList.add('hidden');
+      showToast('✅ PDV instalado na Área de Trabalho do computador!');
+    });
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      document.getElementById('btn-install-pdv-pc')?.classList.add('hidden');
+    }
+    async function installPdvDesktop() {
+      if (deferredPdvPrompt) {
+        deferredPdvPrompt.prompt();
+        const { outcome } = await deferredPdvPrompt.userChoice;
+        if (outcome === 'accepted') showToast('✅ Instalando ícone do PDV na Área de Trabalho...');
+        deferredPdvPrompt = null;
+      } else {
+        showToast('💻 Clique no ícone de instalar na barra de endereço (canto superior direito) para criar o ícone na Área de Trabalho!');
+      }
+    }
+
+    bootPdv().catch((err) => {
+      console.error('[bootPdv error]', err);
+      showGateLogin('Faça login com a conta de Gestor para abrir o PDV.');
+    });
   </script>
 </body>
 </html>

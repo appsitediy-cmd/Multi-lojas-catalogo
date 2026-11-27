@@ -1,0 +1,18 @@
+{
+  "id": "multiloja-pdv",
+  "name": "PDV — Frente de Caixa",
+  "short_name": "PDV Caixa",
+  "start_url": "./pdv.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "icon-pdv.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
