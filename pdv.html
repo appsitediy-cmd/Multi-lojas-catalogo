@@ -122,14 +122,15 @@
     </div>
   </div>
 
-  <!-- FAIXA 2: BARRA LARGA DE BIPAGEM -->
-  <div style="background-color: var(--pdv-primary);" class="px-3 sm:px-5 py-2.5 shadow-md">
+  <!-- FAIXA 2: BARRA LARGA DE BIPAGEM + AUTOCOMPLETE INTELIGENTE -->
+  <div style="background-color: var(--pdv-primary);" class="relative z-30 px-3 sm:px-5 py-2.5 shadow-md">
     <div class="flex items-center gap-3">
       <input
         id="main-barcode-input"
         type="text"
         autocomplete="off"
-        placeholder="Digite o Código ou Passe o Produto"
+        placeholder="Bipe o Código, digite o Nome ou 3*Código"
+        oninput="onMainSearchInput()"
         onkeydown="handleMainInputKey(event)"
         class="flex-1 bg-transparent text-white placeholder:text-white/75 text-lg sm:text-2xl font-semibold text-center focus:outline-none tracking-wide"
       />
@@ -137,6 +138,7 @@
         💰 Receber
       </button>
     </div>
+    <div id="main-search-dropdown" class="hidden absolute left-3 right-3 sm:left-5 sm:right-5 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden max-h-[380px] overflow-y-auto scroll-slim"></div>
   </div>
 
   <!-- ÁREA PRINCIPAL EM 2 COLUNAS -->
@@ -1033,6 +1035,25 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: 🎉 MONTADOR DE SABORES ATACADO MIX NO PDV ==================== -->
+  <div id="modal-pdv-mix" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h3 id="pdv-mix-title" class="text-sm sm:text-base font-black">🎉 Atacado Mix</h3>
+          <p id="pdv-mix-sub" class="text-[11px] font-semibold text-slate-300"></p>
+        </div>
+        <button type="button" onclick="closeModal('modal-pdv-mix')" class="font-black text-slate-300 hover:text-white text-lg cursor-pointer">✕</button>
+      </div>
+      <div id="pdv-mix-progress" class="px-5 py-2.5 text-xs font-black border-b"></div>
+      <div id="pdv-mix-list" class="p-4 space-y-2 overflow-y-auto scroll-slim flex-1"></div>
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+        <button type="button" onclick="closeModal('modal-pdv-mix')" class="px-4 py-2 rounded-xl bg-white border border-slate-300 text-xs font-black text-slate-700 cursor-pointer">Cancelar</button>
+        <button type="button" onclick="confirmPdvMixModal()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow cursor-pointer">✅ Lançar no Caixa</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div id="toast" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white px-4 py-2.5 rounded-2xl text-xs font-extrabold shadow-xl"></div>
 
@@ -1367,7 +1388,7 @@
     // MODAIS & ATALHOS GLOBAIS
     function isAnyModalOpen() {
       return !document.getElementById('pdv-gate').classList.contains('hidden') ||
-        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry', 'modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-motoboy', 'modal-clients', 'modal-delivery-checkout', 'modal-delivery-edit', 'modal-delivery-settle', 'modal-motoboy-summary']
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry', 'modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-motoboy', 'modal-clients', 'modal-delivery-checkout', 'modal-delivery-edit', 'modal-delivery-settle', 'modal-motoboy-summary', 'modal-pdv-mix']
           .some(id => !document.getElementById(id).classList.contains('hidden'));
     }
 
@@ -1400,7 +1421,7 @@
       }
       const payOpen = !document.getElementById('modal-payment').classList.contains('hidden');
       if (e.key === 'Escape') {
-        ['modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-delivery-edit', 'modal-delivery-settle', 'modal-delivery-checkout', 'modal-motoboy-summary', 'modal-clients', 'modal-motoboy', 'modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
+        ['modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-delivery-edit', 'modal-delivery-settle', 'modal-delivery-checkout', 'modal-motoboy-summary', 'modal-clients', 'modal-pdv-mix', 'modal-motoboy', 'modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
         return;
       }
       if (payOpen) {
@@ -1449,6 +1470,7 @@
     });
 
     document.addEventListener('click', (e) => {
+      if (!e.target.closest('#main-search-dropdown') && e.target.id !== 'main-barcode-input') hideMainSearchDropdown();
       if (isAnyModalOpen()) return;
       const tag = e.target?.tagName;
       if (!['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(tag)) {
@@ -1456,10 +1478,128 @@
       }
     });
 
+    let mainDropdownItems = [];
+    let mainDropdownIdx = -1;
+
+    function hideMainSearchDropdown() {
+      const dd = document.getElementById('main-search-dropdown');
+      if (dd) { dd.classList.add('hidden'); dd.innerHTML = ''; }
+      mainDropdownItems = [];
+      mainDropdownIdx = -1;
+    }
+
+    function findExactCatalogProduct(code) {
+      const c = String(code || '').trim();
+      if (!c) return null;
+      const cLow = c.toLowerCase();
+      return catalog.find(p =>
+        (p.ean && p.ean === c) ||
+        (p.plu && p.plu.toLowerCase() === cLow) ||
+        (Array.isArray(p.extraEans) && p.extraEans.includes(c))
+      ) || null;
+    }
+
+    function rankSearchMatches(queryStr) {
+      const q = normText(queryStr).trim();
+      if (!q) return [];
+      const matches = catalog.filter(p => smartMatchProduct(p, queryStr));
+      return matches.sort((a, b) => {
+        const score = (p) => {
+          const nm = normText(p.name);
+          if (p.plu && p.plu.toLowerCase() === q) return 0;
+          if (p.ean && p.ean === queryStr.trim()) return 0;
+          if (nm.startsWith(q)) return 1;
+          if (nm.split(/\s+/).some(w => w.startsWith(q))) return 2;
+          if (nm.includes(q)) return 3;
+          return 4;
+        };
+        const sa = score(a), sb = score(b);
+        return sa !== sb ? sa - sb : a.name.localeCompare(b.name, 'pt-BR');
+      });
+    }
+
+    function onMainSearchInput() {
+      const raw = (document.getElementById('main-barcode-input')?.value || '').trim();
+      if (!raw || raw.length < 2 || raw.includes('$')) { hideMainSearchDropdown(); return; }
+      let q = raw;
+      const mMul = raw.match(/^(\d+(?:[.,]\d+)?)\*(.+)$/);
+      if (mMul) q = mMul[2].trim();
+      if (q.length < 2) { hideMainSearchDropdown(); return; }
+      // Se for um EAN longo digitado pelo leitor (8+ dígitos só números), não polui a tela
+      if (/^\d{8,}$/.test(q)) { hideMainSearchDropdown(); return; }
+
+      const ranked = rankSearchMatches(q).slice(0, 7);
+      if (!ranked.length) { hideMainSearchDropdown(); return; }
+      mainDropdownItems = ranked;
+      mainDropdownIdx = -1;
+      renderMainSearchDropdown(q);
+    }
+
+    function renderMainSearchDropdown(queryText) {
+      const dd = document.getElementById('main-search-dropdown');
+      if (!dd || !mainDropdownItems.length) { hideMainSearchDropdown(); return; }
+      dd.innerHTML = mainDropdownItems.map((p, i) => {
+        const active = i === mainDropdownIdx;
+        const unitPrice = p.promoPrice || p.price;
+        const thumb = p.image
+          ? `<img src="${escapeHtml(p.image)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" />`
+          : `<div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-sm shrink-0">📦</div>`;
+        return `
+          <button type="button" onmousedown="event.preventDefault(); pickMainDropdownItem(${i})" class="w-full text-left px-3.5 py-2 flex items-center justify-between gap-3 border-b border-slate-100 last:border-b-0 cursor-pointer ${active ? 'bg-cyan-50 ring-2 ring-inset ring-cyan-500' : 'hover:bg-slate-50'}">
+            <div class="flex items-center gap-2.5 min-w-0">
+              ${thumb}
+              <div class="min-w-0">
+                <div class="text-xs sm:text-sm font-black text-slate-900 truncate">${escapeHtml(p.name)}</div>
+                <div class="text-[10px] font-bold text-slate-500">${p.plu ? 'PLU ' + escapeHtml(p.plu) + ' · ' : ''}${p.ean ? 'EAN ' + escapeHtml(p.ean) + ' · ' : ''}Est: ${p.stock != null ? p.stock + ' ' + p.unit : '—'}</div>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-xl bg-slate-900 text-white text-xs font-black shrink-0">${brl(unitPrice)}</span>
+          </button>`;
+      }).join('') + `<div class="px-3.5 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 flex items-center justify-between"><span>Use <kbd class="px-1 bg-white border rounded">↑</kbd> <kbd class="px-1 bg-white border rounded">↓</kbd> + <kbd class="px-1 bg-white border rounded">Enter</kbd> para escolher direto</span><span>Ou aperte <strong>Enter</strong> para abrir tudo no F3</span></div>`;
+      dd.classList.remove('hidden');
+    }
+
+    function pickMainDropdownItem(idx) {
+      const prod = mainDropdownItems[idx];
+      if (!prod) return;
+      const inp = document.getElementById('main-barcode-input');
+      const raw = (inp?.value || '').trim();
+      let mult = 1;
+      const mMul = raw.match(/^(\d+(?:[.,]\d+)?)\*(.+)$/);
+      if (mMul) mult = parseFloat(mMul[1].replace(',', '.')) || 1;
+      addToCupom(prod, mult);
+      if (inp) inp.value = '';
+      hideMainSearchDropdown();
+      inp?.focus();
+    }
+
     function handleMainInputKey(e) {
+      const ddOpen = mainDropdownItems.length > 0 && !document.getElementById('main-search-dropdown')?.classList.contains('hidden');
+      if (ddOpen && e.key === 'ArrowDown') {
+        e.preventDefault();
+        mainDropdownIdx = (mainDropdownIdx + 1) % mainDropdownItems.length;
+        renderMainSearchDropdown();
+        return;
+      }
+      if (ddOpen && e.key === 'ArrowUp') {
+        e.preventDefault();
+        mainDropdownIdx = mainDropdownIdx <= 0 ? mainDropdownItems.length - 1 : mainDropdownIdx - 1;
+        renderMainSearchDropdown();
+        return;
+      }
+      if (ddOpen && e.key === 'Escape') {
+        e.preventDefault();
+        hideMainSearchDropdown();
+        return;
+      }
       if (e.key !== 'Enter') return;
       e.preventDefault();
+      if (ddOpen && mainDropdownIdx >= 0 && mainDropdownItems[mainDropdownIdx]) {
+        pickMainDropdownItem(mainDropdownIdx);
+        return;
+      }
       const raw = document.getElementById('main-barcode-input').value.trim();
+      hideMainSearchDropdown();
       if (!raw) {
         if (cupom.length > 0) openPaymentScreen();
         return;
@@ -1469,9 +1609,7 @@
     }
 
     function findCatalogProductByCode(code) {
-      const c = String(code || '').trim();
-      return catalog.find(p => p.ean === c || (p.plu && p.plu.toLowerCase() === c.toLowerCase()) || p.extraEans.includes(c))
-        || catalog.find(p => smartMatchProduct(p, c));
+      return findExactCatalogProduct(code);
     }
 
     function runCommand(raw) {
@@ -1483,7 +1621,7 @@
       // Granel por valor: PLU$Valor (ex: 42$15)
       const mVal = raw.match(/^([a-zA-Z0-9]+)\$(\d+(?:[.,]\d+)?)$/);
       if (mVal) {
-        const p = findCatalogProductByCode(mVal[1]);
+        const p = findExactCatalogProduct(mVal[1]);
         const reais = parseFloat(mVal[2].replace(',', '.'));
         const basePrice = p ? (p.promoPrice || p.price) : 0;
         if (p && reais > 0 && basePrice > 0) {
@@ -1499,16 +1637,32 @@
         }
       }
 
-      // Multiplicação: 3*789...
+      // Multiplicação: 3*789... ou 5*sache
       let mult = 1, code = raw;
       const mMul = raw.match(/^(\d+(?:[.,]\d+)?)\*(.+)$/);
       if (mMul) { mult = parseFloat(mMul[1].replace(',', '.')) || 1; code = mMul[2].trim(); }
 
-      const prod = findCatalogProductByCode(code);
-      if (prod) {
-        addToCupom(prod, mult);
+      // 1º: Código exato (EAN, EAN extra ou PLU) -> lança na hora!
+      const exactProd = findExactCatalogProduct(code);
+      if (exactProd) {
+        addToCupom(exactProd, mult);
+        return;
+      }
+
+      // 2º: Busca por nome / trecho -> se 1 resultado único, lança; se 2+, abre F3 já filtrado!
+      const matches = rankSearchMatches(code);
+      if (matches.length === 1) {
+        addToCupom(matches[0], mult);
+      } else if (matches.length > 1) {
+        openF3Modal();
+        const f3Inp = document.getElementById('f3-search');
+        const f3Qty = document.getElementById('f3-det-qty');
+        if (f3Inp) { f3Inp.value = code; }
+        if (f3Qty && mult !== 1) { f3Qty.value = String(mult).replace('.', ','); }
+        renderF3List();
+        showToast(`🔎 ${matches.length} produtos encontrados — escolha com ↑/↓ e aperte Enter.`);
       } else {
-        showToast('⚠️ Produto não encontrado. Aperte F3 para buscar por nome.');
+        showToast(`⚠️ Nenhum produto encontrado para "${code}".`);
       }
     }
 
@@ -1563,16 +1717,52 @@
       document.getElementById('state-cupom-aberto').classList.toggle('hidden', !hasItems);
       if (!hasItems) return;
 
+      const groupTotals = {};
+      cupom.forEach(c => {
+        if (c.whGroup) {
+          const k = c.whGroup.toLowerCase();
+          groupTotals[k] = (groupTotals[k] || 0) + Number(c.qty || 0);
+        }
+      });
+
       document.getElementById('cupom-item-count').textContent = `${cupom.length} ${cupom.length === 1 ? 'item' : 'itens'}`;
-      document.getElementById('cupom-tbody').innerHTML = cupom.map((it, idx) => `
+      document.getElementById('cupom-tbody').innerHTML = cupom.map((it, idx) => {
+        let inlineWhHtml = '';
+        let whActive = false;
+        if (it.custom_total == null && it.whQty && it.whQty >= 2 && it.whPrice && it.whPrice > 0) {
+          const wUnit = it.whPrice / it.whQty;
+          if (wUnit < it.base_unit) {
+            const effQty = it.whGroup ? (groupTotals[it.whGroup.toLowerCase()] || Number(it.qty || 0)) : Number(it.qty || 0);
+            const missing = Math.ceil(it.whQty - effQty);
+            if (missing <= 0) {
+              whActive = true;
+              inlineWhHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-black shrink-0">🎉 ${it.whGroup ? 'Atacado Mix' : 'Atacado'} ${brl(wUnit)}</span>`;
+            } else if (it.whGroup) {
+              const safeGrp = escapeHtml(it.whGroup).replace(/'/g, '&#39;');
+              inlineWhHtml = `<button type="button" onclick="openPdvMixModal('${safeGrp}')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-400 text-amber-950 text-[10px] font-black cursor-pointer shrink-0 active:scale-95 transition">🔥 +${missing} p/ Atacado Mix (${brl(wUnit)}/un) · Sabores</button>`;
+            } else {
+              inlineWhHtml = `<button type="button" onclick="activatePdvSimpleWholesale(${idx}, ${missing})" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-400 text-amber-950 text-[10px] font-black cursor-pointer shrink-0 active:scale-95 transition">🔥 +${missing} p/ Atacado (${brl(wUnit)}/un) · Ativar</button>`;
+            }
+          }
+        }
+        const unitHtml = whActive
+          ? `<span class="line-through text-[10px] text-slate-400 mr-1">${brl(it.base_unit)}</span><span class="text-emerald-700 font-black">${brl(it.unit_price)}</span>`
+          : brl(it.unit_price);
+        return `
         <tr class="hover:bg-slate-50">
           <td class="py-2 pr-2 font-bold text-slate-400">${idx + 1}</td>
-          <td class="py-2 px-2 font-extrabold text-slate-800">${escapeHtml(it.name)}${it.is_mix ? ' <span class="text-[10px] text-emerald-700 font-black">(Mix)</span>' : ''}</td>
+          <td class="py-2 px-2">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span class="font-extrabold text-slate-800">${escapeHtml(it.name)}</span>
+              ${inlineWhHtml}
+            </div>
+          </td>
           <td class="py-2 px-2 text-center font-black">${it.qty}</td>
-          <td class="py-2 px-2 text-right font-semibold text-slate-600">${brl(it.unit_price)}</td>
+          <td class="py-2 px-2 text-right font-semibold text-slate-600">${unitHtml}</td>
           <td style="color: var(--pdv-primary-dark);" class="py-2 px-2 text-right font-black">${brl(it.subtotal)}</td>
           <td class="py-2 pl-2 text-right"><button onclick="cupom.splice(${idx},1); renderCupom();" class="text-rose-500 font-black cursor-pointer">✕</button></td>
-        </tr>`).join('');
+        </tr>`;
+      }).join('');
 
       const dl = document.getElementById('cupom-discount-line');
       if (discountAmount > 0) {
@@ -1582,6 +1772,112 @@
         dl.classList.add('hidden');
       }
       document.getElementById('cupom-total-big').textContent = brl(getCupomNetTotal());
+    }
+
+
+    // ==================== ATACADO / ATACADO MIX NA LINHA DO PDV ====================
+    let activePdvMixGroup = '';
+    let pdvMixDraftQty = {};
+
+    function activatePdvSimpleWholesale(cupomIdx, missingQty) {
+      const it = cupom[cupomIdx];
+      if (!it || !missingQty || missingQty <= 0) return;
+      it.qty = +(Number(it.qty || 0) + Number(missingQty)).toFixed(3);
+      renderCupom();
+      showToast(`🎉 +${missingQty} un. lançadas — Atacado ativado!`);
+      document.getElementById('main-barcode-input')?.focus();
+    }
+
+    function openPdvMixModal(groupName) {
+      const targetLow = String(groupName || '').trim().toLowerCase();
+      const siblings = catalog.filter(p => p.whGroup && p.whGroup.toLowerCase() === targetLow);
+      if (!siblings.length) { showToast('⚠️ Nenhum sabor encontrado neste grupo Mix.'); return; }
+      activePdvMixGroup = siblings[0].whGroup;
+      pdvMixDraftQty = {};
+      siblings.forEach(p => {
+        const ex = cupom.find(c => c.product_id === p.id && c.custom_total == null);
+        pdvMixDraftQty[p.id] = ex ? Number(ex.qty || 0) : 0;
+      });
+      const minQty = siblings[0].whQty || 2;
+      const wUnit = (siblings[0].whPrice || 0) / minQty;
+      document.getElementById('pdv-mix-title').textContent = `🎉 Atacado Mix — ${activePdvMixGroup}`;
+      document.getElementById('pdv-mix-sub').textContent = `Misture os sabores (${minQty}+ un. por ${brl(wUnit)} cada)`;
+      renderPdvMixModal();
+      openModal('modal-pdv-mix');
+    }
+
+    function changePdvMixDraft(prodId, delta) {
+      pdvMixDraftQty[prodId] = Math.max(0, +(Number(pdvMixDraftQty[prodId] || 0) + delta).toFixed(3));
+      renderPdvMixModal();
+    }
+
+    function renderPdvMixModal() {
+      const targetLow = activePdvMixGroup.toLowerCase();
+      const siblings = catalog.filter(p => p.whGroup && p.whGroup.toLowerCase() === targetLow);
+      const minQty = siblings[0]?.whQty || 2;
+      const wUnit = (siblings[0]?.whPrice || 0) / minQty;
+      const totalSel = siblings.reduce((s, p) => s + Number(pdvMixDraftQty[p.id] || 0), 0);
+      const missing = Math.max(0, Math.ceil(minQty - totalSel));
+
+      const bar = document.getElementById('pdv-mix-progress');
+      if (missing > 0) {
+        bar.className = 'px-5 py-2.5 text-xs font-black border-b bg-amber-50 border-amber-200 text-amber-950';
+        bar.textContent = `🔥 Selecionados: ${totalSel} de ${minQty} · Faltam +${missing} sabor(es) para cair para ${brl(wUnit)}/un!`;
+      } else {
+        bar.className = 'px-5 py-2.5 text-xs font-black border-b bg-emerald-600 border-emerald-700 text-white';
+        bar.textContent = `🎉 ATACADO MIX ATIVADO! ${totalSel} un. por ${brl(wUnit)} cada!`;
+      }
+
+      document.getElementById('pdv-mix-list').innerHTML = siblings.map(p => {
+        const q = Number(pdvMixDraftQty[p.id] || 0);
+        const base = p.promoPrice || p.price;
+        const pWUnit = (p.whPrice && p.whQty) ? (p.whPrice / p.whQty) : wUnit;
+        const thumb = p.image
+          ? `<img src="${escapeHtml(p.image)}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0" />`
+          : `<div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-base shrink-0">📦</div>`;
+        return `
+          <div class="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl border ${q > 0 ? 'bg-emerald-50/60 border-emerald-300' : 'bg-slate-50 border-slate-200'}">
+            <div class="flex items-center gap-2.5 min-w-0">
+              ${thumb}
+              <div class="min-w-0">
+                <div class="text-xs font-black text-slate-900 truncate">${escapeHtml(p.name)}</div>
+                <div class="text-[11px] font-bold text-slate-500">Est: ${p.stock != null ? p.stock + ' ' + p.unit : '—'} · ${brl(base)} → <strong class="text-emerald-700">${brl(pWUnit)}</strong></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="changePdvMixDraft(${p.id}, -1)" class="w-8 h-8 rounded-xl bg-white border border-slate-300 font-black cursor-pointer">−</button>
+              <span class="w-7 text-center text-sm font-black">${q}</span>
+              <button type="button" onclick="changePdvMixDraft(${p.id}, 1)" class="w-8 h-8 rounded-xl bg-slate-900 text-white font-black cursor-pointer">+</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function confirmPdvMixModal() {
+      const targetLow = activePdvMixGroup.toLowerCase();
+      const siblings = catalog.filter(p => p.whGroup && p.whGroup.toLowerCase() === targetLow);
+      siblings.forEach(p => {
+        const targetQty = Number(pdvMixDraftQty[p.id] || 0);
+        const idx = cupom.findIndex(c => c.product_id === p.id && c.custom_total == null);
+        if (targetQty > 0) {
+          if (idx === -1) {
+            const baseUnit = p.promoPrice || p.price;
+            cupom.push({
+              product_id: p.id, name: p.name, qty: targetQty,
+              base_unit: baseUnit, unit_price: baseUnit, subtotal: baseUnit * targetQty,
+              unit_type: p.unit, whQty: p.whQty, whPrice: p.whPrice, whGroup: p.whGroup,
+              is_diversos: false
+            });
+          } else {
+            cupom[idx].qty = targetQty;
+          }
+        } else if (idx !== -1) {
+          cupom.splice(idx, 1);
+        }
+      });
+      closeModal('modal-pdv-mix');
+      renderCupom();
+      showToast('🎉 Sabores do Atacado Mix atualizados no caixa!');
     }
 
     function cancelCupom() {
