@@ -179,20 +179,19 @@
       <div id="state-caixa-livre" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <div style="color: var(--pdv-primary-dark);" class="text-5xl sm:text-7xl font-black tracking-tight">Caixa Livre</div>
         <div id="live-clock" style="color: var(--pdv-primary-mid);" class="text-3xl sm:text-4xl font-extrabold mt-3 tabular-nums">00:00:00</div>
-        <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-slate-500">
-          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">F3</kbd> Produtos</span>
-          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">N1</kbd> Diversos</span>
-          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">D</kbd> Desconto</span>
-          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">R</kbd> Relatório</span>
-          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">F12</kbd> Fechamento</span>
-          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">I</kbd> Imprimir Última</span>
-          <span class="px-2.5 py-1 rounded-xl bg-slate-100"><kbd class="font-black text-slate-800">PLU$Valor</kbd> Granel</span>
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs font-bold">
+          <button onclick="openF3Modal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">F3</kbd> Produtos</button>
+          <button onclick="openDiversos()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">N1</kbd> Diversos</button>
+          <button onclick="openGranelValueModal()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 font-extrabold cursor-pointer transition">⚖️ Granel por Valor</button>
+          <button onclick="openDiscountModal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">D</kbd> Desconto</button>
+          <button onclick="openReportModal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">R</kbd> Relatório</button>
+          <button onclick="openF12Modal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">F12</kbd> Fechamento</button>
+          <button onclick="reprintLastSale()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">I</kbd> Imprimir Última</button>
         </div>
-        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-          <button onclick="reprintLastSale()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🖨️ I — Imprimir Última Venda</button>
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+          <button onclick="openStockEntryModal(false)" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-extrabold cursor-pointer">📥 <kbd class="font-black">E</kbd> Entrada Mercadoria</button>
+          <button onclick="openTrocaModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🔄 <kbd class="font-black">T</kbd> Troca</button>
           <button onclick="openCaixaMoveModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">💵 Sangria / Suprimento</button>
-          <button onclick="openRepoModal()" class="px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-cyan-900 text-xs font-extrabold cursor-pointer">📦 Reposição &amp; Transferências</button>
-          <button onclick="openStockEntryModal()" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-extrabold cursor-pointer">📥 Entrada de Mercadoria / Nota</button>
           <button onclick="syncOfflineQueue(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🔄 Sincronizar</button>
         </div>
       </div>
@@ -346,10 +345,10 @@
         <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">📦 F3 — Consulta de Produtos (1 clique = detalhes • 2 cliques = lançar)</h3>
         <button onclick="closeModal('modal-f3')" class="font-black text-slate-400 cursor-pointer">✕</button>
       </div>
-      <input id="f3-search" type="text" oninput="renderF3List()" placeholder="Buscar por nome, parte do nome, código de barras ou PLU..." class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3.5 py-2 text-xs font-bold focus:outline-none" />
+      <input id="f3-search" type="text" oninput="f3SelectedIdx=0; renderF3List();" onkeydown="handleF3SearchKey(event)" placeholder="Buscar por nome, parte do nome, código ou PLU... (use ↑/↓ e Enter)" class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3.5 py-2 text-xs font-bold focus:outline-none" />
       <div id="f3-results" class="space-y-1.5 max-h-60 overflow-y-auto scroll-slim"></div>
-      <div id="f3-detail" style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="hidden border rounded-2xl p-3 flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3 min-w-0">
+      <div id="f3-detail" style="background-color: var(--pdv-soft); border-color: var(--pdv-border);" class="hidden border rounded-2xl p-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
           <img id="f3-det-img" onclick="openPdvPhotoZoom(this.src, document.getElementById('f3-det-name').textContent)" title="Clique para dar zoom na foto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'/%3E" alt="" class="w-14 h-14 rounded-xl object-contain bg-white border border-slate-200 p-1 shrink-0 hidden cursor-zoom-in hover:scale-105 transition" />
           <div class="min-w-0">
             <div id="f3-det-name" style="color: var(--pdv-primary-dark);" class="text-xs font-black truncate"></div>
@@ -357,7 +356,13 @@
             <div id="f3-det-stock" class="text-[11px] font-black text-emerald-800 mt-0.5"></div>
           </div>
         </div>
-        <button id="f3-det-add" style="background-color: var(--pdv-primary);" class="px-4 py-2 rounded-xl text-white text-xs font-black shrink-0 cursor-pointer">+ Lançar</button>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <div class="text-center">
+            <label for="f3-det-qty" class="block text-[9px] font-black text-slate-500 uppercase">Qtd</label>
+            <input id="f3-det-qty" type="text" inputmode="decimal" value="1" onkeydown="if(event.key==='Enter'){event.preventDefault(); confirmF3Launch();}" class="w-16 text-center bg-white border-2 border-slate-400 rounded-xl py-1.5 text-sm font-black text-slate-900 focus:outline-none focus:border-cyan-600" />
+          </div>
+          <button id="f3-det-add" onclick="confirmF3Launch()" style="background-color: var(--pdv-primary);" class="px-4 py-2.5 rounded-xl text-white text-xs font-black shrink-0 cursor-pointer mt-3">+ Lançar (Enter)</button>
+        </div>
       </div>
     </div>
   </div>
@@ -588,16 +593,16 @@
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
           <input id="se-search" type="text" oninput="renderStockEntryOptions()" placeholder="🔍 Buscar produto ou bipar EAN/PLU (sem acento)..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" />
           <select id="se-prod" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold"></select>
-          <div class="grid grid-cols-3 gap-2">
-            <div>
+          <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-5">
               <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Qtd Recebida</label>
               <input id="se-qty" type="text" inputmode="decimal" value="1" placeholder="Ex: 10 ou 15,5" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-black" />
             </div>
-            <div>
-              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Custo Unit. (opcional)</label>
+            <div id="se-cost-wrap" class="col-span-4">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">🔒 Custo Unit. (opcional)</label>
               <input id="se-cost" type="text" inputmode="decimal" placeholder="Ex: 118,50" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-black" />
             </div>
-            <div class="flex items-end">
+            <div class="col-span-3 flex items-end">
               <button onclick="addStockEntryItem()" style="background-color: var(--pdv-primary);" class="w-full py-2 rounded-xl text-white font-black cursor-pointer">+ Na Lista</button>
             </div>
           </div>
@@ -610,6 +615,29 @@
         <span id="se-summary" class="text-xs font-extrabold text-slate-600">0 itens na entrada</span>
         <button onclick="confirmStockEntryBatch()" class="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow cursor-pointer">✅ Confirmar Entrada no Estoque</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: ⚖️ GRANEL POR VALOR (CLICÁVEL OU PLU$VALOR) ==================== -->
+  <div id="modal-granel-val" class="hidden fixed inset-0 z-50 bg-slate-900/75 items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <div>
+          <h3 style="color: var(--pdv-primary-dark);" class="text-sm font-black">⚖️ Vender Granel por Valor (R$)</h3>
+          <p class="text-[11px] font-semibold text-slate-500">Ou digite direto no caixa <code class="bg-slate-100 px-1 rounded font-black">PLU$Valor</code> (ex: 42$15)</p>
+        </div>
+        <button onclick="closeModal('modal-granel-val')" class="font-black text-slate-400 cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-2.5 text-xs">
+        <input id="gv-search" type="text" oninput="renderGranelValueOptions()" placeholder="🔍 Buscar ração a granel..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+        <select id="gv-prod" onchange="previewGranelWeight()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold"></select>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">Valor que o cliente pediu (R$)</label>
+          <input id="gv-amount" type="text" inputmode="decimal" oninput="previewGranelWeight()" onkeydown="if(event.key==='Enter') confirmGranelValue();" placeholder="Ex: 15,00" class="w-full bg-amber-50 border-2 border-amber-300 rounded-xl px-3 py-2 text-lg font-black text-amber-950" />
+        </div>
+        <div id="gv-weight-preview" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-emerald-800 text-center">Peso calculado: 0,000 kg</div>
+      </div>
+      <button onclick="confirmGranelValue()" style="background-color: var(--pdv-primary);" class="w-full py-2.5 rounded-xl text-white font-black text-xs cursor-pointer">Enter — Lançar no Cupom</button>
     </div>
   </div>
 
@@ -872,7 +900,10 @@
       await Promise.all([loadCatalog(), loadAppOrders(), loadTodaySales()]);
       await syncOfflineQueue(false);
       updateOnlineStatusUI();
-      document.getElementById('main-barcode-input').focus();
+      const openTab = urlParams.get('open');
+      if (openTab === 'repo') { openRepoModal(); }
+      else if (openTab === 'entry') { openStockEntryModal(true); }
+      else { document.getElementById('main-barcode-input').focus(); }
     }
 
     function showGateLogin(msg) {
@@ -971,7 +1002,7 @@
     // MODAIS & ATALHOS GLOBAIS
     function isAnyModalOpen() {
       return !document.getElementById('pdv-gate').classList.contains('hidden') ||
-        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry', 'modal-pdv-zoom', 'modal-voucher-picker']
+        ['modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-print-popup', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry', 'modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val']
           .some(id => !document.getElementById(id).classList.contains('hidden'));
     }
 
@@ -1004,7 +1035,7 @@
       }
       const payOpen = !document.getElementById('modal-payment').classList.contains('hidden');
       if (e.key === 'Escape') {
-        ['modal-pdv-zoom', 'modal-voucher-picker', 'modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
+        ['modal-pdv-zoom', 'modal-voucher-picker', 'modal-granel-val', 'modal-payment', 'modal-f3', 'modal-n1', 'modal-disc', 'modal-report', 'modal-f12', 'modal-troca', 'modal-caixa-move', 'modal-repo', 'modal-stock-entry'].forEach(closeModal);
         return;
       }
       if (payOpen) {
@@ -1034,6 +1065,9 @@
             if (e.key.toLowerCase() === 'd') { e.preventDefault(); openDiscountModal(); return; }
             if (e.key.toLowerCase() === 'r') { e.preventDefault(); openReportModal(); return; }
             if (e.key.toLowerCase() === 'i') { e.preventDefault(); reprintLastSale(); return; }
+            if (e.key.toLowerCase() === 'g') { e.preventDefault(); openGranelValueModal(); return; }
+            if (e.key.toLowerCase() === 'e') { e.preventDefault(); openStockEntryModal(false); return; }
+            if (e.key.toLowerCase() === 't') { e.preventDefault(); openTrocaModal(); return; }
           }
           if (activeEl !== mainInp && !e.ctrlKey && !e.altKey && !e.metaKey) {
             if (e.key === 'Enter') {
@@ -1695,20 +1729,46 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       if (v !== null) { extraAmount = Math.max(0, parseFloat(v.replace(',', '.')) || 0); renderPaymentState(); }
     }
 
-    // F3 CONSULTA
+    // F3 CONSULTA (↑/↓ + QTD + ENTER DIRETO PRO CAIXA + ZOOM NA FOTO)
+    let f3FilteredList = [];
+    let f3SelectedIdx = 0;
+    let f3SelectedProdId = null;
+
     function openF3Modal() {
       document.getElementById('f3-search').value = '';
-      document.getElementById('f3-detail').classList.add('hidden');
+      document.getElementById('f3-det-qty').value = '1';
+      f3SelectedIdx = 0;
+      f3SelectedProdId = null;
       renderF3List();
       openModal('modal-f3');
       setTimeout(() => document.getElementById('f3-search').focus(), 60);
     }
 
+    function handleF3SearchKey(e) {
+      if (!f3FilteredList.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        f3SelectedIdx = Math.min(f3FilteredList.length - 1, f3SelectedIdx + 1);
+        renderF3List();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        f3SelectedIdx = Math.max(0, f3SelectedIdx - 1);
+        renderF3List();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmF3Launch();
+      }
+    }
+
     function renderF3List() {
       const rawQ = document.getElementById('f3-search').value.trim();
-      const list = catalog.filter(p => smartMatchProduct(p, rawQ)).slice(0, 60);
-      document.getElementById('f3-results').innerHTML = list.length ? list.map(p => `
-        <div onclick="showF3Detail(${p.id})" ondblclick="addToCupom(catalog.find(x=>x.id===${p.id}),1); closeModal('modal-f3');" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-2 flex items-center justify-between gap-2 cursor-pointer">
+      f3FilteredList = catalog.filter(p => smartMatchProduct(p, rawQ)).slice(0, 60);
+      if (f3SelectedIdx >= f3FilteredList.length) f3SelectedIdx = Math.max(0, f3FilteredList.length - 1);
+
+      document.getElementById('f3-results').innerHTML = f3FilteredList.length ? f3FilteredList.map((p, idx) => {
+        const isSel = idx === f3SelectedIdx;
+        return `
+        <div onclick="selectF3Item(${idx}, true)" ondblclick="selectF3Item(${idx}, false); confirmF3Launch();" style="${isSel ? 'border-color: var(--pdv-primary); background-color: var(--pdv-soft);' : ''}" class="border-2 rounded-xl px-2.5 py-2 flex items-center justify-between gap-2 cursor-pointer transition ${isSel ? 'shadow-xs' : 'bg-slate-50 hover:bg-slate-100 border-slate-200'}">
           <div class="flex items-center gap-2 min-w-0">
             ${p.image ? `<img src="${escapeHtml(p.image)}" onclick="event.stopPropagation(); openPdvPhotoZoom(this.src, '${escapeHtml(p.name).replace(/'/g, '')}');" title="Zoom na foto" class="w-9 h-9 rounded-lg object-contain bg-white border border-slate-200 p-0.5 shrink-0 cursor-zoom-in" />` : ''}
             <div class="min-w-0">
@@ -1717,19 +1777,96 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
             </div>
           </div>
           <span style="color: var(--pdv-primary-dark);" class="text-xs font-black shrink-0">${brl(p.promoPrice || p.price)}</span>
-        </div>`).join('') : '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum produto encontrado.</div>';
+        </div>`;
+      }).join('') : '<div class="text-xs text-slate-400 font-bold text-center py-6">Nenhum produto encontrado.</div>';
+
+      if (f3FilteredList[f3SelectedIdx]) {
+        showF3Detail(f3FilteredList[f3SelectedIdx].id);
+      } else {
+        f3SelectedProdId = null;
+        document.getElementById('f3-detail').classList.add('hidden');
+      }
+    }
+
+    function selectF3Item(idx, focusQty) {
+      f3SelectedIdx = idx;
+      renderF3List();
+      if (focusQty) {
+        const qEl = document.getElementById('f3-det-qty');
+        if (qEl) { qEl.focus(); qEl.select(); }
+      }
     }
 
     function showF3Detail(id) {
       const p = catalog.find(x => x.id === id);
       if (!p) return;
+      f3SelectedProdId = p.id;
       document.getElementById('f3-detail').classList.remove('hidden');
       const img = document.getElementById('f3-det-img');
       if (p.image) { img.src = p.image; img.classList.remove('hidden'); } else { img.classList.add('hidden'); }
       document.getElementById('f3-det-name').textContent = `${p.plu ? `[PLU ${p.plu}] ` : ''}${p.name} — ${brl(p.promoPrice || p.price)}`;
       document.getElementById('f3-det-desc').textContent = `${p.ean ? `EAN: ${p.ean} • ` : ''}Unidade: ${p.unit}${p.whQty ? ` • Atacado ${p.whQty}x por ${brl(p.whPrice)}` : ''}`;
       document.getElementById('f3-det-stock').textContent = `Estoque atual (002 Dom José): ${p.stock != null ? `${p.stock} ${p.unit}` : 'Sem controle numérico'}`;
-      document.getElementById('f3-det-add').onclick = () => { addToCupom(p, 1); closeModal('modal-f3'); };
+    }
+
+    function confirmF3Launch() {
+      const p = catalog.find(x => x.id === f3SelectedProdId) || f3FilteredList[f3SelectedIdx];
+      if (!p) return;
+      const qty = parseBrNumber(document.getElementById('f3-det-qty')?.value);
+      const finalQty = qty > 0 ? qty : 1;
+      addToCupom(p, finalQty);
+      document.getElementById('f3-det-qty').value = '1';
+      closeModal('modal-f3');
+      showToast(`✅ ${finalQty}x ${p.name} lançado no caixa!`);
+    }
+
+    // GRANEL POR VALOR (CLICÁVEL)
+    function openGranelValueModal() {
+      document.getElementById('gv-search').value = '';
+      document.getElementById('gv-amount').value = '';
+      renderGranelValueOptions();
+      openModal('modal-granel-val');
+      setTimeout(() => document.getElementById('gv-amount').focus(), 60);
+    }
+
+    function renderGranelValueOptions() {
+      const q = (document.getElementById('gv-search')?.value || '').trim();
+      const granelFirst = catalog
+        .filter(p => smartMatchProduct(p, q))
+        .sort((a, b) => (b.unit === 'KG' ? 1 : 0) - (a.unit === 'KG' ? 1 : 0))
+        .slice(0, 60);
+      document.getElementById('gv-prod').innerHTML = granelFirst.map(p => `<option value="${p.id}">${p.plu ? `[${escapeHtml(p.plu)}] ` : ''}${escapeHtml(p.name)} — ${brl(p.promoPrice || p.price)}/${p.unit}</option>`).join('');
+      previewGranelWeight();
+    }
+
+    function previewGranelWeight() {
+      const pid = Number(document.getElementById('gv-prod')?.value || 0);
+      const p = catalog.find(x => x.id === pid);
+      const val = parseBrNumber(document.getElementById('gv-amount')?.value);
+      const el = document.getElementById('gv-weight-preview');
+      if (!p || !el) return;
+      const base = p.promoPrice || p.price;
+      if (val <= 0 || base <= 0) { el.textContent = `Preço: ${brl(base)} / ${p.unit}`; return; }
+      const kg = +(val / base).toFixed(3);
+      el.textContent = `⚖️ ${brl(val)} = ${kg.toFixed(3).replace('.', ',')} ${p.unit} (preço ${brl(base)}/${p.unit})`;
+    }
+
+    function confirmGranelValue() {
+      const pid = Number(document.getElementById('gv-prod')?.value || 0);
+      const p = catalog.find(x => x.id === pid);
+      const reais = parseBrNumber(document.getElementById('gv-amount')?.value);
+      if (!p || reais <= 0) { showToast('⚠️ Informe o valor em reais.'); return; }
+      const base = p.promoPrice || p.price;
+      if (base <= 0) return;
+      const kg = +(reais / base).toFixed(3);
+      cupom.push({
+        product_id: p.id, name: `${p.name} (${kg.toFixed(3).replace('.', ',')} ${p.unit})`,
+        qty: kg, base_unit: base, unit_price: base, subtotal: reais,
+        unit_type: p.unit, custom_total: reais, is_diversos: false
+      });
+      closeModal('modal-granel-val');
+      renderCupom();
+      showToast(`⚖️ Granel lançado: ${brl(reais)} (${kg.toFixed(3).replace('.', ',')} ${p.unit})!`);
     }
 
     // N1 DIVERSOS
@@ -2129,11 +2266,15 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
     }
 
     // ENTRADA DE MERCADORIA / NOTA
-    function openStockEntryModal() {
+    let stockEntryAllowCost = false;
+    function openStockEntryModal(allowCost = false) {
+      stockEntryAllowCost = !!allowCost;
       stockEntryDraft = [];
       document.getElementById('se-search').value = '';
       document.getElementById('se-qty').value = '1';
       document.getElementById('se-cost').value = '';
+      const cw = document.getElementById('se-cost-wrap');
+      if (cw) cw.classList.toggle('hidden', !stockEntryAllowCost);
       renderStockEntryOptions();
       renderStockEntryDraft();
       openModal('modal-stock-entry');
@@ -2150,7 +2291,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       const prodId = Number(document.getElementById('se-prod')?.value || 0);
       const p = catalog.find(x => x.id === prodId);
       const qty = parseBrNumber(document.getElementById('se-qty')?.value);
-      const cost = parseBrNumber(document.getElementById('se-cost')?.value);
+      const cost = stockEntryAllowCost ? parseBrNumber(document.getElementById('se-cost')?.value) : 0;
       if (!p || qty <= 0) { showToast('⚠️ Selecione o produto e informe uma quantidade válida.'); return; }
       stockEntryDraft.push({ product_id: p.id, name: p.name, unit: p.unit, qty, cost: cost > 0 ? cost : null });
       document.getElementById('se-qty').value = '1';

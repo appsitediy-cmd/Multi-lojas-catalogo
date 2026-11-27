@@ -269,6 +269,12 @@
           <button id="btn-open-pdv-module" onclick="openPdvModule()" class="hidden bg-cyan-600 hover:bg-cyan-700 text-white font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1 shadow-sm transition" title="Abrir Frente de Caixa (PDV)">
             🖥️ PDV
           </button>
+          <button id="btn-open-repo-module" onclick="openPdvSubmodule('repo')" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1 shadow-sm transition" title="Reposição Inteligente e Transferências (só Gestor)">
+            📦 Reposição
+          </button>
+          <button id="btn-open-entry-module" onclick="openPdvSubmodule('entry')" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1 shadow-sm transition" title="Entrada de Mercadoria / Nota (só Gestor)">
+            📥 Entrada Nota
+          </button>
           <button id="btn-open-flash-modal" onclick="openFlashSaleModal()" class="bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-95 text-white font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1 shadow-sm transition">
             ⚡ Relâmpago <span id="mgr-flash-badge" class="hidden bg-white/25 px-1.5 py-0.5 rounded-full text-[9px]">ON</span>
           </button>
@@ -2464,8 +2470,11 @@
     }
 
     function updateModuleButtonsVisibility() {
-      const pdvBtn = document.getElementById('btn-open-pdv-module');
-      if (pdvBtn) pdvBtn.classList.toggle('hidden', !(currentStoreModules && currentStoreModules.pdv === true));
+      const hasPdv = !!(currentStoreModules && currentStoreModules.pdv === true);
+      ['btn-open-pdv-module', 'btn-open-repo-module', 'btn-open-entry-module'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', !hasPdv);
+      });
       const saBtn = document.getElementById('btn-open-superadmin-modal');
       if (saBtn) saBtn.classList.toggle('hidden', !isSuperAdminUser());
     }
@@ -2476,6 +2485,14 @@
         return;
       }
       window.location.href = `pdv.html?loja=${encodeURIComponent(storeSlug)}`;
+    }
+
+    function openPdvSubmodule(mode) {
+      if (!currentStoreModules || currentStoreModules.pdv !== true) {
+        showToast('🔒 Módulo PDV não está ativado para esta loja.');
+        return;
+      }
+      window.location.href = `pdv.html?loja=${encodeURIComponent(storeSlug)}&open=${encodeURIComponent(mode)}`;
     }
 
     function computeSaaSPlanName(m) {
