@@ -72,6 +72,22 @@
   </style>
 </head>
 <body class="min-h-screen flex flex-col select-none">
+  <!-- BARRA FIXA UNIFICADA DO GESTOR (MESMA DA VITRINE E PAINEL GESTOR) -->
+  <nav id="manager-global-topbar" class="hidden sticky top-0 z-[60] bg-slate-950 text-white border-b border-slate-800 shadow-lg">
+    <div class="w-full px-3 sm:px-4 py-1.5 flex items-center justify-between gap-2 overflow-x-auto" style="scrollbar-width:none;">
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black uppercase">🔑 Gestor</span>
+        <select id="global-store-switcher" onchange="switchPdvGlobalStore(this.value)" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs font-black focus:outline-none cursor-pointer"></select>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button type="button" onclick="goToManager()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">⚙️ Gestor</button>
+        <button type="button" onclick="closeModal('modal-motoboy'); document.getElementById('main-barcode-input')?.focus();" class="px-2.5 py-1 rounded-xl text-xs font-black bg-white text-slate-950 shadow cursor-pointer">🖥️ PDV</button>
+        <button type="button" onclick="openMotoboyModal()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛵 Entregas</button>
+        <button type="button" onclick="goToAppClient()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛍️ Vitrine</button>
+        <button type="button" onclick="logoutFromPdv()" title="Sair do modo Gestor" class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600/90 hover:bg-rose-600 text-white cursor-pointer ml-1">🚪 Sair</button>
+      </div>
+    </div>
+  </nav>
 
   <!-- TELA DE LOGIN / BLOQUEIO (QUANDO NÃO LOGADO OU SEM MÓDULO PDV) -->
   <div id="pdv-gate" class="fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
@@ -1281,9 +1297,11 @@
       await Promise.all([loadCatalog(), loadAppOrders(), loadTodaySales()]);
       await syncOfflineQueue(false);
       updateOnlineStatusUI();
+      initPdvGlobalTopbar();
       const openTab = urlParams.get('open');
       if (openTab === 'repo') { openRepoModal(); }
       else if (openTab === 'entry') { openStockEntryModal(true); }
+      else if (openTab === 'motoboy') { openMotoboyModal(); }
       else { document.getElementById('main-barcode-input').focus(); }
     }
 
@@ -4077,6 +4095,35 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       const codSum = list.filter(o => (o.pay_status || 'cod') === 'cod').reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
       const txt = `${(currentStore?.name || 'LOJA').toUpperCase()}\n${isBatch ? 'LOTE DE SAIDA' : 'FOLHA DE ROTA'} - MOTOBOY (${list.length} entregas)\nTOTAL A COBRAR NA RUA: ${brl(codSum)}\n========================================\n` + list.map(formatThermalDeliveryBlock).join('\n');
       printThermalText('Rota Motoboy', txt);
+    }
+
+    // ==================== BARRA FIXA UNIFICADA DO GESTOR NO PDV (v48) ====================
+    async function initPdvGlobalTopbar() {
+      const bar = document.getElementById('manager-global-topbar');
+      if (!bar || !currentUser) return;
+      bar.classList.remove('hidden');
+      const sel = document.getElementById('global-store-switcher');
+      if (!sel || !sb) return;
+      const isSuper = String(currentUser.email || '').toLowerCase() === 'leonardomoura@gmail.com';
+      try {
+        let q = sb.from('stores').select('slug,name').order('name');
+        if (!isSuper) q = q.eq('owner_id', currentUser.id);
+        const { data } = await q;
+        const rows = Array.isArray(data) && data.length ? data : [{ slug: storeSlug, name: currentStore?.name || storeSlug }];
+        sel.innerHTML = rows.map(r => `<option value="${escapeHtml(r.slug)}" ${r.slug === storeSlug ? 'selected' : ''}>🏪 ${escapeHtml(r.name)}</option>`).join('');
+      } catch (e) {
+        sel.innerHTML = `<option value="${escapeHtml(storeSlug)}">🏪 ${escapeHtml(currentStore?.name || storeSlug)}</option>`;
+      }
+    }
+
+    function switchPdvGlobalStore(newSlug) {
+      if (!newSlug || newSlug === storeSlug) return;
+      window.location.href = `pdv.html?loja=${encodeURIComponent(newSlug)}`;
+    }
+
+    async function logoutFromPdv() {
+      if (sb) { try { await sb.auth.signOut(); } catch (e) {} }
+      window.location.href = `index.html?loja=${encodeURIComponent(storeSlug)}`;
     }
   </script>
 </body>

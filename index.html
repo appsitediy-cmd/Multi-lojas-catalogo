@@ -90,6 +90,22 @@
   </style>
 </head>
 <body id="app-body" style="background-color: var(--brand-page-bg);" class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+  <!-- BARRA FIXA UNIFICADA DO GESTOR (INVISÍVEL PARA CLIENTES — SÓ APARECE SE LOGADO COMO GESTOR) -->
+  <nav id="manager-global-topbar" class="hidden sticky top-0 z-[60] bg-slate-950 text-white border-b border-slate-800 shadow-lg">
+    <div class="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-between gap-2 overflow-x-auto" style="scrollbar-width:none;">
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black uppercase">🔑 Gestor</span>
+        <select id="global-store-switcher" onchange="switchGlobalStore(this.value)" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs font-black focus:outline-none cursor-pointer"></select>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="gtb-btn-gestor" type="button" onclick="openManagerLoginModal()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">⚙️ Gestor</button>
+        <button id="gtb-btn-pdv" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../pdv.html' : 'pdv.html') + '?loja=' + encodeURIComponent(storeSlug)" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🖥️ PDV</button>
+        <button id="gtb-btn-entregas" type="button" onclick="window.location.href=(location.pathname.endsWith('/') ? '../pdv.html' : 'pdv.html') + '?loja=' + encodeURIComponent(storeSlug) + '&open=motoboy'" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛵 Entregas</button>
+        <button id="gtb-btn-vitrine" type="button" onclick="switchToClient()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛍️ Vitrine</button>
+        <button type="button" onclick="logoutManager()" title="Sair do modo Gestor" class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600/90 hover:bg-rose-600 text-white cursor-pointer ml-1">🚪 Sair</button>
+      </div>
+    </div>
+  </nav>
   <!-- TELA NEUTRA DE CARREGAMENTO PARA LOJAS PARCEIRAS (EVITA PISCAR CORES DO RECANTO) -->
   <div id="store-loading-overlay" class="hidden fixed inset-0 z-[100] bg-white flex-col items-center justify-center gap-3 p-6 text-center">
     <div class="w-10 h-10 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin"></div>
@@ -2475,6 +2491,7 @@
         const el = document.getElementById(id);
         if (el) el.classList.toggle('hidden', !hasPdv);
       });
+      if (typeof syncManagerGlobalTopbar === 'function') syncManagerGlobalTopbar();
       const saBtn = document.getElementById('btn-open-superadmin-modal');
       if (saBtn) saBtn.classList.toggle('hidden', !isSuperAdminUser());
     }
@@ -3268,6 +3285,17 @@
     }
 
     async function openManagerLoginModal() {
+      // Regra de navegação livre: se o Gestor já estiver logado na sessão, entra direto sem pedir senha de novo!
+      if (!currentUser && sb) {
+        try {
+          const { data } = await sb.auth.getSession();
+          if (data?.session?.user) currentUser = data.session.user;
+        } catch (e) {}
+      }
+      if (currentUser) {
+        await enterManagerAfterAuth();
+        return;
+      }
       const passEl = document.getElementById('login-password');
       if (passEl) passEl.value = '';
       document.getElementById('login-modal').classList.remove('hidden');
@@ -3380,6 +3408,7 @@
       document.getElementById('store-header')?.classList.remove('hidden');
       document.getElementById('client-view').classList.remove('hidden');
       if (typeof updateCartBadge === 'function') updateCartBadge();
+      if (typeof syncManagerGlobalTopbar === 'function') syncManagerGlobalTopbar();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -9362,6 +9391,50 @@
       }
     }, 1000);
 
+
+    // ==================== BARRA FIXA UNIFICADA DO GESTOR (v48) ====================
+    let _gtbStoresLoadedFor = null;
+    async function syncManagerGlobalTopbar() {
+      const bar = document.getElementById('manager-global-topbar');
+      if (!bar) return;
+      const isSuperAdmin = !!(currentUser && String(currentUser.email || '').toLowerCase() === 'leonardomoura@gmail.com');
+      const isStoreOwner = !!(currentUser && currentStoreOwnerId && currentUser.id === currentStoreOwnerId);
+      const canSeeBar = !!(currentUser && (isStoreOwner || isSuperAdmin));
+      bar.classList.toggle('hidden', !canSeeBar);
+      if (!canSeeBar) return;
+
+      const hasPdv = !!(currentStoreModules && currentStoreModules.pdv === true) || isSuperAdmin;
+      document.getElementById('gtb-btn-pdv')?.classList.toggle('hidden', !hasPdv);
+      document.getElementById('gtb-btn-entregas')?.classList.toggle('hidden', !hasPdv);
+
+      const inManager = !document.getElementById('manager-view')?.classList.contains('hidden');
+      const bGest = document.getElementById('gtb-btn-gestor');
+      const bVitr = document.getElementById('gtb-btn-vitrine');
+      if (bGest) bGest.className = 'px-2.5 py-1 rounded-xl text-xs font-black cursor-pointer ' + (inManager ? 'bg-white text-slate-950 shadow' : 'bg-slate-800 hover:bg-slate-700 text-slate-200');
+      if (bVitr) bVitr.className = 'px-2.5 py-1 rounded-xl text-xs font-black cursor-pointer ' + (!inManager ? 'bg-white text-slate-950 shadow' : 'bg-slate-800 hover:bg-slate-700 text-slate-200');
+
+      // Carrega lista de lojas do Gestor para o seletor do topo (1 vez por usuário)
+      const sel = document.getElementById('global-store-switcher');
+      if (sel && sb && _gtbStoresLoadedFor !== currentUser.id) {
+        _gtbStoresLoadedFor = currentUser.id;
+        try {
+          let q = sb.from('stores').select('slug,name').order('name');
+          if (!isSuperAdmin) q = q.eq('owner_id', currentUser.id);
+          const { data } = await q;
+          const rows = Array.isArray(data) && data.length ? data : [{ slug: storeSlug, name: storeConfig?.name || storeSlug }];
+          sel.innerHTML = rows.map(r => `<option value="${escapeHtml(r.slug)}" ${r.slug === storeSlug ? 'selected' : ''}>🏪 ${escapeHtml(r.name)}</option>`).join('');
+        } catch (e) {
+          sel.innerHTML = `<option value="${escapeHtml(storeSlug)}">🏪 ${escapeHtml(storeConfig?.name || storeSlug)}</option>`;
+        }
+      }
+    }
+
+    function switchGlobalStore(newSlug) {
+      if (!newSlug || newSlug === storeSlug) return;
+      const inManager = !document.getElementById('manager-view')?.classList.contains('hidden');
+      const basePath = location.pathname.endsWith('/') ? '../index.html' : location.pathname;
+      window.location.href = `${basePath}?loja=${encodeURIComponent(newSlug)}${inManager ? '#gestor' : ''}`;
+    }
   </script>
 
   <!-- CARRINHO FLUTUANTE FIXO NO RODAPÉ DA VITRINE (SÓ APARECE COM ITENS) -->
