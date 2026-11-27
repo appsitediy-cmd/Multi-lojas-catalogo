@@ -525,23 +525,60 @@
       </div>
 
       <div class="p-4 overflow-y-auto scroll-slim flex-1 space-y-4">
-        <!-- Filtros + Controles -->
-        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-3">
-          <div class="flex flex-wrap items-center gap-2 flex-1">
-            <input id="repo-search" type="text" oninput="renderRepoTable()" placeholder="🔍 Buscar produto (sem acento)..." class="min-w-[180px] flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold" />
-            <select id="repo-filter" onchange="renderRepoTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
-              <option value="low">⚠️ Abaixo do Mínimo / Zerados</option>
-              <option value="all">📋 Todos com Estoque</option>
-            </select>
-            <label class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
-              <span>Reforço %:</span>
-              <input id="repo-boost" type="text" inputmode="decimal" value="20" oninput="renderRepoTable()" class="w-12 text-center font-black text-slate-900 focus:outline-none" />
-            </label>
+        <!-- Filtros Completos + Controles -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2.5">
+          <!-- Linha 1: Período (Data Inicial / Final) + Status + Reforço % + Ações -->
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <label class="flex items-center gap-1 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-600">
+                <span>📅 De:</span>
+                <input id="repo-date-start" type="date" onchange="loadRepoSalesForPeriod()" class="font-black text-slate-900 text-xs focus:outline-none bg-transparent" />
+              </label>
+              <label class="flex items-center gap-1 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-600">
+                <span>Até:</span>
+                <input id="repo-date-end" type="date" onchange="loadRepoSalesForPeriod()" class="font-black text-slate-900 text-xs focus:outline-none bg-transparent" />
+              </label>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="setRepoQuickDays(7)" class="px-2 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-[10px] font-black text-slate-700 cursor-pointer">7d</button>
+                <button type="button" onclick="setRepoQuickDays(15)" class="px-2 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-[10px] font-black text-slate-700 cursor-pointer">15d</button>
+                <button type="button" onclick="setRepoQuickDays(30)" class="px-2 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-[10px] font-black text-slate-700 cursor-pointer">30d</button>
+              </div>
+              <select id="repo-filter" onchange="renderRepoTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
+                <option value="low">⚠️ Abaixo do Mínimo / Zerados</option>
+                <option value="all">📋 Todos com Estoque</option>
+                <option value="every">📦 Todos os Produtos</option>
+              </select>
+              <label class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
+                <span>Reforço %:</span>
+                <input id="repo-boost" type="text" inputmode="decimal" value="20" oninput="renderRepoTable()" class="w-12 text-center font-black text-slate-900 focus:outline-none" />
+              </label>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" onclick="autoFillRepoSuggestions()" style="background-color: var(--pdv-primary);" class="px-3 py-1.5 rounded-xl text-white text-xs font-black cursor-pointer">✨ Preencher Sugestão</button>
+              <button type="button" onclick="copyRepoOrderWhatsApp()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer">📋 Copiar Pedido</button>
+              <button type="button" onclick="clearRepoOrder()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-black cursor-pointer">🗑️ Limpar Pedido</button>
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button onclick="autoFillRepoSuggestions()" style="background-color: var(--pdv-primary);" class="px-3 py-1.5 rounded-xl text-white text-xs font-black cursor-pointer">✨ Preencher Sugestão</button>
-            <button onclick="copyRepoOrderWhatsApp()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer">📋 Copiar Pedido</button>
-            <button onclick="clearRepoOrder()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-black cursor-pointer">🗑️ Limpar</button>
+
+          <!-- Linha 2: Marca/Fornecedor + Categoria + Subcategoria + Cód. EAN/Interno + Descrição -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-2 border-t border-slate-200/80">
+            <select id="repo-brand" onchange="renderRepoTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
+              <option value="">🏷️ Todas as Marcas / Fornecedores</option>
+            </select>
+            <select id="repo-category" onchange="onRepoCategoryChange()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
+              <option value="">📂 Todas as Categorias</option>
+            </select>
+            <select id="repo-subcategory" onchange="renderRepoTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
+              <option value="">🗂️ Todas as Subcategorias</option>
+            </select>
+            <input id="repo-code" type="text" oninput="renderRepoTable()" placeholder="🔢 Cód. EAN ou Cód. Interno..." class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800" />
+            <input id="repo-search" type="text" oninput="renderRepoTable()" placeholder="🔍 Descrição do produto..." class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800" />
+          </div>
+
+          <!-- Linha 3: Contador + Limpar Filtros -->
+          <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+            <span id="repo-count-label">Carregando produtos...</span>
+            <button type="button" onclick="resetRepoFilters()" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-black cursor-pointer">🧹 Limpar Filtros</button>
           </div>
         </div>
 
@@ -553,7 +590,7 @@
                 <th class="py-2 px-3">Produto</th>
                 <th class="py-2 px-2 text-center">Estoque</th>
                 <th class="py-2 px-2 text-center">Mínimo</th>
-                <th class="py-2 px-2 text-center">Venda 7d</th>
+                <th id="repo-sales-col-header" class="py-2 px-2 text-center">Vendido (7d)</th>
                 <th class="py-2 px-2 text-center">Sugestão</th>
                 <th class="py-2 px-2 text-center">Pedir (↑/↓)</th>
                 <th class="py-2 px-3 text-right">Transferência</th>
@@ -950,6 +987,9 @@
             whQty: p.wholesale_qty ? parseInt(p.wholesale_qty, 10) : null,
             whPrice: p.wholesale_price ? parseFloat(p.wholesale_price) : null,
             whGroup: String(p.wholesale_group || '').trim(),
+            brand: String(p.brand || '').trim(),
+            category: String(p.category || '').trim(),
+            subcategory: String(p.subcategory || '').trim(),
             image: p.image_url || ''
           }));
           try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(catalog)); } catch (e) {}
@@ -2079,25 +2119,138 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
     let pdvTransfersList = [];
     let stockEntryDraft = [];
 
-    async function openRepoModal() {
-      openModal('modal-repo');
+    function localDateYmd(dt) {
+      const d = dt instanceof Date ? dt : new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatShortBrDate(ymd) {
+      if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return '';
+      const [y, m, d] = ymd.split('-');
+      return `${d}/${m}`;
+    }
+
+    function populateRepoFilterOptions() {
+      const brandSel = document.getElementById('repo-brand');
+      const catSel = document.getElementById('repo-category');
+      if (!brandSel || !catSel) return;
+      const prevBrand = brandSel.value;
+      const prevCat = catSel.value;
+
+      const brands = [...new Set(catalog.map(p => (p.brand || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      brandSel.innerHTML = '<option value="">🏷️ Todas as Marcas / Fornecedores</option>' +
+        brands.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+      if (brands.includes(prevBrand)) brandSel.value = prevBrand;
+
+      const cats = [...new Set(catalog.map(p => (p.category || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      catSel.innerHTML = '<option value="">📂 Todas as Categorias</option>' +
+        cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      if (cats.includes(prevCat)) catSel.value = prevCat;
+
+      populateRepoSubcategoryOptions();
+    }
+
+    function populateRepoSubcategoryOptions() {
+      const catVal = document.getElementById('repo-category')?.value || '';
+      const subSel = document.getElementById('repo-subcategory');
+      if (!subSel) return;
+      const prevSub = subSel.value;
+      const source = catVal ? catalog.filter(p => (p.category || '').trim() === catVal) : catalog;
+      const subs = [...new Set(source.map(p => (p.subcategory || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      subSel.innerHTML = '<option value="">🗂️ Todas as Subcategorias</option>' +
+        subs.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+      if (subs.includes(prevSub)) subSel.value = prevSub;
+    }
+
+    function onRepoCategoryChange() {
+      populateRepoSubcategoryOptions();
+      renderRepoTable();
+    }
+
+    function setRepoQuickDays(days) {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - Math.max(0, days - 1));
+      const startEl = document.getElementById('repo-date-start');
+      const endEl = document.getElementById('repo-date-end');
+      if (startEl) startEl.value = localDateYmd(start);
+      if (endEl) endEl.value = localDateYmd(end);
+      loadRepoSalesForPeriod();
+    }
+
+    function resetRepoFilters() {
+      const ids = ['repo-brand', 'repo-category', 'repo-subcategory', 'repo-code', 'repo-search'];
+      ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      const flt = document.getElementById('repo-filter');
+      if (flt) flt.value = 'low';
+      populateRepoSubcategoryOptions();
+      setRepoQuickDays(7);
+      showToast('🧹 Filtros da reposição restaurados.');
+    }
+
+    async function loadRepoSalesForPeriod() {
+      const startEl = document.getElementById('repo-date-start');
+      const endEl = document.getElementById('repo-date-end');
+      let startYmd = startEl?.value || '';
+      let endYmd = endEl?.value || '';
+      if (!startYmd || !endYmd) {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(end.getDate() - 6);
+        startYmd = localDateYmd(start);
+        endYmd = localDateYmd(end);
+        if (startEl) startEl.value = startYmd;
+        if (endEl) endEl.value = endYmd;
+      }
+      if (startYmd > endYmd) {
+        const tmp = startYmd; startYmd = endYmd; endYmd = tmp;
+        if (startEl) startEl.value = startYmd;
+        if (endEl) endEl.value = endYmd;
+      }
+
+      const [sy, sm, sd] = startYmd.split('-').map(Number);
+      const [ey, em, ed] = endYmd.split('-').map(Number);
+      const localStart = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+      const localEnd = new Date(ey, em - 1, ed, 23, 59, 59, 999);
+
+      const headerEl = document.getElementById('repo-sales-col-header');
+      if (headerEl) {
+        const diffDays = Math.round((new Date(ey, em - 1, ed) - new Date(sy, sm - 1, sd)) / 86400000) + 1;
+        headerEl.textContent = `Vendido (${formatShortBrDate(startYmd)}–${formatShortBrDate(endYmd)} · ${diffDays}d)`;
+      }
+
       repoSold7dMap = {};
       if (navigator.onLine && sb && currentStore) {
-        const d7 = new Date(Date.now() - 7 * 86400000).toISOString();
-        const { data: sales7 } = await sb.from('pdv_sales')
+        const { data: salesPeriod } = await sb.from('pdv_sales')
           .select('items')
           .eq('store_id', currentStore.id)
           .eq('status', 'completed')
-          .gte('created_at', d7)
-          .limit(1000);
-        (sales7 || []).forEach(s => {
+          .gte('created_at', localStart.toISOString())
+          .lte('created_at', localEnd.toISOString())
+          .limit(2000);
+        (salesPeriod || []).forEach(s => {
           (s.items || []).forEach(it => {
             if (it.product_id) repoSold7dMap[it.product_id] = (repoSold7dMap[it.product_id] || 0) + (Number(it.qty) || 0);
           });
         });
       }
-      await loadTransfers();
       renderRepoTable();
+    }
+
+    async function openRepoModal() {
+      openModal('modal-repo');
+      populateRepoFilterOptions();
+      if (!document.getElementById('repo-date-start')?.value) {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(end.getDate() - 6);
+        document.getElementById('repo-date-start').value = localDateYmd(start);
+        document.getElementById('repo-date-end').value = localDateYmd(end);
+      }
+      await Promise.all([loadRepoSalesForPeriod(), loadTransfers()]);
     }
 
     function getRepoSuggestedQty(p) {
@@ -2110,21 +2263,47 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       return Math.max(0, Math.ceil(target - cur));
     }
 
-    function getFilteredRepoItems() {
-      const q = normText((document.getElementById('repo-search')?.value || '').trim());
+    function getFilteredRepoItems(applyLimit = true) {
+      const rawDesc = (document.getElementById('repo-search')?.value || '').trim();
+      const rawCode = (document.getElementById('repo-code')?.value || '').trim();
+      const codeNorm = rawCode.toLowerCase();
+      const brandVal = document.getElementById('repo-brand')?.value || '';
+      const catVal = document.getElementById('repo-category')?.value || '';
+      const subVal = document.getElementById('repo-subcategory')?.value || '';
       const flt = document.getElementById('repo-filter')?.value || 'low';
-      return catalog.filter(p => {
-        if (q && !smartMatchProduct(p, document.getElementById('repo-search')?.value || '')) return false;
+
+      const list = catalog.filter(p => {
+        if (brandVal && (p.brand || '').trim() !== brandVal) return false;
+        if (catVal && (p.category || '').trim() !== catVal) return false;
+        if (subVal && (p.subcategory || '').trim() !== subVal) return false;
+        if (codeNorm) {
+          const eanMatch = p.ean && p.ean.toLowerCase().includes(codeNorm);
+          const pluMatch = p.plu && p.plu.toLowerCase().includes(codeNorm);
+          const extraMatch = Array.isArray(p.extraEans) && p.extraEans.some(x => String(x).toLowerCase().includes(codeNorm));
+          if (!eanMatch && !pluMatch && !extraMatch) return false;
+        }
+        if (rawDesc && !smartMatchProduct(p, rawDesc)) return false;
         if (flt === 'low') {
           if (p.stock == null) return false;
           return p.stock <= 0 || (p.minStock != null && p.stock <= p.minStock);
         }
-        return p.stock != null;
-      }).slice(0, 120);
+        if (flt === 'all') {
+          return p.stock != null;
+        }
+        return true;
+      });
+      return applyLimit ? list.slice(0, 150) : list;
     }
 
     function renderRepoTable() {
-      const items = getFilteredRepoItems();
+      const allMatched = getFilteredRepoItems(false);
+      const items = allMatched.slice(0, 150);
+      const countEl = document.getElementById('repo-count-label');
+      if (countEl) {
+        countEl.textContent = allMatched.length > items.length
+          ? `Mostrando ${items.length} de ${allMatched.length} produtos (refine os filtros para ver mais)`
+          : `${allMatched.length} produto(s) encontrado(s) neste filtro`;
+      }
       const tb = document.getElementById('repo-tbody');
       if (!items.length) {
         tb.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-400 font-bold">Nenhum produto encontrado neste filtro.</td></tr>';
@@ -2134,11 +2313,19 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
         const sold = +(repoSold7dMap[p.id] || 0).toFixed(2);
         const sug = getRepoSuggestedQty(p);
         const val = repoOrderQtyMap[p.id] != null ? repoOrderQtyMap[p.id] : '';
-        const isLow = p.stock <= 0 || (p.minStock != null && p.stock <= p.minStock);
+        const isLow = p.stock != null && (p.stock <= 0 || (p.minStock != null && p.stock <= p.minStock));
+        const metaParts = [];
+        if (p.plu) metaParts.push(`PLU ${escapeHtml(p.plu)}`);
+        if (p.ean) metaParts.push(`EAN ${escapeHtml(p.ean)}`);
+        if (p.brand) metaParts.push(escapeHtml(p.brand));
+        if (p.category) metaParts.push(p.subcategory ? `${escapeHtml(p.category)} › ${escapeHtml(p.subcategory)}` : escapeHtml(p.category));
         return `
           <tr class="hover:bg-slate-50">
-            <td class="py-2 px-3 font-extrabold text-slate-800">${escapeHtml(p.name)}</td>
-            <td class="py-2 px-2 text-center font-black ${isLow ? 'text-rose-600' : 'text-slate-700'}">${p.stock} ${p.unit}</td>
+            <td class="py-2 px-3">
+              <div class="font-extrabold text-slate-800">${escapeHtml(p.name)}</div>
+              ${metaParts.length ? `<div class="text-[10px] font-bold text-slate-400 mt-0.5">${metaParts.join(' · ')}</div>` : ''}
+            </td>
+            <td class="py-2 px-2 text-center font-black ${isLow ? 'text-rose-600' : 'text-slate-700'}">${p.stock != null ? `${p.stock} ${p.unit}` : '—'}</td>
             <td class="py-2 px-2 text-center font-bold text-slate-500">${p.minStock != null ? p.minStock : '—'}</td>
             <td class="py-2 px-2 text-center font-bold text-slate-600">${sold}</td>
             <td class="py-2 px-2 text-center"><span class="px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 font-black">${sug}</span></td>
@@ -2183,7 +2370,11 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
         if (p) lines.push(`• ${q} ${p.unit} — ${p.name}`);
       });
       if (!lines.length) { showToast('⚠️ Preencha ao menos 1 quantidade antes de copiar.'); return; }
-      const txt = `📦 *Pedido de Reposição — ${currentStore?.name || storeSlug}*\n\n${lines.join('\n')}`;
+      const brandPicked = document.getElementById('repo-brand')?.value || '';
+      const dStart = formatShortBrDate(document.getElementById('repo-date-start')?.value || '');
+      const dEnd = formatShortBrDate(document.getElementById('repo-date-end')?.value || '');
+      const headerMeta = [brandPicked ? `🏷️ Marca/Fornecedor: *${brandPicked}*` : '', (dStart && dEnd) ? `📅 Base de vendas: ${dStart} a ${dEnd}` : ''].filter(Boolean).join('\n');
+      const txt = `📦 *Pedido de Reposição — ${currentStore?.name || storeSlug}*${headerMeta ? '\n' + headerMeta : ''}\n\n${lines.join('\n')}`;
       navigator.clipboard?.writeText(txt);
       showToast(`📋 Lista com ${lines.length} produto(s) copiada para o WhatsApp!`);
     }
