@@ -104,6 +104,10 @@
           <input id="ns-slug" type="text" placeholder="Ex.: amigofiel" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono font-bold" />
         </div>
         <div>
+          <label class="font-black text-slate-600 block mb-1">E-mail de acesso do Lojista</label>
+          <input id="ns-email" type="email" placeholder="Ex.: dono@amigofiel.com.br" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+        </div>
+        <div>
           <label class="font-black text-slate-600 block mb-1">Plano Inicial</label>
           <select id="ns-plan" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold">
             <option value="vitrine">🛍️ Só Vitrine / Catálogo</option>
@@ -216,7 +220,7 @@
     }
 
     async function loadAllStores() {
-      const { data, error } = await sb.from('stores').select('id,slug,name,active,plan,modules,plan_expires_at,created_at').order('name');
+      const { data, error } = await sb.from('stores').select('id,slug,name,owner_email,active,plan,modules,plan_expires_at,created_at').order('name');
       if (error) { showToast('❌ Erro ao carregar lojas: ' + error.message); return; }
       allStores = Array.isArray(data) ? data : [];
       renderStores();
@@ -241,7 +245,7 @@
         if (activeFilter === 'paused' && s.active !== false) return false;
         if (activeFilter === 'pdv' && !s.modules?.pdv) return false;
         if (activeFilter === 'vitrine' && s.modules?.pdv) return false;
-        if (q && !norm(`${s.name} ${s.slug} ${s.plan}`).includes(q)) return false;
+        if (q && !norm(`${s.name} ${s.slug} ${s.owner_email || ''} ${s.plan}`).includes(q)) return false;
         return true;
       });
 
@@ -262,7 +266,11 @@
                 <span class="px-2.5 py-1 rounded-full text-[11px] font-black ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isActive ? '🟢 ATIVA' : '⏸️ PAUSADA'}</span>
                 <div>
                   <div class="text-base font-black text-slate-900">${esc(s.name)}</div>
-                  <div class="text-[11px] font-mono font-bold text-slate-500">slug: ${esc(s.slug)}</div>
+                  <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-500 mt-0.5">
+                    <span class="font-mono">slug: ${esc(s.slug)}</span>
+                    <span>·</span>
+                    <button type="button" onclick="copyStoreAccessLink('${esc(s.slug)}')" class="text-indigo-700 hover:underline font-black cursor-pointer">📋 Copiar Link da Conta</button>
+                  </div>
                 </div>
               </div>
 
@@ -287,6 +295,11 @@
                     <option value="completo" ${(!s.plan || s.plan === 'completo') ? 'selected' : ''}>🚀 Completo</option>
                   </select>
                 </label>
+                <label class="flex items-center gap-1.5 font-bold text-slate-600">
+                  <span>📧 E-mail:</span>
+                  <input type="email" value="${esc(s.owner_email || '')}" placeholder="email@loja.com" onchange="updateStoreMeta('${s.id}', { owner_email: this.value.trim() })" class="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 font-bold text-slate-900 w-48" />
+                </label>
+                <button type="button" onclick="sendPasswordReset('${s.id}')" class="px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-black cursor-pointer">🔑 Redefinir Senha</button>
                 <label class="flex items-center gap-1.5 font-bold text-slate-600">
                   <span>Vencimento:</span>
                   <input type="date" value="${expVal}" onchange="updateStoreMeta('${s.id}', { plan_expires_at: this.value ? this.value + 'T23:59:59Z' : null })" class="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 font-black text-slate-900" />
@@ -386,6 +399,7 @@
     function openNewStoreModal() {
       document.getElementById('ns-name').value = '';
       document.getElementById('ns-slug').value = '';
+      document.getElementById('ns-email').value = '';
       const m = document.getElementById('modal-new-store');
       m.classList.remove('hidden'); m.classList.add('flex');
     }
@@ -397,6 +411,7 @@
     async function createNewStore() {
       const name = document.getElementById('ns-name').value.trim();
       const slug = document.getElementById('ns-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      const ownerEmail = document.getElementById('ns-email').value.trim();
       const plan = document.getElementById('ns-plan').value;
       if (!name || !slug) { showToast('⚠️ Preencha nome e slug da loja.'); return; }
       const mods = plan === 'vitrine'
@@ -405,12 +420,30 @@
             ? { catalog: true, pdv: true, deliveries: true, replenishment: false, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true }
             : { catalog: true, pdv: true, deliveries: true, replenishment: true, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true });
       const { error } = await sb.from('stores').insert({
-        slug, name, owner_id: currentUser.id, active: true, plan, modules: mods
+        slug, name, owner_email: ownerEmail, owner_id: currentUser.id, active: true, plan, modules: mods
       });
       if (error) { showToast('❌ Erro ao criar loja: ' + error.message); return; }
       closeNewStoreModal();
       await loadAllStores();
       showToast(`🏪 Loja "${name}" criada com sucesso!`);
+    }
+
+    function copyStoreAccessLink(slug) {
+      const base = location.href.replace(/admin\.html.*$/i, '');
+      const url = `${base}index.html?loja=${encodeURIComponent(slug)}`;
+      navigator.clipboard?.writeText(url);
+      showToast(`📋 Link copiado: ${url}`);
+    }
+
+    async function sendPasswordReset(storeId) {
+      const s = allStores.find(x => x.id === storeId);
+      const email = String(s?.owner_email || '').trim();
+      if (!email) { showToast('⚠️ Preencha o e-mail do lojista primeiro.'); return; }
+      if (!confirm(`Enviar e-mail oficial de redefinição de senha para ${email}?`)) return;
+      const base = location.href.replace(/admin\.html.*$/i, '');
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${base}index.html?loja=${encodeURIComponent(s.slug)}#gestor` });
+      if (error) { showToast('❌ Erro ao enviar redefinição: ' + error.message); return; }
+      showToast(`🔑 Link de redefinição enviado para ${email}!`);
     }
 
     bootAdmin();
