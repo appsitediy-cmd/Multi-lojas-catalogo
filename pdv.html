@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="theme-color" content="#0F172A" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PDV — Frente de Caixa</title>
   <link rel="manifest" href="manifest-pdv.json" />
@@ -1283,7 +1284,7 @@
       } else if (q.length > 0) {
         el.innerHTML = `🟡 <strong>Online (${q.length} pendente${q.length > 1 ? 's' : ''})</strong>`;
       } else {
-        el.innerHTML = `🟢 <strong>Online (Sincronizado)</strong> <span class="opacity-70 ml-1">· v66</span>`;
+        el.innerHTML = `🟢 <strong>Online (Sincronizado)</strong> <span class="opacity-70 ml-1">· v67</span>`;
       }
     }
 
@@ -1306,7 +1307,7 @@
           if (cached && cached.store && cached.email) {
             currentStore = cached.store;
             currentUser = { email: cached.email };
-            applyStoreTheme(currentStore.primary_color);
+            applyStoreTheme((currentStore.header_styles && currentStore.header_styles.headerBg) || currentStore.primary_color);
             document.getElementById('pdv-gate').classList.add('hidden');
             document.title = `PDV (Offline) — ${currentStore.name || storeSlug}`;
             document.getElementById('top-store-name').textContent = currentStore.name || storeSlug;
@@ -1338,7 +1339,7 @@
         return;
       }
       currentStore = st;
-      applyStoreTheme(st.primary_color);
+      applyStoreTheme((st.header_styles && st.header_styles.headerBg) || st.primary_color);
 
       const isSuper = SUPER_ADMIN_EMAILS.includes(String(currentUser.email || '').toLowerCase().trim());
       const isOwner = st.owner_id === currentUser.id;
@@ -2022,11 +2023,14 @@
     async function pollPdvPermissionsLive() {
       if (!sb || !storeSlug || !currentStore) return;
       try {
-        const { data, error } = await sb.from('stores').select('active,plan,modules').eq('slug', storeSlug).maybeSingle();
+        const { data, error } = await sb.from('stores').select('active,plan,modules,primary_color,header_styles').eq('slug', storeSlug).maybeSingle();
         if (error || !data) return;
         currentStore.active = data.active;
         currentStore.plan = data.plan;
         currentStore.modules = data.modules || {};
+        if (data.primary_color) currentStore.primary_color = data.primary_color;
+        if (data.header_styles) currentStore.header_styles = data.header_styles;
+        applyStoreTheme((currentStore.header_styles && currentStore.header_styles.headerBg) || currentStore.primary_color);
         syncPdvTopbarLocks();
         const isLocked = (data.active === false) || !(currentStore.modules.pdv === true);
         if (isLocked) {

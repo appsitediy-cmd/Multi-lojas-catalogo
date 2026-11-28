@@ -328,7 +328,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v66</span></h2>
+          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v67</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -2239,7 +2239,8 @@
       document.documentElement.style.setProperty('--brand-accent-soft', mixHexWithWhite(a, 0.91));
       document.documentElement.style.setProperty('--brand-accent-border', mixHexWithWhite(a, 0.58));
       const themeMeta = document.querySelector('meta[name="theme-color"]');
-      if (themeMeta) themeMeta.setAttribute('content', p);
+      const hdrCol = (typeof visualPaletteState !== 'undefined' && visualPaletteState.headerBg) ? visualPaletteState.headerBg : p;
+      if (themeMeta) themeMeta.setAttribute('content', hdrCol);
       const pHex = document.getElementById('primary-color-hex');
       const aHex = document.getElementById('accent-color-hex');
       if (pHex && document.activeElement !== pHex) pHex.value = p.toUpperCase();
@@ -2370,8 +2371,9 @@
           document.title = `${storeConfig.name} • Catálogo Oficial`;
         }
         const themeMeta = document.querySelector('meta[name="theme-color"]');
-        if (themeMeta && storeConfig.primaryColor) {
-          themeMeta.setAttribute('content', storeConfig.primaryColor);
+        const hdrCol2 = (typeof visualPaletteState !== 'undefined' && visualPaletteState.headerBg) ? visualPaletteState.headerBg : storeConfig.primaryColor;
+        if (themeMeta && hdrCol2) {
+          themeMeta.setAttribute('content', hdrCol2);
         }
 
         if (storeSlug === 'recanto') return;
@@ -3202,6 +3204,10 @@
       const waBg = s.waBg || '#FFFFFF';
       root.style.setProperty('--brand-wa-bg', waBg);
       root.style.setProperty('--brand-wa-text', getContrastHex(waBg, '#075E54', '#FFFFFF'));
+      const themeMetaExt = document.querySelector('meta[name="theme-color"]');
+      if (themeMetaExt && (s.headerBg || storeConfig.primaryColor)) {
+        themeMetaExt.setAttribute('content', s.headerBg || storeConfig.primaryColor);
+      }
       updateManagerLiveMiniPreview(s);
     }
 
@@ -3748,7 +3754,7 @@
             const { data: syncedRows, error: syncErr } = await sb
               .from('stores')
               .update({
-                logo: storeConfig.logo,
+                logo_url: (storeConfig.logo === DEFAULT_LOGO_IMG || storeConfig.logo === NEUTRAL_LOGO_IMG) ? '' : storeConfig.logo,
                 logo_zoom: storeConfig.logoZoom || 100,
                 primary_color: storeConfig.primaryColor,
                 accent_color: storeConfig.accentColor,
