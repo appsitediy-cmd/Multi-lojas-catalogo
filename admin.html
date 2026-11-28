@@ -110,9 +110,9 @@
         <div>
           <label class="font-black text-slate-600 block mb-1">Plano Inicial</label>
           <select id="ns-plan" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold">
-            <option value="vitrine">🛍️ Só Vitrine / Catálogo</option>
-            <option value="pro">🖥️ Vitrine + PDV + Entregas</option>
-            <option value="completo" selected>🚀 Completo (Todos os Módulos)</option>
+            <option value="essencial">🛍️ Essencial (Vitrine + Gestor)</option>
+            <option value="balcao_pro" selected>🖥️ Balcão Pro ⭐ (Vitrine + PDV + Promo/Mix)</option>
+            <option value="gestao_total">🚀 Gestão Total (Todos os Módulos)</option>
           </select>
         </div>
         <p class="text-[11px] font-semibold text-slate-500">A loja é criada vinculada à sua conta inicialmente para você configurar e depois transferir o <code>owner_id</code> para o cliente.</p>
@@ -284,7 +284,7 @@
               <div class="flex flex-wrap items-center gap-2.5">
                 <span class="px-2.5 py-1 rounded-full text-[11px] font-black ${isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${isActive ? '🟢 ATIVA' : '⏸️ PAUSADA'}</span>
                 <div>
-                  <div class="text-base font-black text-slate-900">${esc(s.name)}</div>
+                  <div class="text-base font-black text-slate-900 flex items-center gap-1.5"><span>${esc(s.name)}</span><button type="button" onclick="renameStoreAdmin('${s.id}')" class="text-xs px-1.5 py-0.5 rounded-lg bg-slate-200/80 hover:bg-slate-300 text-slate-700 cursor-pointer" title="Renomear loja">✏️</button></div>
                   <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-500 mt-0.5">
                     <span class="font-mono">slug: ${esc(s.slug)}</span>
                     <span>·</span>
@@ -309,10 +309,10 @@
               <div class="flex flex-wrap items-center gap-2">
                 <label class="flex items-center gap-1.5 font-bold text-slate-600">
                   <span>Plano:</span>
-                  <select onchange="updateStoreMeta('${s.id}', { plan: this.value })" class="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 font-black text-slate-900">
-                    <option value="vitrine" ${s.plan === 'vitrine' ? 'selected' : ''}>🛍️ Vitrine</option>
-                    <option value="pro" ${s.plan === 'pro' ? 'selected' : ''}>🖥️ Pro (PDV)</option>
-                    <option value="completo" ${(!s.plan || s.plan === 'completo') ? 'selected' : ''}>🚀 Completo</option>
+                  <select onchange="applyPreset('${s.id}', this.value)" class="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 font-black text-slate-900 cursor-pointer">
+                    <option value="essencial" ${['essencial','vitrine','basico','free'].includes(String(s.plan||'').toLowerCase()) ? 'selected' : ''}>🛍️ Essencial</option>
+                    <option value="balcao_pro" ${['balcao_pro','pro','pdv','plus'].includes(String(s.plan||'').toLowerCase()) ? 'selected' : ''}>🖥️ Balcão Pro ⭐</option>
+                    <option value="gestao_total" ${(!s.plan || ['gestao_total','completo','master','enterprise'].includes(String(s.plan||'').toLowerCase())) ? 'selected' : ''}>🚀 Gestão Total</option>
                   </select>
                 </label>
                 <label class="flex items-center gap-1.5 font-bold text-slate-600">
@@ -451,24 +451,65 @@
       m.classList.add('hidden'); m.classList.remove('flex');
     }
 
+    async function renameStoreAdmin(storeId) {
+      const s = allStores.find(x => x.id === storeId);
+      if (!s) return;
+      const next = prompt('Novo nome da loja:', s.name || s.slug);
+      if (!next || !next.trim() || next.trim() === s.name) return;
+      await saveStoreUpdate(storeId, { name: next.trim() }, `✏️ Loja renomeada para "${next.trim()}"!`);
+    }
+
     async function createNewStore() {
       const name = document.getElementById('ns-name').value.trim();
-      const slug = document.getElementById('ns-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      const rawSlug = document.getElementById('ns-slug').value.trim().toLowerCase();
+      if (/https?:|www\.|\.com|\.io|\//i.test(rawSlug)) {
+        showToast('⚠️ No campo Slug digite apenas um apelido curto (ex: osasco, saomarcos) — não cole link!');
+        return;
+      }
+      const slug = rawSlug.replace(/[^a-z0-9-]/g, '');
       const ownerEmail = document.getElementById('ns-email').value.trim();
       const plan = document.getElementById('ns-plan').value;
-      if (!name || !slug) { showToast('⚠️ Preencha nome e slug da loja.'); return; }
-      const mods = plan === 'vitrine'
-        ? { catalog: true, pdv: false, deliveries: false, replenishment: false, stock_entry: false, analytics: true, flash_sale: true, wholesale_mix: true }
-        : (plan === 'pro'
-            ? { catalog: true, pdv: true, deliveries: true, replenishment: false, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true }
+      if (!name || slug.length < 2 || slug.length > 32) {
+        showToast('⚠️ Preencha nome e um slug válido (2 a 32 letras/números sem espaços).');
+        return;
+      }
+      if (allStores.some(s => String(s.slug || '').toLowerCase() === slug)) {
+        showToast(`⚠️ Já existe uma loja com o slug "${slug}". Escolha outro.`);
+        return;
+      }
+      const mods = (plan === 'essencial' || plan === 'vitrine')
+        ? { catalog: true, pdv: false, deliveries: false, replenishment: false, stock_entry: false, analytics: false, flash_sale: false, wholesale_mix: false }
+        : ((plan === 'balcao_pro' || plan === 'pro')
+            ? { catalog: true, pdv: true, deliveries: false, replenishment: false, stock_entry: false, analytics: true, flash_sale: true, wholesale_mix: true }
             : { catalog: true, pdv: true, deliveries: true, replenishment: true, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true });
-      const { error } = await sb.from('stores').insert({
-        slug, name, owner_email: ownerEmail, owner_id: _newStoreTargetOwnerId || currentUser.id, active: true, plan, modules: mods
-      });
+
+      const targetOwnerId = _newStoreTargetOwnerId || currentUser.id;
+      const sibling = _newStoreTargetOwnerId ? allStores.find(s => s.owner_id === _newStoreTargetOwnerId) : null;
+      const defaultHeaderStyles = {
+        headerBg: '#1E3A5F', waBg: '#FFFFFF', primaryColor: '#1E3A5F',
+        accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#CBD5E1',
+        priceColor: '#0F172A', stripeColor: '#FEF08A', pageBg: '#F4F7FA',
+        nameColor: '#FFFFFF', subtitleColor: '#E2E8F0', deliveryBg: '#FEF08A', deliveryText: '#0F172A'
+      };
+      const payload = {
+        slug,
+        name,
+        owner_email: ownerEmail,
+        owner_id: targetOwnerId,
+        active: true,
+        plan,
+        modules: mods,
+        primary_color: sibling?.primary_color || '#1E3A5F',
+        accent_color: sibling?.accent_color || '#DC2626',
+        logo_url: sibling?.logo_url || '',
+        logo_zoom: sibling?.logo_zoom || 100,
+        header_styles: sibling?.header_styles || defaultHeaderStyles
+      };
+      const { error } = await sb.from('stores').insert(payload);
       if (error) { showToast('❌ Erro ao criar loja: ' + error.message); return; }
       closeNewStoreModal();
       await loadAllStores();
-      showToast(`🏪 Loja "${name}" criada com sucesso!`);
+      showToast(sibling ? `🏪 Filial "${name}" criada herdando logo e cores da matriz!` : `🏪 Loja "${name}" criada com sucesso!`);
     }
 
     function copyStoreAccessLink(slug) {
