@@ -328,7 +328,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v64</span></h2>
+          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v65</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -413,7 +413,7 @@
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Endereço da Loja</label>
-            <input type="text" id="config-store-address-input" placeholder="Ex: Rua Itajubá, 338 - Carapicuíba" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
+            <input type="text" id="config-store-address-input" placeholder="Ex: Rua das Flores, 123 - Centro" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
             <div class="flex items-center gap-3 mt-1.5 flex-wrap">
               <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 cursor-pointer select-none">
                 <input type="checkbox" id="hs-show-addr-top" checked onchange="previewHeaderStyles()" class="w-3.5 h-3.5 accent-[#2EB4C7] rounded">
@@ -2784,7 +2784,7 @@
 
       if (typeof syncManagerGlobalTopbar === 'function') syncManagerGlobalTopbar();
       const saBtn = document.getElementById('btn-open-superadmin-modal');
-      if (saBtn) saBtn.classList.toggle('hidden', !isSuperAdminUser());
+      if (saBtn) saBtn.classList.add('hidden');
     }
 
     function openPdvModule() {
@@ -3325,7 +3325,7 @@
       const sel = document.getElementById('saas-palette-preset-select');
       if (!sel) return;
       if (!sel.options.length) {
-        sel.innerHTML = SAAS_COLOR_PRESETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+        sel.innerHTML = '<option value="">— Escolha uma paleta pronta para aplicar —</option>' + SAAS_COLOR_PRESETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
       }
       updateSaasPresetDots();
       syncVisualItemHex();
@@ -3354,6 +3354,7 @@
     }
 
     function applySaasColorPreset(idxStr) {
+      if (idxStr === '' || idxStr === null || idxStr === undefined) return;
       const i = Number(idxStr) || 0;
       activeBasePresetIdx = i;
       const pr = SAAS_COLOR_PRESETS[i] || SAAS_COLOR_PRESETS[0];
@@ -3838,6 +3839,10 @@
         }
       }
       if (!currentStoreId) {
+        if (!/^[a-z0-9-]{2,40}$/.test(String(storeSlug || ''))) {
+          showToast("⚠️ Link/slug da loja inválido. Abra pelo link oficial da loja.");
+          return;
+        }
         const { data: created, error } = await sb
           .from('stores')
           .insert({
