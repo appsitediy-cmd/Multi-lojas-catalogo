@@ -1284,8 +1284,12 @@
         showGateLogin(`A conta ${currentUser.email} não é dona da loja "${st.name || storeSlug}". Entre com a conta correta.`);
         return;
       }
-      if (!pdvEnabled && !isSuper) {
-        showGateBlocked(`O módulo PDV não está ativado para "${st.name || storeSlug}". Ative no plano para liberar o caixa.`);
+      if (st.active === false) {
+        showGateBlocked(`A conta "${st.name || storeSlug}" está temporariamente pausada. Reative no Painel Master (admin.html) para liberar o acesso.`);
+        return;
+      }
+      if (!pdvEnabled) {
+        showGateBlocked(`O módulo PDV está desligado para "${st.name || storeSlug}". Ligue o botão PDV no Painel Master (admin.html) para liberar o caixa.`);
         return;
       }
 
@@ -4129,9 +4133,9 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       if (!sel || !sb) return;
       const isSuper = String(currentUser.email || '').toLowerCase() === 'leonardomouras@gmail.com';
       const mods = currentStore?.modules || {};
-      const hasDeliv = isSuper || (typeof mods.deliveries === 'boolean' ? mods.deliveries : Boolean(mods.pdv === true));
+      const hasDeliv = typeof mods.deliveries === 'boolean' ? mods.deliveries : Boolean(mods.pdv === true);
       document.querySelectorAll('[onclick*="openMotoboyModal"], [onclick*="openDeliveryCheckoutModal"]').forEach(el => el.classList.toggle('hidden', !hasDeliv));
-      const hasEntry = isSuper || (typeof mods.stock_entry === 'boolean' ? mods.stock_entry : Boolean(mods.pdv === true));
+      const hasEntry = typeof mods.stock_entry === 'boolean' ? mods.stock_entry : Boolean(mods.pdv === true);
       document.querySelectorAll('[onclick*="openStockEntryModal"]').forEach(el => el.classList.toggle('hidden', !hasEntry));
       try {
         const scopeOwnerId = currentStore?.owner_id || currentUser.id;

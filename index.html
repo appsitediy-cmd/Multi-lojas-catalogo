@@ -9418,8 +9418,8 @@
       if (!canSeeBar) return;
 
       const mods = currentStoreModules || {};
-      const hasPdv = !!(mods.pdv === true) || isSuperAdmin;
-      const hasDeliv = isSuperAdmin || (typeof mods.deliveries === 'boolean' ? mods.deliveries : !!(mods.pdv === true));
+      const hasPdv = !!(mods.pdv === true);
+      const hasDeliv = typeof mods.deliveries === 'boolean' ? mods.deliveries : hasPdv;
       document.getElementById('gtb-btn-pdv')?.classList.toggle('hidden', !hasPdv);
       document.getElementById('gtb-btn-entregas')?.classList.toggle('hidden', !hasDeliv);
 
