@@ -328,7 +328,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v68</span></h2>
+          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v70</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -1150,7 +1150,10 @@
             <h3 id="manager-product-count" class="text-xs font-extrabold uppercase tracking-wider text-[#9D174D]">4. Produtos Cadastrados (0)</h3>
             <span id="mgr-sec-arrow-4" class="text-xs font-black text-[#9D174D] shrink-0 ml-2">▾ Recolher</span>
           </button>
-          <button type="button" onclick="exportJSON()" class="text-[11px] bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-xl transition shrink-0">💾 Exportar</button>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" onclick="openCloneBranchModal()" class="btn-pill-white px-2.5 py-1 text-[11px]" title="Copiar catálogo de outra filial desta conta (com estoque 0)">📋 Clonar Filial</button>
+            <button type="button" onclick="exportJSON()" class="btn-pill-white px-2.5 py-1 text-[11px]">💾 Exportar</button>
+          </div>
         </div>
         <div id="mgr-sec-body-4" class="px-4 pb-4 pt-2 border-t border-[#E84D9A]/20">
         <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 mb-2.5 space-y-2">
@@ -1694,9 +1697,15 @@
           </div>
         </div>
       </div>
-      <div class="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-end gap-2 shrink-0">
-        <button type="button" onclick="closeEditProductModal()" class="btn-pill-white px-4 py-2 text-xs">Cancelar</button>
-        <button type="button" onclick="saveEditedProduct()" class="btn-pill-white px-5 py-2 text-xs shadow-sm">💾 Salvar Alterações do Produto</button>
+      <div class="bg-slate-50 border-t border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <label class="inline-flex items-center gap-1.5 bg-cyan-50 border border-cyan-200 rounded-xl px-2.5 py-1.5 cursor-pointer select-none" title="Atualiza nome, foto, preço e custo nas outras filiais da conta pelo EAN/PLU sem mexer no estoque">
+          <input type="checkbox" id="edit-sync-other-branches" checked class="w-4 h-4 accent-cyan-700 rounded cursor-pointer">
+          <span class="text-[11px] font-extrabold text-cyan-950">🏢 Sincronizar preço/custo nas filiais (estoque intacto)</span>
+        </label>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" onclick="closeEditProductModal()" class="btn-pill-white px-4 py-2 text-xs">Cancelar</button>
+          <button type="button" onclick="saveEditedProduct()" class="btn-pill-white px-5 py-2 text-xs shadow-sm">💾 Salvar Alterações</button>
+        </div>
       </div>
     </div>
   </div>
@@ -7788,10 +7797,206 @@
       });
       await syncWholesaleMixAfterSave('edit', p, oldMixGroupBeforeSave);
 
+      let syncedBranches = 0;
+      if (document.getElementById('edit-sync-other-branches')?.checked) {
+        syncedBranches = await syncEditedProductToSiblingBranches(p, updated);
+      }
+
       filterProducts();
       renderManagerProducts();
       closeEditProductModal();
-      showToast("✅ Produto atualizado na nuvem!");
+      showToast(syncedBranches > 0 ? `✅ Salvo! Preço e custo sincronizados em +${syncedBranches} filial(is) (estoque intacto).` : "✅ Produto atualizado na nuvem!");
+    }
+
+    async function syncEditedProductToSiblingBranches(localProd, updatedRow) {
+      if (!sb || !currentStoreOwnerId || !currentStoreId) return 0;
+      try {
+        const { data: siblings } = await sb.from('stores').select('id').eq('owner_id', currentStoreOwnerId).neq('id', currentStoreId);
+        if (!Array.isArray(siblings) || !siblings.length) return 0;
+        const sibIds = siblings.map(s => s.id);
+        const { data: sibProds } = await sb.from('products').select('id,store_id,name,barcode,internal_code').in('store_id', sibIds);
+        if (!Array.isArray(sibProds) || !sibProds.length) return 0;
+
+        const bKey = normalizeBarcodeKey(localProd.barcode);
+        const pluKey = String(localProd.internalCode || '').trim().toLowerCase();
+        const nKey = normalizeProductNameKey(localProd.name);
+
+        const matched = [];
+        for (const sid of sibIds) {
+          const list = sibProds.filter(x => x.store_id === sid);
+          let found = bKey ? list.find(x => normalizeBarcodeKey(x.barcode) === bKey) : null;
+          if (!found && pluKey) found = list.find(x => String(x.internal_code || '').trim().toLowerCase() === pluKey);
+          if (!found && nKey) found = list.find(x => normalizeProductNameKey(x.name) === nKey);
+          if (found) matched.push(found);
+        }
+        if (!matched.length) return 0;
+
+        const syncPatch = {
+          name: updatedRow.name,
+          price: updatedRow.price,
+          promo_price: updatedRow.promo_price,
+          pickup_price: updatedRow.pickup_price,
+          wholesale_qty: updatedRow.wholesale_qty,
+          wholesale_price: updatedRow.wholesale_price,
+          wholesale_group: updatedRow.wholesale_group,
+          category: updatedRow.category,
+          subcategory: updatedRow.subcategory,
+          brand: updatedRow.brand,
+          weight: updatedRow.weight,
+          image_url: updatedRow.image_url,
+          ncm: updatedRow.ncm,
+          unit_type: updatedRow.unit_type
+        };
+        const matchIds = matched.map(m => m.id);
+        await sb.from('products').update(syncPatch).in('id', matchIds);
+
+        const costRec = productCostsMap[String(localProd.id)];
+        if (costRec) {
+          const costRows = matched.map(m => ({
+            product_id: m.id,
+            store_id: m.store_id,
+            cost_price: costRec.costPrice || 0,
+            tax_pct: costRec.taxPct != null ? costRec.taxPct : 6,
+            card_fee_pct: costRec.cardFeePct != null ? costRec.cardFeePct : 3,
+            supplier: costRec.supplier || ''
+          }));
+          await sb.from('product_costs').upsert(costRows, { onConflict: 'product_id' });
+        }
+        return matched.length;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    async function openCloneBranchModal() {
+      if (!sb || !currentStoreOwnerId) { showToast('⚠️ Entre na conta do gestor primeiro.'); return; }
+      const { data: siblings } = await sb.from('stores').select('id,name,slug').eq('owner_id', currentStoreOwnerId).neq('id', currentStoreId).order('name');
+      if (!Array.isArray(siblings) || !siblings.length) {
+        showToast('ℹ️ Você ainda não tem outra filial cadastrada nesta conta.');
+        return;
+      }
+      const sel = document.getElementById('clone-branch-source');
+      sel.innerHTML = siblings.map(s => `<option value="${s.id}">${escapeHtml(s.name || s.slug)} (${escapeHtml(s.slug)})</option>`).join('');
+      document.getElementById('clone-branch-modal')?.classList.remove('hidden');
+    }
+
+    function closeCloneBranchModal() {
+      document.getElementById('clone-branch-modal')?.classList.add('hidden');
+    }
+
+    async function executeCloneFromBranch() {
+      const srcStoreId = document.getElementById('clone-branch-source')?.value;
+      const pauseAll = !!document.getElementById('clone-branch-paused')?.checked;
+      if (!srcStoreId || !sb || !currentStoreId) return;
+      const btn = document.getElementById('btn-run-clone-branch');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Clonando...'; }
+      try {
+        const [{ data: srcStore }, { data: srcProds }, { data: srcCosts }] = await Promise.all([
+          sb.from('stores').select('categories,subcategories,brands,weights').eq('id', srcStoreId).maybeSingle(),
+          sb.from('products').select('*').eq('store_id', srcStoreId),
+          sb.from('product_costs').select('product_id,cost_price,tax_pct,card_fee_pct,supplier').eq('store_id', srcStoreId)
+        ]);
+        if (!Array.isArray(srcProds) || !srcProds.length) {
+          showToast('⚠️ A loja selecionada não tem produtos para clonar.');
+          return;
+        }
+        // Mescla categorias/marcas/pesos da matriz se estiverem faltando
+        if (srcStore) {
+          if (Array.isArray(srcStore.categories)) srcStore.categories.forEach(c => { if (c && !categories.includes(c)) categories.push(c); });
+          if (Array.isArray(srcStore.brands)) srcStore.brands.forEach(b => { if (b && !brands.includes(b)) brands.push(b); });
+          if (Array.isArray(srcStore.weights)) srcStore.weights.forEach(w => { if (w && !weights.includes(w)) weights.push(w); });
+          if (srcStore.subcategories && typeof srcStore.subcategories === 'object') {
+            Object.entries(srcStore.subcategories).forEach(([k, arr]) => {
+              if (!Array.isArray(subcategories[k])) subcategories[k] = [];
+              (arr || []).forEach(sv => { if (sv && !subcategories[k].includes(sv)) subcategories[k].push(sv); });
+            });
+          }
+          await saveStoreMetaToCloud();
+        }
+
+        const costBySrcId = {};
+        (srcCosts || []).forEach(c => { costBySrcId[String(c.product_id)] = c; });
+
+        const toInsert = [];
+        const srcRefList = [];
+        for (const sp of srcProds) {
+          const dup = findDuplicateProduct(sp.name, sp.barcode, null, sp.internal_code);
+          if (dup) continue;
+          toInsert.push({
+            store_id: currentStoreId,
+            name: sp.name,
+            price: sp.price,
+            promo_price: sp.promo_price,
+            promo_start: sp.promo_start,
+            promo_end: sp.promo_end,
+            promo_show_end: !!sp.promo_show_end,
+            pickup_price: sp.pickup_price,
+            wholesale_qty: sp.wholesale_qty,
+            wholesale_price: sp.wholesale_price,
+            wholesale_group: sp.wholesale_group,
+            category: sp.category,
+            subcategory: sp.subcategory,
+            brand: sp.brand,
+            weight: sp.weight,
+            image_url: sp.image_url,
+            barcode: sp.barcode,
+            extra_barcodes: sp.extra_barcodes || [],
+            internal_code: sp.internal_code,
+            ncm: sp.ncm,
+            unit_type: sp.unit_type || 'UN',
+            stock_qty: 0,
+            min_stock: sp.min_stock,
+            show_in_catalog: sp.show_in_catalog !== false,
+            active: pauseAll ? false : (sp.active !== false)
+          });
+          srcRefList.push(sp.id);
+        }
+
+        if (!toInsert.length) {
+          closeCloneBranchModal();
+          showToast('ℹ️ Todos os produtos da filial de origem já existem aqui!');
+          return;
+        }
+
+        const insertedAll = [];
+        for (let i = 0; i < toInsert.length; i += 60) {
+          const chunk = toInsert.slice(i, i + 60);
+          const { data: ins, error } = await sb.from('products').insert(chunk).select('id');
+          if (error) { showToast('❌ Erro ao clonar: ' + error.message); return; }
+          if (Array.isArray(ins)) insertedAll.push(...ins);
+        }
+
+        const costRows = [];
+        insertedAll.forEach((row, idxIns) => {
+          const c = costBySrcId[String(srcRefList[idxIns])];
+          if (c) {
+            costRows.push({
+              product_id: row.id,
+              store_id: currentStoreId,
+              cost_price: c.cost_price || 0,
+              tax_pct: c.tax_pct != null ? c.tax_pct : 6,
+              card_fee_pct: c.card_fee_pct != null ? c.card_fee_pct : 3,
+              supplier: c.supplier || ''
+            });
+          }
+        });
+        if (costRows.length) {
+          for (let i = 0; i < costRows.length; i += 60) {
+            await sb.from('product_costs').upsert(costRows.slice(i, i + 60), { onConflict: 'product_id' });
+          }
+        }
+
+        closeCloneBranchModal();
+        await loadStoreFromCloud();
+        await loadProductCostsFromCloud();
+        renderManagerCategories();
+        renderManagerBrands();
+        renderManagerWeights();
+        renderManagerProducts();
+        showToast(`✅ ${insertedAll.length} produto(s) clonados com estoque 0!`);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '📋 Clonar Agora'; }
+      }
     }
 
     function processImageFile(file, targetInputId, previewImgId) {
@@ -10659,6 +10864,38 @@
         <svg class="w-4 h-4 shrink-0" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16.04 2.003C8.32 2.003 2.04 8.283 2.04 16c0 2.47.65 4.88 1.88 7.01L2 30l7.19-1.88A13.94 13.94 0 0 0 16.04 30C23.76 30 30 23.72 30 16S23.76 2.003 16.04 2.003zm0 25.63c-2.17 0-4.3-.58-6.16-1.69l-.44-.26-4.27 1.12 1.14-4.16-.29-.46a11.58 11.58 0 0 1-1.78-6.18c0-6.4 5.21-11.61 11.62-11.61 6.4 0 11.61 5.21 11.61 11.61 0 6.41-5.21 11.63-11.43 11.63zm6.37-8.71c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.36-.2.23-.41.26-.76.09-.35-.17-1.47-.54-2.8-1.73-1.04-.93-1.74-2.07-1.94-2.42-.2-.35-.02-.54.15-.71.16-.16.35-.41.52-.61.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.58-.28-.68-.57-.58-.78-.59h-.67c-.23 0-.61.09-.93.44-.32.35-1.22 1.19-1.22 2.9 0 1.71 1.25 3.36 1.42 3.59.17.23 2.46 3.76 5.96 5.27.83.36 1.48.57 1.99.73.84.27 1.6.23 2.2.14.67-.1 2.06-.84 2.35-1.65.29-.81.29-1.51.2-1.65-.09-.15-.32-.23-.67-.41z"/></svg>
         <span>Falar com o Suporte</span>
       </button>
+    </div>
+  </div>
+
+  <!-- MODAL CLONAR CATÁLOGO ENTRE FILIAIS (v69) -->
+  <div id="clone-branch-modal" class="hidden fixed inset-0 z-[85] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+      <div class="bg-slate-950 text-white px-5 py-4 flex items-center justify-between gap-2">
+        <div>
+          <span class="block text-[10px] font-black uppercase text-cyan-300">Cópia Segura entre Filiais</span>
+          <h3 class="text-sm font-black">📋 Clonar Catálogo de Outra Filial</h3>
+        </div>
+        <button type="button" onclick="closeCloneBranchModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-black text-xs cursor-pointer">✕</button>
+      </div>
+      <div class="p-5 space-y-3.5 text-xs">
+        <div>
+          <label class="block text-[11px] font-extrabold text-slate-600 mb-1">Copiar produtos de qual loja da sua conta?</label>
+          <select id="clone-branch-source" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-extrabold text-slate-800 cursor-pointer"></select>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5 font-bold text-slate-700 text-[11px]">
+          <div>✅ Copia nomes, fotos, categorias, marcas, pesos, preços, custos, fornecedores, PLU e EAN</div>
+          <div>✅ Pula automaticamente produtos que já existam nesta filial</div>
+          <div class="text-emerald-800">🛡️ <strong>Estoque NÃO é copiado</strong> (entra zerado = 0 para não misturar!)</div>
+        </div>
+        <label class="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 cursor-pointer select-none">
+          <input id="clone-branch-paused" type="checkbox" class="w-4 h-4 accent-amber-600 rounded">
+          <span class="text-[11px] font-bold text-amber-900">Importar já pausados (para ativar conforme conferir estoque)</span>
+        </label>
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" onclick="closeCloneBranchModal()" class="btn-pill-white px-4 py-2 text-xs">Cancelar</button>
+          <button type="button" id="btn-run-clone-branch" onclick="executeCloneFromBranch()" class="btn-pill-white px-5 py-2 text-xs shadow-sm">📋 Clonar Agora</button>
+        </div>
+      </div>
     </div>
   </div>
 </body>
