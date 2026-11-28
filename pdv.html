@@ -84,7 +84,6 @@
         <button type="button" onclick="closeModal('modal-motoboy'); document.getElementById('main-barcode-input')?.focus();" class="px-2.5 py-1 rounded-xl text-xs font-black bg-white text-slate-950 shadow cursor-pointer">🖥️ PDV</button>
         <button type="button" onclick="openMotoboyModal()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛵 Entregas</button>
         <button type="button" onclick="goToAppClient()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛍️ Vitrine</button>
-        <button id="pdv-gtb-admin" type="button" onclick="window.location.href='admin.html'" class="hidden px-2.5 py-1 rounded-xl text-xs font-black bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer">👑 Contas</button>
         <button type="button" onclick="logoutFromPdv()" title="Sair do modo Gestor" class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600/90 hover:bg-rose-600 text-white cursor-pointer ml-1">🚪 Sair</button>
       </div>
     </div>
@@ -4106,15 +4105,14 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       const sel = document.getElementById('global-store-switcher');
       if (!sel || !sb) return;
       const isSuper = String(currentUser.email || '').toLowerCase() === 'leonardomoura@gmail.com';
-      document.getElementById('pdv-gtb-admin')?.classList.toggle('hidden', !isSuper);
       const mods = currentStore?.modules || {};
       const hasDeliv = isSuper || (typeof mods.deliveries === 'boolean' ? mods.deliveries : Boolean(mods.pdv === true));
       document.querySelectorAll('[onclick*="openMotoboyModal"], [onclick*="openDeliveryCheckoutModal"]').forEach(el => el.classList.toggle('hidden', !hasDeliv));
       const hasEntry = isSuper || (typeof mods.stock_entry === 'boolean' ? mods.stock_entry : Boolean(mods.pdv === true));
       document.querySelectorAll('[onclick*="openStockEntryModal"]').forEach(el => el.classList.toggle('hidden', !hasEntry));
       try {
-        let q = sb.from('stores').select('slug,name').order('name');
-        if (!isSuper) q = q.eq('owner_id', currentUser.id);
+        const scopeOwnerId = currentStore?.owner_id || currentUser.id;
+        let q = sb.from('stores').select('slug,name').eq('owner_id', scopeOwnerId).order('name');
         const { data } = await q;
         const rows = Array.isArray(data) && data.length ? data : [{ slug: storeSlug, name: currentStore?.name || storeSlug }];
         sel.innerHTML = rows.map(r => `<option value="${escapeHtml(r.slug)}" ${r.slug === storeSlug ? 'selected' : ''}>🏪 ${escapeHtml(r.name)}</option>`).join('');

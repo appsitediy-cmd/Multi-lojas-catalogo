@@ -220,7 +220,7 @@
     }
 
     async function loadAllStores() {
-      const { data, error } = await sb.from('stores').select('id,slug,name,owner_email,active,plan,modules,plan_expires_at,created_at').order('name');
+      const { data, error } = await sb.from('stores').select('id,slug,name,owner_id,owner_email,active,plan,modules,plan_expires_at,created_at').order('name');
       if (error) { showToast('❌ Erro ao carregar lojas: ' + error.message); return; }
       allStores = Array.isArray(data) ? data : [];
       renderStores();
@@ -255,7 +255,26 @@
         return;
       }
 
-      box.innerHTML = list.map(s => {
+      // Agrupa lojas por Conta/Dono (owner_id) para visão clara de Redes e Filiais
+      const groupsMap = new Map();
+      list.forEach(s => {
+        const gKey = s.owner_id || s.owner_email || s.id;
+        if (!groupsMap.has(gKey)) groupsMap.set(gKey, { ownerId: s.owner_id, email: s.owner_email || '', stores: [] });
+        const g = groupsMap.get(gKey);
+        if (!g.email && s.owner_email) g.email = s.owner_email;
+        g.stores.push(s);
+      });
+
+      box.innerHTML = [...groupsMap.values()].map(grp => {
+        const grpHeader = `
+          <div class="bg-slate-900 text-white rounded-t-3xl px-5 py-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div class="text-sm font-black">🏢 Conta: ${esc(grp.email || grp.stores[0]?.name || 'Lojista')} <span class="text-xs font-bold text-slate-300">(${grp.stores.length} loja${grp.stores.length > 1 ? 's' : ''})</span></div>
+            </div>
+            <button type="button" onclick="openNewBranchForOwner('${esc(grp.ownerId || '')}', '${esc(grp.email || '')}')" class="px-3 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-black cursor-pointer">+ Nova Filial nesta Conta</button>
+          </div>`;
+
+        const cardsHtml = grp.stores.map(s => {
         const isActive = s.active !== false;
         const expVal = s.plan_expires_at ? String(s.plan_expires_at).slice(0, 10) : '';
         return `
@@ -278,6 +297,7 @@
                 <a href="index.html?loja=${encodeURIComponent(s.slug)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 font-black text-slate-700">🛍️ Vitrine</a>
                 <a href="index.html?loja=${encodeURIComponent(s.slug)}#gestor" target="_blank" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 font-black text-slate-700">⚙️ Gestor</a>
                 <a href="pdv.html?loja=${encodeURIComponent(s.slug)}" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black">🖥️ PDV</a>
+                <button onclick="renewStore30Days('${s.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black cursor-pointer">✅ +30 dias</button>
                 <button onclick="toggleStoreActive('${s.id}')" class="px-3 py-1.5 rounded-xl font-black cursor-pointer ${isActive ? 'bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}">
                   ${isActive ? '⏸️ Pausar Conta' : '▶️ Reativar Conta'}
                 </button>
@@ -330,6 +350,8 @@
               }).join('')}
             </div>
           </article>`;
+        }).join('');
+        return `<div class="rounded-3xl overflow-hidden shadow-sm border border-slate-300 bg-slate-100/70">${grpHeader}<div class="p-3 space-y-3">${cardsHtml}</div></div>`;
       }).join('');
     }
 
@@ -396,12 +418,29 @@
       }
     }
 
+    let _newStoreTargetOwnerId = null;
     function openNewStoreModal() {
+      _newStoreTargetOwnerId = null;
       document.getElementById('ns-name').value = '';
       document.getElementById('ns-slug').value = '';
       document.getElementById('ns-email').value = '';
       const m = document.getElementById('modal-new-store');
       m.classList.remove('hidden'); m.classList.add('flex');
+    }
+    function openNewBranchForOwner(ownerId, ownerEmail) {
+      _newStoreTargetOwnerId = ownerId || null;
+      document.getElementById('ns-name').value = '';
+      document.getElementById('ns-slug').value = '';
+      document.getElementById('ns-email').value = ownerEmail || '';
+      const m = document.getElementById('modal-new-store');
+      m.classList.remove('hidden'); m.classList.add('flex');
+    }
+    async function renewStore30Days(storeId) {
+      const s = allStores.find(x => x.id === storeId); if (!s) return;
+      const base = (s.plan_expires_at && new Date(s.plan_expires_at) > new Date()) ? new Date(s.plan_expires_at) : new Date();
+      base.setDate(base.getDate() + 30);
+      const ymd = `${base.getFullYear()}-${String(base.getMonth()+1).padStart(2,'0')}-${String(base.getDate()).padStart(2,'0')}T23:59:59Z`;
+      await saveStoreUpdate(storeId, { active: true, plan_expires_at: ymd }, `✅ +30 dias liberados em ${s.name}!`);
     }
     function closeNewStoreModal() {
       const m = document.getElementById('modal-new-store');
@@ -420,7 +459,7 @@
             ? { catalog: true, pdv: true, deliveries: true, replenishment: false, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true }
             : { catalog: true, pdv: true, deliveries: true, replenishment: true, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true });
       const { error } = await sb.from('stores').insert({
-        slug, name, owner_email: ownerEmail, owner_id: currentUser.id, active: true, plan, modules: mods
+        slug, name, owner_email: ownerEmail, owner_id: _newStoreTargetOwnerId || currentUser.id, active: true, plan, modules: mods
       });
       if (error) { showToast('❌ Erro ao criar loja: ' + error.message); return; }
       closeNewStoreModal();
