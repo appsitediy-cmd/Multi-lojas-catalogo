@@ -69,6 +69,40 @@
     }
     .urgent-glow { animation: pulseUrgent 1.5s infinite; }
     .alarm-shake { animation: pulseUrgent 1.2s infinite, gentleShake 0.6s ease-in-out 2; }
+    /* Padrão Clean White Pill + Emoji (v56) */
+    .btn-pill-white {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 9999px !important;
+      font-weight: 800 !important;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      transition: all 140ms ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      cursor: pointer;
+    }
+    .btn-pill-white:hover {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+      transform: translateY(-0.5px);
+    }
+    .btn-pill-white:active { transform: translateY(0); }
+    .btn-pill-active {
+      box-shadow: 0 0 0 2px #38bdf8, 0 2px 8px rgba(15, 23, 42, 0.18) !important;
+      border-color: #ffffff !important;
+    }
+    .btn-pill-danger {
+      color: #be123c !important;
+      border-color: #fecdd3 !important;
+    }
+    .btn-pill-danger:hover {
+      background-color: #fff1f2 !important;
+      border-color: #fda4af !important;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col select-none">
@@ -80,11 +114,11 @@
         <select id="global-store-switcher" onchange="switchPdvGlobalStore(this.value)" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 text-xs font-black focus:outline-none cursor-pointer"></select>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
-        <button type="button" onclick="goToManager()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">⚙️ Gestor</button>
-        <button type="button" onclick="closeModal('modal-motoboy'); document.getElementById('main-barcode-input')?.focus();" class="px-2.5 py-1 rounded-xl text-xs font-black bg-white text-slate-950 shadow cursor-pointer">🖥️ PDV</button>
-        <button type="button" onclick="openMotoboyModal()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛵 Entregas</button>
-        <button type="button" onclick="goToAppClient()" class="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">🛍️ Vitrine</button>
-        <button type="button" onclick="logoutFromPdv()" title="Sair do modo Gestor" class="px-2.5 py-1 rounded-xl text-xs font-black bg-rose-600/90 hover:bg-rose-600 text-white cursor-pointer ml-1">🚪 Sair</button>
+        <button type="button" onclick="goToManager()" class="btn-pill-white px-3 py-1 text-xs">⚙️ Gestor</button>
+        <button type="button" onclick="closeModal('modal-motoboy'); document.getElementById('main-barcode-input')?.focus();" class="btn-pill-white btn-pill-active px-3 py-1 text-xs">🖥️ PDV</button>
+        <button type="button" onclick="openMotoboyModal()" class="btn-pill-white px-3 py-1 text-xs">🛵 Entregas</button>
+        <button type="button" onclick="goToAppClient()" class="btn-pill-white px-3 py-1 text-xs">🛍️ Vitrine</button>
+        <button type="button" onclick="logoutFromPdv()" title="Sair do modo Gestor" class="btn-pill-white btn-pill-danger px-3 py-1 text-xs ml-1">🚪 Sair</button>
       </div>
     </div>
   </nav>
@@ -131,10 +165,7 @@
       </label>
     </div>
     <div class="flex items-center gap-1.5">
-      <button onclick="document.getElementById('main-barcode-input').focus()" style="color: var(--pdv-primary-dark);" class="px-2.5 py-1 rounded-lg bg-white font-black text-[11px] cursor-pointer shadow-xs">🖥️ PDV</button>
-      <button onclick="goToAppClient()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] cursor-pointer">🛍️ App Cliente</button>
-      <button id="btn-install-pdv-pc" onclick="installPdvDesktop()" class="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] cursor-pointer shadow-xs" title="Criar ícone do PDV na Área de Trabalho do computador">💻 Instalar no PC</button>
-      <button onclick="goToManager()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] cursor-pointer">⚙️ Painel Gestor</button>
+      <button id="btn-install-pdv-pc" onclick="installPdvDesktop()" class="btn-pill-white px-3 py-1 text-[11px]" title="Criar ícone do PDV na Área de Trabalho do computador">💻 Instalar no PC</button>
     </div>
   </div>
 
@@ -150,7 +181,7 @@
         onkeydown="handleMainInputKey(event)"
         class="flex-1 bg-transparent text-white placeholder:text-white/75 text-lg sm:text-2xl font-semibold text-center focus:outline-none tracking-wide"
       />
-      <button onclick="openPaymentScreen()" title="Ir para Recebimento (ou Enter com campo vazio)" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shrink-0 cursor-pointer shadow">
+      <button onclick="openPaymentScreen()" title="Ir para Recebimento (ou Enter com campo vazio)" class="btn-pill-white px-4 py-2 text-xs shrink-0 shadow">
         💰 Receber
       </button>
     </div>
@@ -172,37 +203,37 @@
           </div>
         </div>
         <div class="grid grid-cols-2 gap-1.5 mb-2.5">
-          <button onclick="openMotoboyModal()" style="background-color: var(--pdv-primary);" class="py-1.5 px-2 rounded-xl text-white text-[11px] font-black shadow-sm cursor-pointer">🛵 Painel (M)</button>
-          <button onclick="openClientsModal()" class="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-black cursor-pointer">👥 Clientes</button>
+          <button onclick="openMotoboyModal()" class="btn-pill-white py-1.5 px-2.5 text-[11px]">🛵 Painel (M)</button>
+          <button onclick="openClientsModal()" class="btn-pill-white py-1.5 px-2.5 text-[11px]">👥 Clientes</button>
         </div>
 
         <div id="left-orders-list" class="space-y-2 flex-1 overflow-y-auto scroll-slim pr-0.5"></div>
       </div>
 
-      <!-- Barra inferior de ícones rápidos -->
-      <div style="background-color: var(--pdv-primary-mid);" class="text-white p-2 grid grid-cols-6 gap-1 text-center">
-        <button onclick="openF3Modal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: F3">
-          <span class="text-base leading-none">📦</span>
+      <!-- Barra inferior de ícones rápidos (Padrão White Pill) -->
+      <div style="background-color: var(--pdv-primary-mid);" class="p-2 grid grid-cols-6 gap-1 text-center">
+        <button onclick="openF3Modal()" class="flex flex-col items-center justify-center py-1.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 shadow-xs cursor-pointer transition" title="Atalho: F3">
+          <span class="text-sm leading-none">📦</span>
           <span class="text-[9px] font-black mt-1">F3 Prod.</span>
         </button>
-        <button onclick="openDiversos()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: N1">
-          <span class="text-base leading-none">➕</span>
+        <button onclick="openDiversos()" class="flex flex-col items-center justify-center py-1.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 shadow-xs cursor-pointer transition" title="Atalho: N1">
+          <span class="text-sm leading-none">➕</span>
           <span class="text-[9px] font-black mt-1">N1 Div.</span>
         </button>
-        <button onclick="openDiscountModal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: D">
-          <span class="text-base leading-none">🏷️</span>
+        <button onclick="openDiscountModal()" class="flex flex-col items-center justify-center py-1.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 shadow-xs cursor-pointer transition" title="Atalho: D">
+          <span class="text-sm leading-none">🏷️</span>
           <span class="text-[9px] font-black mt-1">D Desc.</span>
         </button>
-        <button onclick="openReportModal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: R">
-          <span class="text-base leading-none">📋</span>
+        <button onclick="openReportModal()" class="flex flex-col items-center justify-center py-1.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 shadow-xs cursor-pointer transition" title="Atalho: R">
+          <span class="text-sm leading-none">📋</span>
           <span class="text-[9px] font-black mt-1">R Relat.</span>
         </button>
-        <button onclick="openF12Modal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl hover:bg-white/15 cursor-pointer" title="Atalho: F12">
-          <span class="text-base leading-none">📊</span>
+        <button onclick="openF12Modal()" class="flex flex-col items-center justify-center py-1.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 shadow-xs cursor-pointer transition" title="Atalho: F12">
+          <span class="text-sm leading-none">📊</span>
           <span class="text-[9px] font-black mt-1">F12 Fech.</span>
         </button>
-        <button onclick="openTrocaModal()" class="flex flex-col items-center justify-center py-1.5 rounded-xl bg-white/15 hover:bg-white/25 cursor-pointer" title="Troca, Devolução e Vale-Troca">
-          <span class="text-base leading-none">🔄</span>
+        <button onclick="openTrocaModal()" class="flex flex-col items-center justify-center py-1.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 shadow-xs cursor-pointer transition" title="Troca, Devolução e Vale-Troca">
+          <span class="text-sm leading-none">🔄</span>
           <span class="text-[9px] font-black mt-1">Troca</span>
         </button>
       </div>
@@ -215,22 +246,22 @@
       <div id="state-caixa-livre" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <div style="color: var(--pdv-primary-dark);" class="text-5xl sm:text-7xl font-black tracking-tight">Caixa Livre</div>
         <div id="live-clock" style="color: var(--pdv-primary-mid);" class="text-3xl sm:text-4xl font-extrabold mt-3 tabular-nums">00:00:00</div>
-        <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs font-bold">
-          <button onclick="openF3Modal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">F3</kbd> Produtos</button>
-          <button onclick="openDiversos()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">N1</kbd> Diversos</button>
-          <button onclick="openGranelValueModal()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 font-extrabold cursor-pointer transition">⚖️ Granel por Valor</button>
-          <button onclick="openDiscountModal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">D</kbd> Desconto</button>
-          <button onclick="openReportModal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">R</kbd> Relatório</button>
-          <button onclick="openF12Modal()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">F12</kbd> Fechamento</button>
-          <button onclick="reprintLastSale()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition"><kbd class="font-black text-slate-900">I</kbd> Imprimir Última</button>
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <button onclick="openF3Modal()" class="btn-pill-white px-3.5 py-2">📦 <kbd class="font-black">F3</kbd> Produtos</button>
+          <button onclick="openDiversos()" class="btn-pill-white px-3.5 py-2">➕ <kbd class="font-black">N1</kbd> Diversos</button>
+          <button onclick="openGranelValueModal()" class="btn-pill-white px-3.5 py-2">⚖️ Granel por Valor</button>
+          <button onclick="openDiscountModal()" class="btn-pill-white px-3.5 py-2">🏷️ <kbd class="font-black">D</kbd> Desconto</button>
+          <button onclick="openReportModal()" class="btn-pill-white px-3.5 py-2">📋 <kbd class="font-black">R</kbd> Relatório</button>
+          <button onclick="openF12Modal()" class="btn-pill-white px-3.5 py-2">📊 <kbd class="font-black">F12</kbd> Fechamento</button>
+          <button onclick="reprintLastSale()" class="btn-pill-white px-3.5 py-2">🖨️ <kbd class="font-black">I</kbd> Imprimir Última</button>
         </div>
-        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
-          <button onclick="openMotoboyModal()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 text-xs font-extrabold cursor-pointer">🛵 <kbd class="font-black">M</kbd> Painel Entregas</button>
-          <button onclick="openClientsModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">👥 Clientes</button>
-          <button onclick="openStockEntryModal(false)" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-extrabold cursor-pointer">📥 <kbd class="font-black">E</kbd> Entrada Mercadoria</button>
-          <button onclick="openTrocaModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🔄 <kbd class="font-black">T</kbd> Troca</button>
-          <button onclick="openCaixaMoveModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">💵 Sangria / Suprimento</button>
-          <button onclick="syncOfflineQueue(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold cursor-pointer">🔄 Sincronizar</button>
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <button onclick="openMotoboyModal()" class="btn-pill-white px-3.5 py-2">🛵 <kbd class="font-black">M</kbd> Painel Entregas</button>
+          <button onclick="openClientsModal()" class="btn-pill-white px-3.5 py-2">👥 Clientes</button>
+          <button onclick="openStockEntryModal(false)" class="btn-pill-white px-3.5 py-2">📥 <kbd class="font-black">E</kbd> Entrada Mercadoria</button>
+          <button onclick="openTrocaModal()" class="btn-pill-white px-3.5 py-2">🔄 <kbd class="font-black">T</kbd> Troca</button>
+          <button onclick="openCaixaMoveModal()" class="btn-pill-white px-3.5 py-2">💵 Sangria / Suprimento</button>
+          <button onclick="syncOfflineQueue(true)" class="btn-pill-white px-3.5 py-2">🔄 Sincronizar</button>
         </div>
       </div>
 
@@ -244,8 +275,8 @@
               <span id="cupom-mix-badge" class="hidden px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-black">🎉 Atacado Mix Ativo</span>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="openDiscountModal()" class="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-extrabold cursor-pointer">🏷️ D — Desconto</button>
-              <button onclick="cancelCupom()" class="px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-extrabold cursor-pointer">✕ Cancelar Venda</button>
+              <button onclick="openDiscountModal()" class="btn-pill-white px-3 py-1 text-xs">🏷️ D — Desconto</button>
+              <button onclick="cancelCupom()" class="btn-pill-white btn-pill-danger px-3 py-1 text-xs">❌ Cancelar Venda</button>
             </div>
           </div>
 
@@ -325,7 +356,7 @@
           </div>
           <div class="px-4 py-2.5 flex items-center justify-between gap-3 bg-slate-50">
             <label for="pay-receive-input" class="text-base font-bold text-slate-600">Receber:</label>
-            <input id="pay-receive-input" type="text" inputmode="decimal" class="w-44 text-right text-2xl font-black text-slate-800 bg-white border border-slate-300 rounded-xl px-3 py-1 focus:outline-none" />
+            <input id="pay-receive-input" type="text" inputmode="numeric" oninput="maskBrlCents(this)" class="w-44 text-right text-2xl font-black text-slate-800 bg-white border border-slate-300 rounded-xl px-3 py-1 focus:outline-none" />
           </div>
         </div>
 
@@ -422,7 +453,7 @@
       </div>
       <div>
         <label class="block text-[11px] font-bold text-slate-600 mb-1">Valor (R$)</label>
-        <input id="n1-val" type="text" inputmode="decimal" onkeydown="if(event.key==='Enter') confirmDiversos();" placeholder="Ex: 15,00" class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-black" />
+        <input id="n1-val" type="text" inputmode="numeric" oninput="maskBrlCents(this)" onkeydown="if(event.key==='Enter') confirmDiversos();" placeholder="0,00" class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-black" />
       </div>
       <div>
         <label class="block text-[11px] font-bold text-slate-600 mb-1">Descrição (opcional)</label>
@@ -443,7 +474,7 @@
         <button id="disc-mode-rs" onclick="setDiscMode('rs')" style="background-color: var(--pdv-primary);" class="py-2 rounded-xl text-white text-xs font-black cursor-pointer">R$ (Reais)</button>
         <button id="disc-mode-pct" onclick="setDiscMode('pct')" class="py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-black cursor-pointer">% (Porcentagem)</button>
       </div>
-      <input id="disc-input" type="text" inputmode="decimal" onkeydown="if(event.key==='Enter') confirmDiscount();" placeholder="Ex: 5,00 ou 10" class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-black" />
+      <input id="disc-input" type="text" inputmode="decimal" oninput="maskDiscInput(this)" onkeydown="if(event.key==='Enter') confirmDiscount();" placeholder="Ex: 5,00 ou 10" class="w-full bg-slate-50 border-2 border-slate-400 rounded-xl px-3 py-2 text-lg font-black" />
       <button onclick="confirmDiscount()" class="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-black text-xs cursor-pointer">Aplicar Desconto</button>
     </div>
   </div>
@@ -523,7 +554,7 @@
           </div>
           <div>
             <label class="block text-[11px] font-bold text-amber-800 mb-1">Valor Vale (R$)</label>
-            <input id="tr-value" type="text" inputmode="decimal" placeholder="0,00" class="w-full bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-2 font-black text-amber-950" />
+            <input id="tr-value" type="text" inputmode="numeric" oninput="maskBrlCents(this)" placeholder="0,00" class="w-full bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-2 font-black text-amber-950" />
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Cliente</label>
@@ -553,7 +584,7 @@
         <button id="mv-btn-sangria" onclick="setCashMoveType('sangria')" class="py-2 rounded-xl bg-rose-600 text-white font-black cursor-pointer">➖ Sangria</button>
         <button id="mv-btn-suprimento" onclick="setCashMoveType('suprimento')" class="py-2 rounded-xl bg-slate-100 text-slate-700 font-black cursor-pointer">➕ Suprimento</button>
       </div>
-      <input id="mv-val" type="text" inputmode="decimal" placeholder="Ex: 50,00" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-lg font-black" />
+      <input id="mv-val" type="text" inputmode="numeric" oninput="maskBrlCents(this)" placeholder="0,00" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-lg font-black" />
       <input id="mv-note" type="text" placeholder="Motivo (ex: Troco, pagamento fornecedor)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold" />
       <button onclick="confirmCashMove()" style="background-color: var(--pdv-primary);" class="w-full py-2.5 rounded-xl text-white font-black text-xs cursor-pointer">Salvar Movimentação</button>
     </div>
@@ -686,7 +717,7 @@
             </div>
             <div id="se-cost-wrap" class="col-span-4">
               <label class="block text-[10px] font-bold text-slate-600 mb-0.5">🔒 Custo Unit. (opcional)</label>
-              <input id="se-cost" type="text" inputmode="decimal" placeholder="Ex: 118,50" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-black" />
+              <input id="se-cost" type="text" inputmode="numeric" oninput="maskBrlCents(this)" placeholder="0,00" class="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 font-black" />
             </div>
             <div class="col-span-3 flex items-end">
               <button onclick="addStockEntryItem()" style="background-color: var(--pdv-primary);" class="w-full py-2 rounded-xl text-white font-black cursor-pointer">+ Na Lista</button>
@@ -719,7 +750,7 @@
         <select id="gv-prod" onchange="previewGranelWeight()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold"></select>
         <div>
           <label class="block text-[11px] font-bold text-slate-600 mb-1">Valor que o cliente pediu (R$)</label>
-          <input id="gv-amount" type="text" inputmode="decimal" oninput="previewGranelWeight()" onkeydown="if(event.key==='Enter') confirmGranelValue();" placeholder="Ex: 15,00" class="w-full bg-amber-50 border-2 border-amber-300 rounded-xl px-3 py-2 text-lg font-black text-amber-950" />
+          <input id="gv-amount" type="text" inputmode="numeric" oninput="maskBrlCents(this); previewGranelWeight()" onkeydown="if(event.key==='Enter') confirmGranelValue();" placeholder="0,00" class="w-full bg-amber-50 border-2 border-amber-300 rounded-xl px-3 py-2 text-lg font-black text-amber-950" />
         </div>
         <div id="gv-weight-preview" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-emerald-800 text-center">Peso calculado: 0,000 kg</div>
       </div>
@@ -904,7 +935,7 @@
         </div>
         <div id="deliv-co-change-wrap">
           <label class="font-black text-orange-900 block mb-1">Troco para quanto? (opcional, se for Dinheiro)</label>
-          <input id="deliv-co-change" type="text" inputmode="decimal" placeholder="Ex.: 200,00" class="w-full bg-orange-50/60 border border-orange-300 rounded-xl px-3 py-2 font-bold" />
+          <input id="deliv-co-change" type="text" inputmode="numeric" oninput="maskBrlCents(this)" placeholder="0,00" class="w-full bg-orange-50/60 border border-orange-300 rounded-xl px-3 py-2 font-bold" />
         </div>
         <div>
           <label class="font-black text-slate-600 block mb-1">Endereço + Referência</label>
@@ -969,7 +1000,7 @@
           </div>
           <div id="deliv-ed-change-wrap">
             <label class="font-black text-orange-900 block mb-1">Troco para (opcional)</label>
-            <input id="deliv-ed-change" type="text" inputmode="decimal" placeholder="Ex.: 200,00" class="w-full bg-orange-50/60 border border-orange-300 rounded-xl px-3 py-2 font-bold" />
+            <input id="deliv-ed-change" type="text" inputmode="numeric" oninput="maskBrlCents(this)" placeholder="0,00" class="w-full bg-orange-50/60 border border-orange-300 rounded-xl px-3 py-2 font-bold" />
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1124,6 +1155,16 @@
       const n = parseFloat(s);
       return isNaN(n) ? 0 : n;
     }
+    function maskBrlCents(el) {
+      if (!el) return;
+      const digits = String(el.value || '').replace(/\D/g, '');
+      if (!digits) { el.value = ''; return; }
+      const cents = parseInt(digits, 10);
+      el.value = (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function maskDiscInput(el) {
+      if (typeof discMode !== 'undefined' && discMode === 'rs') maskBrlCents(el);
+    }
     function normText(s) {
       return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     }
@@ -1219,7 +1260,7 @@
       } else if (q.length > 0) {
         el.innerHTML = `🟡 <strong>Online (${q.length} pendente${q.length > 1 ? 's' : ''})</strong>`;
       } else {
-        el.innerHTML = `🟢 <strong>Online (Sincronizado)</strong>`;
+        el.innerHTML = `🟢 <strong>Online (Sincronizado)</strong> <span class="opacity-70 ml-1">· v57</span>`;
       }
     }
 
@@ -3242,8 +3283,16 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
     }
 
     // INSTALAÇÃO TRADICIONAL NO WINDOWS (BAIXA INSTALADOR EM DOWNLOADS -> 2 CLIQUES -> ÍCONE NA ÁREA DE TRABALHO)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      let _pdvSwReloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_pdvSwReloaded) return;
+        _pdvSwReloaded = true;
+        window.location.reload();
+      });
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+        .then((reg) => { reg.update().catch(() => {}); })
+        .catch(() => {});
     }
     if (window.matchMedia('(display-mode: standalone)').matches) {
       document.getElementById('btn-install-pdv-pc')?.classList.add('hidden');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'multiloja-catalogo-v55';
+const CACHE_NAME = 'multiloja-catalogo-v57';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -20,7 +20,7 @@ self.addEventListener('fetch', (event) => {
   const isAppShell =
     event.request.mode === 'navigate' ||
     url.pathname.endsWith('/') ||
-    url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('.html') ||
     url.pathname.endsWith('.json');
 
   if (isAppShell) {
