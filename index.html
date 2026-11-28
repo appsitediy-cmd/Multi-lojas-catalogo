@@ -309,7 +309,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800">Painel Gestor <span id="manager-store-slug-badge" class="hidden"></span><span class="text-[10px] font-extrabold text-slate-400 ml-1.5">v58</span></h2>
+          <h2 class="text-lg font-black text-slate-800">Painel Gestor <span id="manager-store-slug-badge" class="hidden"></span><span class="text-[10px] font-extrabold text-slate-400 ml-1.5">v60</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -352,17 +352,17 @@
         </div>
       </div>
 
-      <!-- ATALHOS RÁPIDOS E RECOLHER/ABRIR TODAS -->
+      <!-- ATALHOS RÁPIDOS E RECOLHER/ABRIR TODAS (WHITE PILL) -->
       <div class="flex items-center justify-between gap-2 flex-wrap mb-4">
         <div class="flex flex-wrap gap-1.5">
-          <button type="button" onclick="focusManagerSection(1)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">1. Loja</button>
-          <button type="button" onclick="focusManagerSection(2)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">2. Categorias</button>
-          <button type="button" onclick="focusManagerSection(3)" class="bg-[#CFFAFE] hover:bg-[#A5F3FC] text-[#155E75] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">3. Novo Produto</button>
-          <button type="button" onclick="focusManagerSection(4)" class="bg-pink-100 hover:bg-pink-200 text-[#9D174D] text-[11px] font-extrabold px-2.5 py-1 rounded-xl transition">4. Produtos</button>
+          <button type="button" onclick="focusManagerSection(1)" class="btn-pill-white px-3 py-1.5 text-[11px]">🏪 1. Loja</button>
+          <button type="button" onclick="focusManagerSection(2)" class="btn-pill-white px-3 py-1.5 text-[11px]">📂 2. Categorias</button>
+          <button type="button" onclick="focusManagerSection(3)" class="btn-pill-white px-3 py-1.5 text-[11px]">➕ 3. Novo Produto</button>
+          <button type="button" onclick="focusManagerSection(4)" class="btn-pill-white px-3 py-1.5 text-[11px]">📦 4. Produtos</button>
         </div>
         <div class="flex items-center gap-1.5">
-          <button type="button" onclick="setAllManagerSections(false)" class="text-[11px] font-bold text-slate-600 bg-white border border-slate-300 px-2.5 py-1 rounded-xl hover:bg-slate-100 transition">Recolher tudo</button>
-          <button type="button" onclick="setAllManagerSections(true)" class="text-[11px] font-bold text-[#155E75] bg-white border border-[#2EB4C7] px-2.5 py-1 rounded-xl hover:bg-cyan-50 transition">Abrir tudo</button>
+          <button type="button" onclick="setAllManagerSections(false)" class="btn-pill-white px-3 py-1 text-[11px]">🔼 Recolher tudo</button>
+          <button type="button" onclick="setAllManagerSections(true)" class="btn-pill-white px-3 py-1 text-[11px]">🔽 Abrir tudo</button>
         </div>
       </div>
 
@@ -435,99 +435,118 @@
             <label class="block text-[11px] font-bold text-slate-700 mb-1">Chave Pix da Loja (para pagamento no carrinho)</label>
             <input type="text" id="config-pix-key" placeholder="Ex: 11999999999, CNPJ, E-mail ou Chave Aleatória" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400">
           </div>
-          <div>
-            <label for="config-primary-color" class="block text-[11px] font-bold text-slate-700 mb-1">Cor Principal da Loja</label>
-            <div class="flex items-center justify-between gap-2 bg-white border border-slate-300 rounded-xl px-3 py-2">
-              <label for="config-primary-color" class="flex items-center gap-2 cursor-pointer flex-1">
-                <input type="color" id="config-primary-color" value="#2EB4C7" oninput="previewThemeColors()" class="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 bg-transparent shrink-0">
-                <span class="text-xs text-slate-700 font-semibold">Cor principal</span>
-              </label>
-              <input type="text" id="primary-color-hex" value="#2EB4C7" maxlength="7" oninput="applyHexInput('primary', this.value)" class="w-20 text-right text-[11px] font-mono font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 uppercase">
-            </div>
-            <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-              <button type="button" onclick="setQuickColor('primary', '#2EB4C7')" class="w-6 h-6 rounded-full bg-[#2EB4C7] border-2 border-white shadow" title="Turquesa"></button>
-              <button type="button" onclick="setQuickColor('primary', '#E84D9A')" class="w-6 h-6 rounded-full bg-[#E84D9A] border-2 border-white shadow" title="Rosa"></button>
-              <button type="button" onclick="setQuickColor('primary', '#2563EB')" class="w-6 h-6 rounded-full bg-[#2563EB] border-2 border-white shadow" title="Azul"></button>
-              <button type="button" onclick="setQuickColor('primary', '#16A34A')" class="w-6 h-6 rounded-full bg-[#16A34A] border-2 border-white shadow" title="Verde"></button>
-              <button type="button" onclick="setQuickColor('primary', '#9333EA')" class="w-6 h-6 rounded-full bg-[#9333EA] border-2 border-white shadow" title="Roxo"></button>
-              <button type="button" onclick="setQuickColor('primary', '#EA580C')" class="w-6 h-6 rounded-full bg-[#EA580C] border-2 border-white shadow" title="Laranja"></button>
-              <button type="button" onclick="setQuickColor('primary', '#1E293B')" class="w-6 h-6 rounded-full bg-[#1E293B] border-2 border-white shadow" title="Grafite"></button>
-            </div>
+          <!-- INPUTS OCULTOS DE COMPATIBILIDADE (PRINCIPAL / DESTAQUE) -->
+          <div class="hidden">
+            <input type="color" id="config-primary-color" value="#1E3A5F" oninput="previewThemeColors()">
+            <input type="text" id="primary-color-hex" value="#1E3A5F" maxlength="7">
+            <input type="color" id="config-accent-color" value="#DC2626" oninput="previewThemeColors()">
+            <input type="text" id="accent-color-hex" value="#DC2626" maxlength="7">
+            <div id="visual-color-targets"></div>
+            <div id="visual-header-targets"></div>
+            <strong id="visual-active-label">Cor do Topo</strong>
           </div>
-          <div>
-            <label for="config-accent-color" class="block text-[11px] font-bold text-slate-700 mb-1">Cor de Destaque (Marcas/Promo)</label>
-            <div class="flex items-center justify-between gap-2 bg-white border border-slate-300 rounded-xl px-3 py-2">
-              <label for="config-accent-color" class="flex items-center gap-2 cursor-pointer flex-1">
-                <input type="color" id="config-accent-color" value="#E84D9A" oninput="previewThemeColors()" class="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 bg-transparent shrink-0">
-                <span class="text-xs text-slate-700 font-semibold">Cor destaque</span>
-              </label>
-              <input type="text" id="accent-color-hex" value="#E84D9A" maxlength="7" oninput="applyHexInput('accent', this.value)" class="w-20 text-right text-[11px] font-mono font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 uppercase">
+
+          <!-- BLOCO UNIFICADO E LIMPO DE CORES (v60) -->
+          <div class="sm:col-span-2 bg-white border-2 border-slate-200 rounded-2xl p-3.5 space-y-3.5">
+            <div class="flex items-center justify-between gap-2 flex-wrap border-b border-slate-100 pb-2.5">
+              <div>
+                <span class="text-xs font-black text-slate-800">🎨 Aparência e Cores da Vitrine</span>
+                <p class="text-[10px] font-semibold text-slate-500">15 paletas prontas, extrator automático da logo e personalização item a item em caixa seletora.</p>
+              </div>
+              <button type="button" onclick="confirmResetAllTheme()" class="btn-pill-white px-3 py-1 text-[10px]">↺ Restaurar Tudo</button>
             </div>
-            <div class="flex items-center gap-1.5 mt-1.5">
-              <button type="button" onclick="setQuickColor('accent', '#E84D9A')" class="w-5 h-5 rounded-full bg-[#E84D9A] border border-white shadow" title="Rosa"></button>
-              <button type="button" onclick="setQuickColor('accent', '#E11D48')" class="w-5 h-5 rounded-full bg-[#E11D48] border border-white shadow" title="Vermelho"></button>
-              <button type="button" onclick="setQuickColor('accent', '#F59E0B')" class="w-5 h-5 rounded-full bg-[#F59E0B] border border-white shadow" title="Ambar"></button>
-              <button type="button" onclick="setQuickColor('accent', '#7C3AED')" class="w-5 h-5 rounded-full bg-[#7C3AED] border border-white shadow" title="Violeta"></button>
-              <button type="button" onclick="setQuickColor('accent', '#0D9488')" class="w-5 h-5 rounded-full bg-[#0D9488] border border-white shadow" title="Esmeralda"></button>
-              <button type="button" onclick="setQuickColor('accent', '#2563EB')" class="w-5 h-5 rounded-full bg-[#2563EB] border border-white shadow" title="Azul"></button>
+
+            <!-- 1. 15 COMBINAÇÕES PRONTAS -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <label for="saas-palette-preset-select" class="text-[11px] font-black text-slate-800">1️⃣ 15 Combinações Prontas (1 clique aplica na vitrine)</label>
+                <span id="saas-preset-dots" class="flex items-center gap-1"></span>
+              </div>
+              <select id="saas-palette-preset-select" onchange="applySaasColorPreset(this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-extrabold text-slate-800 cursor-pointer focus:outline-none focus:border-slate-500"></select>
             </div>
-          </div>
-          <div class="sm:col-span-2 bg-white border-2 border-slate-200 rounded-2xl p-3 space-y-3">
-            <div class="flex items-center justify-between gap-2 flex-wrap">
-              <span class="text-[11px] font-extrabold text-slate-800">🎨 Editor Visual Completo de Cores (1º escolha o item → 2º clique na cor)</span>
-              <button type="button" onclick="resetAllThemeToBrandLogo()" class="text-[10px] font-black bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded-lg shadow-sm transition">🔄 Resetar Cores da Logo</button>
+
+            <!-- 2. EXTRATOR DE CORES DA LOGO -->
+            <div class="bg-sky-50/70 border border-sky-200 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-[11px] font-black text-sky-950">✨ 2️⃣ Puxar Paleta da Logo da Loja</div>
+                <p class="text-[10px] font-semibold text-sky-800/80">Lê as cores reais da sua logo e aplica na vitrine (mantendo Promoção vermelha).</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" onclick="extractThemeFromCurrentLogo()" class="btn-pill-white px-3 py-1.5 text-[11px]">✨ Usar Logo Atual</button>
+                <label class="btn-pill-white px-3 py-1.5 text-[11px] cursor-pointer">
+                  📤 Subir Logo e Extrair
+                  <input type="file" accept="image/*" onchange="extractThemeFromUploadedFile(event)" class="hidden">
+                </label>
+              </div>
             </div>
-            <div>
-              <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Vitrine, Botões & Molduras</span>
-              <div id="visual-color-targets" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5"></div>
-            </div>
-            <div>
-              <div class="flex items-center justify-between gap-2 flex-wrap mb-1">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Cabeçalho (Letras e Fundos)</span>
+
+            <!-- 3. PERSONALIZAÇÃO COMPLETA POR CAIXA SELETORA + RESTAURAR ESTE -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2.5">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <span class="text-[11px] font-black text-slate-800">🎛️ 3️⃣ Personalizar Cada Item (Moldura, Preço, Promoção, Topo, Fundo...)</span>
                 <label class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 cursor-pointer select-none">
-                  <input type="checkbox" id="hs-address-nobg" checked onchange="previewHeaderStyles(); updateManagerLiveMiniPreview();" class="w-3.5 h-3.5 accent-[#2EB4C7]">
+                  <input type="checkbox" id="hs-address-nobg" checked onchange="previewHeaderStyles(); updateManagerLiveMiniPreview();" class="w-3.5 h-3.5 accent-slate-800">
                   <span>📍 Endereço sem fundo</span>
                 </label>
               </div>
-              <div id="visual-header-targets" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5"></div>
-            </div>
-            <!-- Inputs ocultos sincronizados para compatibilidade total -->
-            <div class="hidden">
-              <input type="color" id="hs-name-color" value="#FFFFFF">
-              <input type="color" id="hs-subtitle-color" value="#ECFEFF">
-              <input type="color" id="hs-address-text" value="#ECFEFF">
-              <input type="color" id="hs-address-bg" value="#176E7B">
-              <input type="color" id="hs-hours-text" value="#FFFFFF">
-              <input type="color" id="hs-hours-bg" value="#176E7B">
-              <input type="color" id="hs-delivery-text" value="#0F172A">
-              <input type="color" id="hs-delivery-bg" value="#F7D046">
-            </div>
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
-              <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="text-[11px] font-bold text-slate-700">Pintando agora: <strong id="visual-active-label" class="text-brand-primary">Cor do Topo (Logo)</strong></span>
-                <label class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-white border border-slate-300 px-2 py-0.5 rounded-lg cursor-pointer">
-                  <span>Cor livre:</span>
-                  <input type="color" id="visual-free-color" oninput="applyVisualPaletteColor(this.value)" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent">
-                </label>
+
+              <!-- Inputs ocultos sincronizados para compatibilidade total -->
+              <div class="hidden">
+                <input type="color" id="hs-name-color" value="#FFFFFF">
+                <input type="color" id="hs-subtitle-color" value="#ECFEFF">
+                <input type="color" id="hs-address-text" value="#ECFEFF">
+                <input type="color" id="hs-address-bg" value="#1E3A5F">
+                <input type="color" id="hs-hours-text" value="#FFFFFF">
+                <input type="color" id="hs-hours-bg" value="#1E3A5F">
+                <input type="color" id="hs-delivery-text" value="#0F172A">
+                <input type="color" id="hs-delivery-bg" value="#FEF08A">
               </div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="text-[10px] font-extrabold text-slate-500">Paleta Rápida:</span>
-                <button type="button" onclick="applyVisualPaletteColor('#24B7C5')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#24B7C5" title="Turquesa Logo"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#E94793')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#E94793" title="Magenta Logo"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#FCD40F')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#FCD40F" title="Amarelo Logo"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#65B54A')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#65B54A" title="Verde Logo"></button>
-                <span class="text-[10px] font-extrabold text-slate-500 ml-1">Primárias:</span>
-                <button type="button" onclick="applyVisualPaletteColor('#DC2626')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#DC2626" title="Vermelho"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#2563EB')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#2563EB" title="Azul"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#EAB308')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#EAB308" title="Amarelo"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#16A34A')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#16A34A" title="Verde"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#EA580C')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#EA580C" title="Laranja"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#9333EA')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#9333EA" title="Roxo"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#111827')" class="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition" style="background:#111827" title="Preto"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#FFFFFF')" class="w-6 h-6 rounded-full border-2 border-slate-300 shadow hover:scale-110 transition" style="background:#FFFFFF" title="Branco"></button>
-                <button type="button" onclick="applyVisualPaletteColor('#F4F9FA')" class="w-6 h-6 rounded-full border-2 border-slate-300 shadow hover:scale-110 transition" style="background:#F4F9FA" title="Gelo Suave"></button>
+
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                <select id="visual-item-select" onchange="selectVisualColorTarget(this.value)" class="sm:col-span-6 bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-extrabold text-slate-800 cursor-pointer focus:outline-none focus:border-slate-500">
+                  <optgroup label="Vitrine, Preços & Molduras">
+                    <option value="cardBorder">🖼️ Moldura / Borda dos Cards</option>
+                    <option value="priceColor">💰 Cor do Preço Normal</option>
+                    <option value="accentColor">🔥 Cor da Promoção (Botão & Preço)</option>
+                    <option value="fireBg">⚪ Bolinha em Volta do Fogo 🔥</option>
+                    <option value="headerBg">🏠 Fundo do Cabeçalho da Loja</option>
+                    <option value="primaryColor">🔘 Botões Principais (Adicionar)</option>
+                    <option value="waBg">💬 Fundo do Botão WhatsApp</option>
+                    <option value="stripeColor">➖ Faixa Colorida do Topo</option>
+                    <option value="pageBg">📄 Fundo da Página (Vitrine)</option>
+                  </optgroup>
+                  <optgroup label="Textos & Faixas do Cabeçalho">
+                    <option value="hsNameColor">✍️ Nome da Loja (Letra)</option>
+                    <option value="hsSubColor">✍️ Subtítulo (Letra)</option>
+                    <option value="hsAddrText">📍 Endereço (Letra)</option>
+                    <option value="hsAddrBg">📍 Endereço (Fundo)</option>
+                    <option value="hsHoursText">🕒 Horário (Letra)</option>
+                    <option value="hsHoursBg">🕒 Horário (Fundo)</option>
+                    <option value="hsDelivText">🛵 Faixa Entrega (Letra)</option>
+                    <option value="hsDelivBg">🛵 Faixa Entrega (Fundo)</option>
+                  </optgroup>
+                </select>
+                <div class="sm:col-span-3 flex items-center justify-between gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1.5">
+                  <input type="color" id="visual-free-color" oninput="applyVisualPaletteColor(this.value); syncVisualItemHex();" class="w-7 h-7 rounded cursor-pointer border-0 bg-transparent">
+                  <span id="visual-free-color-hex" class="text-[11px] font-mono font-black text-slate-600 uppercase">#CBD5E1</span>
+                </div>
+                <button type="button" onclick="resetOnlySelectedVisualItem()" class="sm:col-span-3 btn-pill-white py-2 px-2.5 text-[11px] whitespace-nowrap" title="Volta apenas este item para a cor original da paleta">↺ Restaurar este</button>
               </div>
             </div>
+
+            <!-- 4. TEMA SÓBRIO DO PAINEL GESTOR -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div class="text-[11px] font-black text-slate-800">⚙️ 4️⃣ Tema Sóbrio do Painel Gestor (Separado da Vitrine)</div>
+                <p class="text-[10px] font-semibold text-slate-500">Fundo neutro para trabalhar sem distração — mantendo alertas em Promoção, Atacado, Variações (Roxo) e Mix.</p>
+              </div>
+              <select id="gestor-sober-theme-select" onchange="applyGestorSoberTheme(this.value)" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-extrabold text-slate-800 cursor-pointer">
+                <option value="clean">🤍 Claro Neutro (Padrão)</option>
+                <option value="warm">🪨 Areia Suave</option>
+                <option value="slate">🌫️ Cinza Executivo</option>
+              </select>
+            </div>
+
             <!-- MINI PRÉVIA AO VIVO COMPLETA DA VITRINE -->
             <div class="space-y-1.5">
               <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500">👁️ Prévia ao vivo da Vitrine (sem sair do Gestor)</span>
@@ -607,42 +626,87 @@
         </button>
         <div id="mgr-sec-body-2" class="hidden px-4 pb-4 pt-2 border-t border-amber-200">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <span class="text-xs font-bold text-slate-700">Categorias</span>
-              <button onclick="addNewCategoryModal()" class="text-[11px] bg-brand-primary text-white font-bold px-2.5 py-1 rounded-lg hover:opacity-90 transition shrink-0 whitespace-nowrap">+ Nova</button>
-            </div>
-            <div id="manager-category-list" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1"></div>
-          </div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <span class="text-xs font-bold text-slate-700">Marcas</span>
-              <button onclick="addNewBrandModal()" class="text-[11px] bg-brand-accent text-white font-bold px-2.5 py-1 rounded-lg hover:opacity-90 transition shrink-0 whitespace-nowrap">+ Nova</button>
-            </div>
-            <div id="manager-brand-list" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1"></div>
-          </div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <span class="text-xs font-bold text-slate-700">Subcategorias</span>
-              <button onclick="addNewSubcatFromManager()" class="text-[11px] bg-[#D99B00] text-white font-bold px-2.5 py-1 rounded-lg hover:bg-[#B88200] transition shrink-0 whitespace-nowrap">+ Nova</button>
-            </div>
-            <select id="manager-subcat-filter" onchange="renderManagerSubcategories()" class="w-full mb-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
-            <div id="manager-subcat-list" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1"></div>
-          </div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200 min-w-0 overflow-hidden">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span class="text-xs font-bold text-slate-700 truncate">Pesos / Medidas</span>
-                <span id="manager-weight-count" class="text-[10px] font-extrabold bg-[#F4FCEB] text-[#4D7C0F] px-1.5 py-0.5 rounded-md border border-[#7CB342]/30">A–Z</span>
+          <!-- 1. CATEGORIAS (CAIXA SELETORA) -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 min-w-0 flex flex-col justify-between gap-2.5">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-black text-slate-800">📂 Categorias <span id="manager-cat-count" class="ml-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px]">0</span></span>
+                <button type="button" onclick="addNewCategoryModal()" class="btn-pill-white px-2.5 py-1 text-[11px] shrink-0">➕ Nova</button>
               </div>
-              <button onclick="addNewWeightQuick('manager-weight-select')" class="text-[11px] bg-[#7CB342] text-white font-bold px-2.5 py-1 rounded-lg hover:bg-[#689F38] transition shrink-0 whitespace-nowrap">+ Nova</button>
+              <select id="manager-category-select" onchange="updateManagerCategoryInfo()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-slate-500 cursor-pointer"></select>
+              <p id="manager-category-info" class="text-[10px] font-semibold text-slate-500 px-0.5"></p>
+              <div id="manager-category-list" class="hidden"></div>
             </div>
-            <select id="manager-weight-select" class="w-full bg-[#F4FCEB] border border-[#7CB342]/50 rounded-xl px-2.5 py-2 text-xs font-bold text-[#365314] focus:outline-none focus:border-[#7CB342] mb-2"></select>
-            <div class="grid grid-cols-2 gap-1.5">
-              <button type="button" onclick="editSelectedManagerWeight()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-[11px] transition flex items-center justify-center gap-1">✏️ Editar</button>
-              <button type="button" onclick="deleteSelectedManagerWeight()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-1.5 px-2 rounded-lg text-[11px] transition flex items-center justify-center gap-1">🗑️ Excluir</button>
+            <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100">
+              <button type="button" onclick="editSelectedManagerCategory()" class="btn-pill-white py-1.5 px-2 text-[11px]">✏️ Editar</button>
+              <button type="button" onclick="deleteSelectedManagerCategory()" class="btn-pill-white btn-pill-danger py-1.5 px-2 text-[11px]">🗑️ Excluir</button>
             </div>
           </div>
+
+          <!-- 2. MARCAS (CAIXA SELETORA + VISIBILIDADE NA VITRINE) -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 min-w-0 flex flex-col justify-between gap-2.5">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-black text-slate-800">🏷️ Marcas <span id="manager-brand-count" class="ml-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px]">0</span></span>
+                <button type="button" onclick="addNewBrandModal()" class="btn-pill-white px-2.5 py-1 text-[11px] shrink-0">➕ Nova</button>
+              </div>
+              <select id="manager-brand-select" onchange="updateManagerBrandStatus()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-slate-500 cursor-pointer"></select>
+              <div id="manager-brand-status" class="rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold"></div>
+              <div id="manager-brand-list" class="hidden"></div>
+            </div>
+            <div class="space-y-1.5 pt-2 border-t border-slate-100">
+              <button type="button" id="btn-toggle-selected-brand-vis" onclick="toggleSelectedManagerBrandVis()" class="btn-pill-white w-full py-1.5 px-2 text-[11px]">👁️ Mostrar / Ocultar</button>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button type="button" onclick="editSelectedManagerBrand()" class="btn-pill-white py-1.5 px-2 text-[11px]">✏️ Editar</button>
+                <button type="button" onclick="deleteSelectedManagerBrand()" class="btn-pill-white btn-pill-danger py-1.5 px-2 text-[11px]">🗑️ Excluir</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. SUBCATEGORIAS (CAIXA SELETORA) -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 min-w-0 flex flex-col justify-between gap-2.5">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-black text-slate-800">🗂️ Subcategorias</span>
+                <button type="button" onclick="addNewSubcatFromManager()" class="btn-pill-white px-2.5 py-1 text-[11px] shrink-0">➕ Nova</button>
+              </div>
+              <select id="manager-subcat-filter" onchange="renderManagerSubcategories()" class="w-full bg-amber-50/70 border border-amber-200 rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold text-amber-900 focus:outline-none cursor-pointer"></select>
+              <select id="manager-subcat-select" onchange="updateManagerSubcatInfo()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-slate-500 cursor-pointer"></select>
+              <p id="manager-subcat-info" class="text-[10px] font-semibold text-slate-500 px-0.5"></p>
+              <div id="manager-subcat-list" class="hidden"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100">
+              <button type="button" onclick="editSelectedManagerSubcat()" class="btn-pill-white py-1.5 px-2 text-[11px]">✏️ Editar</button>
+              <button type="button" onclick="deleteSelectedManagerSubcat()" class="btn-pill-white btn-pill-danger py-1.5 px-2 text-[11px]">🗑️ Excluir</button>
+            </div>
+          </div>
+
+          <!-- 4. PESOS / MEDIDAS (CAIXA SELETORA) -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 min-w-0 flex flex-col justify-between gap-2.5">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="text-xs font-black text-slate-800 truncate">⚖️ Pesos / Medidas</span>
+                  <span id="manager-weight-count" class="text-[10px] font-extrabold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full">A–Z</span>
+                </div>
+                <button type="button" onclick="addNewWeightQuick('manager-weight-select')" class="btn-pill-white px-2.5 py-1 text-[11px] shrink-0">➕ Novo</button>
+              </div>
+              <select id="manager-weight-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-slate-500 cursor-pointer"></select>
+              <p class="text-[10px] font-semibold text-slate-500 px-0.5">Ordenado de A → Z.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100">
+              <button type="button" onclick="editSelectedManagerWeight()" class="btn-pill-white py-1.5 px-2 text-[11px]">✏️ Editar</button>
+              <button type="button" onclick="deleteSelectedManagerWeight()" class="btn-pill-white btn-pill-danger py-1.5 px-2 text-[11px]">🗑️ Excluir</button>
+            </div>
+          </div>
+        </div>
+        <!-- RESUMO AO VIVO DAS MARCAS VISÍVEIS NA VITRINE -->
+        <div class="mt-3 bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="font-black text-slate-700">🛍️ Marcas visíveis na Vitrine agora:</span>
+            <span id="manager-vitrine-brands-preview" class="flex flex-wrap gap-1"></span>
+          </div>
+          <span class="text-[10px] font-bold text-slate-400">Marcas sem produto ficam ocultas automaticamente</span>
         </div>
         </div>
       </div>
@@ -1076,6 +1140,7 @@
             <select id="manager-filter-cat" onchange="clearManagerSelection(); updateManagerFilterSubcats(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
             <select id="manager-filter-subcat" onchange="clearManagerSelection(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
             <select id="manager-filter-brand" onchange="clearManagerSelection(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"></select>
+            <select id="manager-filter-supplier" onchange="clearManagerSelection(); renderManagerProducts();" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-slate-400"><option value="Todos">🏭 Todos Fornecedores</option></select>
             <div class="flex items-center gap-1.5">
               <button type="button" id="manager-multi-filter-btn" onclick="toggleManagerFilterPanel()" class="flex-1 min-w-0 bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-2.5 py-1.5 text-[11px] font-black flex items-center justify-between gap-1 shadow-xs transition">
                 <span>🎛️ Filtros</span>
@@ -1106,6 +1171,13 @@
               <label class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 py-1.5 font-bold cursor-pointer"><input type="checkbox" value="flash_only" onchange="toggleManagerStatusFilter(this)" class="mgr-st-chk w-3.5 h-3.5 rounded"><span>⚡ No Relâmpago</span></label>
             </div>
           </div>
+          <!-- FILTROS RÁPIDOS DE LIMPEZA -->
+          <div class="flex flex-wrap items-center gap-1.5 pt-1">
+            <span class="text-[10px] font-black text-slate-500">⚡ Limpeza rápida:</span>
+            <button type="button" id="mgr-qf-nobrand" onclick="toggleQuickManagerFilter('no_brand')" class="btn-pill-white px-2.5 py-1 text-[10px]">⚠️ Sem Marca (<span id="mgr-cnt-nobrand">0</span>)</button>
+            <button type="button" id="mgr-qf-nophoto" onclick="toggleQuickManagerFilter('no_photo')" class="btn-pill-white px-2.5 py-1 text-[10px]">🖼️ Sem Foto (<span id="mgr-cnt-nophoto">0</span>)</button>
+            <button type="button" id="mgr-qf-nostock" onclick="toggleQuickManagerFilter('no_stock')" class="btn-pill-white px-2.5 py-1 text-[10px]">📦 Estoque 0 (<span id="mgr-cnt-nostock">0</span>)</button>
+          </div>
           <div id="manager-active-filter-chips" class="flex flex-wrap gap-1"></div>
         </div>
         <div id="manager-bulk-bar" class="bg-white rounded-2xl border border-slate-200 p-2.5 mb-2.5 space-y-2 shadow-sm">
@@ -1116,19 +1188,33 @@
             </label>
             <span id="manager-selected-badge" class="text-[10px] font-extrabold text-slate-400">0 selecionado(s)</span>
           </div>
-          <div id="manager-bulk-actions" class="hidden pt-2 border-t border-slate-100 flex flex-wrap gap-1.5">
-            <button type="button" onclick="openBulkPromoModal()" class="flex-1 min-w-[155px] bg-brand-accent hover:opacity-90 text-white font-extrabold text-[11px] py-2 px-2.5 rounded-xl shadow-sm transition">
-              🔥 Colocar na Promo (<span id="manager-bulk-count-promo">0</span>)
-            </button>
-            <button type="button" onclick="bulkDisableManagerPromo()" class="bg-pink-100 hover:bg-pink-200 text-[#9D174D] font-extrabold text-[11px] py-2 px-2.5 rounded-xl transition">
-              ✕ Tirar da Promo (<span id="manager-bulk-count">0</span>)
-            </button>
-            <button type="button" onclick="bulkToggleManagerActive(false)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-extrabold text-[11px] py-2 px-2.5 rounded-xl transition">
-              ⏸️ Pausar
-            </button>
-            <button type="button" onclick="bulkToggleManagerActive(true)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-extrabold text-[11px] py-2 px-2.5 rounded-xl transition">
-              ✅ Ativar
-            </button>
+          <div id="manager-bulk-actions" class="hidden pt-2 border-t border-slate-100 space-y-2">
+            <!-- Ação em Lote: Marca / Fornecedor / Categoria -->
+            <div class="bg-cyan-50/80 border border-cyan-200 rounded-xl p-2 flex flex-wrap items-center gap-1.5">
+              <span class="text-[10px] font-black text-cyan-900">⚡ Alterar em lote:</span>
+              <select id="bulk-field-type" onchange="renderBulkFieldValue()" class="bg-white border border-cyan-300 rounded-xl px-2 py-1 text-[11px] font-extrabold text-slate-800 cursor-pointer">
+                <option value="brand">🏷️ Mudar Marca</option>
+                <option value="supplier">🏭 Mudar Fornecedor</option>
+                <option value="category">📂 Mudar Categoria</option>
+              </select>
+              <span id="bulk-field-value-wrap" class="inline-flex items-center"></span>
+              <button type="button" onclick="applyBulkFieldUpdate()" class="btn-pill-white px-3 py-1 text-[11px]">✅ Aplicar</button>
+            </div>
+            <!-- Ações de Promoção e Status -->
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="openBulkPromoModal()" class="btn-pill-white px-3 py-1.5 text-[11px]">
+                🔥 Promo (<span id="manager-bulk-count-promo">0</span>)
+              </button>
+              <button type="button" onclick="bulkDisableManagerPromo()" class="btn-pill-white px-3 py-1.5 text-[11px]">
+                ✕ Tirar Promo (<span id="manager-bulk-count">0</span>)
+              </button>
+              <button type="button" onclick="bulkToggleManagerActive(false)" class="btn-pill-white px-3 py-1.5 text-[11px]">
+                ⏸️ Pausar
+              </button>
+              <button type="button" onclick="bulkToggleManagerActive(true)" class="btn-pill-white px-3 py-1.5 text-[11px]">
+                🟢 Ativar
+              </button>
+            </div>
           </div>
         </div>
         <div id="manager-product-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 items-start"></div>
@@ -1176,7 +1262,7 @@
           <button type="button" onclick="closeEditProductModal()" class="w-7 h-7 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white text-xs font-bold">✕</button>
         </div>
       </div>
-      <div class="p-4 overflow-y-auto flex-grow space-y-3">
+      <div id="edit-product-modal-body" class="p-4 overflow-y-auto flex-grow space-y-3">
         <input type="hidden" id="edit-product-id">
         <div>
           <div class="flex items-center justify-between mb-1">
@@ -1575,7 +1661,10 @@
             </div>
           </div>
         </div>
-        <button onclick="saveEditedProduct()" class="w-full bg-brand-primary hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">Salvar Alterações do Produto</button>
+      </div>
+      <div class="bg-slate-50 border-t border-slate-200 px-4 py-3 flex items-center justify-end gap-2 shrink-0">
+        <button type="button" onclick="closeEditProductModal()" class="btn-pill-white px-4 py-2 text-xs">Cancelar</button>
+        <button type="button" onclick="saveEditedProduct()" class="btn-pill-white px-5 py-2 text-xs shadow-sm">💾 Salvar Alterações do Produto</button>
       </div>
     </div>
   </div>
@@ -2894,11 +2983,29 @@
       { key: 'hsDelivText', label: '🛵 Entrega (Letra)', inputId: 'hs-delivery-text' },
       { key: 'hsDelivBg', label: '🛵 Entrega (Fundo)', inputId: 'hs-delivery-bg' }
     ];
-    let selectedVisualTarget = 'headerBg';
+    const SAAS_COLOR_PRESETS = [
+      { name: '1. 🏢 Azul Slate Profissional — Padrão Novo Gestor', headerBg: '#1E3A5F', primaryColor: '#1E3A5F', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#CBD5E1', priceColor: '#0F172A', stripeColor: '#FEF08A', pageBg: '#F4F7FA', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#E2E8F0', hsDelivBg: '#FEF08A', hsDelivText: '#0F172A' },
+      { name: '2. 🐾 Turquesa & Amarelo — Estilo Recanto Petshop', headerBg: '#2EB4C7', primaryColor: '#2EB4C7', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#B5E8EF', priceColor: '#176E7B', stripeColor: '#FCD40F', pageBg: '#F4F9FA', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#ECFEFF', hsDelivBg: '#FCD40F', hsDelivText: '#0F172A' },
+      { name: '3. 🦊 Laranja Vibrante & Grafite — Estilo Suricata / Shopee', headerBg: '#EA580C', primaryColor: '#EA580C', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#FDBA74', priceColor: '#1E293B', stripeColor: '#FEF3C7', pageBg: '#FFFBF5', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#FFEDD5', hsDelivBg: '#FEF3C7', hsDelivText: '#7C2D12' },
+      { name: '4. 🍔 Vermelho & Branco Clássico — Estilo iFood', headerBg: '#EA1D2C', primaryColor: '#EA1D2C', accentColor: '#EA1D2C', fireBg: '#FFFFFF', cardBorder: '#FECACA', priceColor: '#1E293B', stripeColor: '#FEE2E2', pageBg: '#F9FAFB', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#FEE2E2', hsDelivBg: '#FEE2E2', hsDelivText: '#991B1B' },
+      { name: '5. 🛒 Amarelo & Azul Confiança — Estilo Mercado Livre', headerBg: '#FFE600', primaryColor: '#2D3277', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#CBD5E1', priceColor: '#1E293B', stripeColor: '#2D3277', pageBg: '#F5F5F5', waBg: '#FFFFFF', hsNameColor: '#1E293B', hsSubColor: '#334155', hsDelivBg: '#2D3277', hsDelivText: '#FFFFFF' },
+      { name: '6. 💜 Roxo Moderno — Estilo Nubank', headerBg: '#820AD1', primaryColor: '#820AD1', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#DDD6FE', priceColor: '#1E293B', stripeColor: '#F3E8FF', pageBg: '#FAF5FF', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#F3E8FF', hsDelivBg: '#F3E8FF', hsDelivText: '#581C87' },
+      { name: '7. 🛍️ Azul Varejo Clean — Estilo Magalu', headerBg: '#0086FF', primaryColor: '#0086FF', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#BFDBFE', priceColor: '#0F172A', stripeColor: '#DBEAFE', pageBg: '#F8FAFC', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#E0F2FE', hsDelivBg: '#DBEAFE', hsDelivText: '#1E3A8A' },
+      { name: '8. 📦 Azul Marinho & Âmbar — Estilo Amazon', headerBg: '#131921', primaryColor: '#232F3E', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#CBD5E1', priceColor: '#0F172A', stripeColor: '#FF9900', pageBg: '#F3F4F6', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#CBD5E1', hsDelivBg: '#FF9900', hsDelivText: '#0F172A' },
+      { name: '9. 🌿 Verde Esmeralda Pet — Estilo Cobasi / Petz', headerBg: '#0F766E', primaryColor: '#0F766E', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#99F6E4', priceColor: '#134E4A', stripeColor: '#CCFBF1', pageBg: '#F0FDFA', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#CCFBF1', hsDelivBg: '#CCFBF1', hsDelivText: '#115E59' },
+      { name: '10. 💚 Verde Fresh — Estilo WhatsApp / Natural', headerBg: '#075E54', primaryColor: '#128C7E', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#BBF7D0', priceColor: '#0F172A', stripeColor: '#DCFCE7', pageBg: '#F0FDF4', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#DCFCE7', hsDelivBg: '#DCFCE7', hsDelivText: '#14532D' },
+      { name: '11. 🖤 Preto & Dourado Luxo — Estilo Boutique Premium', headerBg: '#0F172A', primaryColor: '#1E293B', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#CBD5E1', priceColor: '#0F172A', stripeColor: '#FDE68A', pageBg: '#F8FAFC', waBg: '#FFFFFF', hsNameColor: '#F8FAFC', hsSubColor: '#CBD5E1', hsDelivBg: '#FDE68A', hsDelivText: '#0F172A' },
+      { name: '12. 💗 Rosa Boutique — Estilo Pet Spa & Estética', headerBg: '#BE185D', primaryColor: '#DB2777', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#FBCFE8', priceColor: '#831843', stripeColor: '#FCE7F3', pageBg: '#FFF1F2', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#FCE7F3', hsDelivBg: '#FCE7F3', hsDelivText: '#831843' },
+      { name: '13. 🍷 Vinho & Creme — Estilo Empório Clássico', headerBg: '#881337', primaryColor: '#9F1239', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#FECDD3', priceColor: '#4C0519', stripeColor: '#FFE4E6', pageBg: '#FFF5F5', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#FFE4E6', hsDelivBg: '#FFE4E6', hsDelivText: '#881337' },
+      { name: '14. 🌊 Azul Oceano — Estilo Clínica Vet & Banho', headerBg: '#0369A1', primaryColor: '#0284C7', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#BAE6FD', priceColor: '#0C4A6E', stripeColor: '#E0F2FE', pageBg: '#F0F9FF', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#E0F2FE', hsDelivBg: '#E0F2FE', hsDelivText: '#0C4A6E' },
+      { name: '15. 🌾 Verde Agro & Campo — Estilo Casa de Ração', headerBg: '#15803D', primaryColor: '#16A34A', accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#BBF7D0', priceColor: '#14532D', stripeColor: '#FEF08A', pageBg: '#F7FEE7', waBg: '#FFFFFF', hsNameColor: '#FFFFFF', hsSubColor: '#DCFCE7', hsDelivBg: '#FEF08A', hsDelivText: '#14532D' }
+    ];
+    let activeBasePresetIdx = 0;
+    let selectedVisualTarget = 'cardBorder';
     let visualPaletteState = {
-      headerBg: '#24B7C5', waBg: '#FFFFFF', primaryColor: '#24B7C5',
-      accentColor: '#E94793', fireBg: '#FFFFFF', cardBorder: '#24B7C5',
-      priceColor: '#1A8E99', stripeColor: '#FCD40F', pageBg: '#F4F9FA'
+      headerBg: '#1E3A5F', waBg: '#FFFFFF', primaryColor: '#1E3A5F',
+      accentColor: '#DC2626', fireBg: '#FFFFFF', cardBorder: '#CBD5E1',
+      priceColor: '#0F172A', stripeColor: '#FEF08A', pageBg: '#F4F7FA'
     };
 
     function getContrastHex(hex, lightFallback, darkFallback) {
@@ -2995,6 +3102,7 @@
     }
 
     function renderVisualColorTargets() {
+      if (typeof initSaasPaletteSelect === 'function') initSaasPaletteSelect();
       renderVisualTargetList('visual-color-targets', VISUAL_COLOR_TARGETS);
       renderVisualTargetList('visual-header-targets', VISUAL_HEADER_TARGETS);
       const all = [...VISUAL_COLOR_TARGETS, ...VISUAL_HEADER_TARGETS];
@@ -3006,6 +3114,8 @@
     }
 
     function selectVisualColorTarget(key) {
+      selectedVisualTarget = key;
+      if (typeof syncVisualItemHex === 'function') syncVisualItemHex();
       selectedVisualTarget = key;
       renderVisualColorTargets();
     }
@@ -3036,21 +3146,157 @@
       applyExtendedThemeVars(visualPaletteState);
     }
 
-    function resetAllThemeToBrandLogo() {
+    function initSaasPaletteSelect() {
+      const sel = document.getElementById('saas-palette-preset-select');
+      if (!sel) return;
+      if (!sel.options.length) {
+        sel.innerHTML = SAAS_COLOR_PRESETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+      }
+      updateSaasPresetDots();
+      syncVisualItemHex();
+      const savedSober = localStorage.getItem('gestor_sober_theme') || 'clean';
+      const gSel = document.getElementById('gestor-sober-theme-select');
+      if (gSel) gSel.value = savedSober;
+      applyGestorSoberTheme(savedSober, true);
+    }
+
+    function updateSaasPresetDots() {
+      const dots = document.getElementById('saas-preset-dots');
+      if (!dots) return;
+      const cols = [visualPaletteState.headerBg, visualPaletteState.accentColor, visualPaletteState.cardBorder];
+      dots.innerHTML = cols.map(c => `<span class="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-xs inline-block" style="background:${c || '#1E3A5F'}"></span>`).join('');
+    }
+
+    function syncVisualItemHex() {
+      const sel = document.getElementById('visual-item-select');
+      if (sel && sel.value !== selectedVisualTarget) sel.value = selectedVisualTarget;
+      const col = getVisualTargetCurrentColor(selectedVisualTarget) || '#1E3A5F';
+      const picker = document.getElementById('visual-free-color');
+      const hexLbl = document.getElementById('visual-free-color-hex');
+      if (picker) picker.value = col;
+      if (hexLbl) hexLbl.textContent = String(col).toUpperCase();
+      updateSaasPresetDots();
+    }
+
+    function applySaasColorPreset(idxStr) {
+      const i = Number(idxStr) || 0;
+      activeBasePresetIdx = i;
+      const pr = SAAS_COLOR_PRESETS[i] || SAAS_COLOR_PRESETS[0];
       visualPaletteState = {
-        headerBg: '#24B7C5', waBg: '#FFFFFF', primaryColor: '#24B7C5',
-        accentColor: '#E94793', fireBg: '#FFFFFF', cardBorder: '#24B7C5',
-        priceColor: '#1A8E99', stripeColor: '#FCD40F', pageBg: '#F4F9FA'
+        headerBg: pr.headerBg, waBg: pr.waBg, primaryColor: pr.primaryColor,
+        accentColor: pr.accentColor, fireBg: pr.fireBg, cardBorder: pr.cardBorder,
+        priceColor: pr.priceColor, stripeColor: pr.stripeColor, pageBg: pr.pageBg
       };
-      const pInp = document.getElementById('config-primary-color');
-      const aInp = document.getElementById('config-accent-color');
-      if (pInp) pInp.value = '#24B7C5';
-      if (aInp) aInp.value = '#E94793';
+      const setVal = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+      setVal('config-primary-color', pr.primaryColor);
+      setVal('config-accent-color', pr.accentColor);
+      setVal('hs-name-color', pr.hsNameColor);
+      setVal('hs-subtitle-color', pr.hsSubColor);
+      setVal('hs-address-text', pr.hsSubColor);
+      setVal('hs-address-bg', pr.headerBg);
+      setVal('hs-hours-text', pr.hsNameColor);
+      setVal('hs-hours-bg', pr.headerBg);
+      setVal('hs-delivery-bg', pr.hsDelivBg);
+      setVal('hs-delivery-text', pr.hsDelivText);
       previewThemeColors();
-      resetHeaderStyles();
-      renderVisualColorTargets();
+      if (typeof previewHeaderStyles === 'function') previewHeaderStyles();
       applyExtendedThemeVars(visualPaletteState);
-      showToast("🔄 Cores restauradas para o padrão! Clique em Salvar Dados da Loja.");
+      syncVisualItemHex();
+      showToast(`🎨 Paleta aplicada! Clique em Salvar Dados da Loja para gravar.`);
+    }
+
+    function resetOnlySelectedVisualItem() {
+      const pr = SAAS_COLOR_PRESETS[activeBasePresetIdx] || SAAS_COLOR_PRESETS[0];
+      const key = document.getElementById('visual-item-select')?.value || selectedVisualTarget;
+      selectedVisualTarget = key;
+      const defaultCol = pr[key] || '#1E3A5F';
+      applyVisualPaletteColor(defaultCol);
+      syncVisualItemHex();
+      showToast('↺ Apenas este item foi restaurado para a cor original da paleta.');
+    }
+
+    function confirmResetAllTheme() {
+      openConfirmModal('Restaurar TODAS as cores da vitrine para o padrão inicial?', () => {
+        resetAllThemeToBrandLogo();
+      }, { title: 'Restaurar Cores', confirmText: '↺ Restaurar Tudo' });
+    }
+
+    function resetAllThemeToBrandLogo() {
+      applySaasColorPreset(0);
+      showToast("🔄 Cores restauradas para o padrão Novo Gestor! Clique em Salvar Dados da Loja.");
+    }
+
+    function applyExtractedLogoPalette(primaryHex) {
+      visualPaletteState.headerBg = primaryHex;
+      visualPaletteState.primaryColor = primaryHex;
+      visualPaletteState.cardBorder = primaryHex;
+      visualPaletteState.accentColor = '#DC2626';
+      visualPaletteState.fireBg = '#FFFFFF';
+      const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      setVal('config-primary-color', primaryHex);
+      setVal('config-accent-color', '#DC2626');
+      setVal('hs-address-bg', primaryHex);
+      setVal('hs-hours-bg', primaryHex);
+      previewThemeColors();
+      if (typeof previewHeaderStyles === 'function') previewHeaderStyles();
+      applyExtendedThemeVars(visualPaletteState);
+      syncVisualItemHex();
+      showToast(`✨ Paleta extraída da logo (${primaryHex.toUpperCase()})! Clique em Salvar Dados da Loja.`);
+    }
+
+    function extractDominantColorFromImageSrc(src, onDone) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 48; canvas.height = 48;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 48, 48);
+          const data = ctx.getImageData(0, 0, 48, 48).data;
+          const buckets = {};
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            if (a < 180) continue;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            const sat = max === 0 ? 0 : (max - min) / max;
+            if (max > 238 && min > 220) continue;
+            if (max < 28) continue;
+            const key = `${Math.round(r/24)*24},${Math.round(g/24)*24},${Math.round(b/24)*24}`;
+            buckets[key] = (buckets[key] || 0) + (sat > 0.25 ? 3 : 1);
+          }
+          const sorted = Object.entries(buckets).sort((a, b) => b[1] - a[1]);
+          const toHex = (k) => '#' + k.split(',').map(n => Math.min(255, Number(n)).toString(16).padStart(2, '0')).join('');
+          onDone(sorted[0] ? toHex(sorted[0][0]) : '#1E3A5F');
+        } catch (e) {
+          showToast('⚠️ Não foi possível ler a logo por link externo — use "📤 Subir Logo e Extrair".');
+        }
+      };
+      img.onerror = () => showToast('⚠️ Logo não carregada — use "📤 Subir Logo e Extrair".');
+      img.src = src;
+    }
+
+    function extractThemeFromCurrentLogo() {
+      const url = (document.getElementById('config-logo-url')?.value || storeConfig.logo || '').trim();
+      if (!url) { showToast('⚠️ Cadastre uma logo primeiro ou clique em "📤 Subir Logo e Extrair".'); return; }
+      extractDominantColorFromImageSrc(url, applyExtractedLogoPalette);
+    }
+
+    function extractThemeFromUploadedFile(ev) {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => extractDominantColorFromImageSrc(e.target.result, applyExtractedLogoPalette);
+      reader.readAsDataURL(file);
+    }
+
+    function applyGestorSoberTheme(mode, silent) {
+      const mv = document.getElementById('manager-view');
+      const bgMap = { clean: '#F8FAFC', warm: '#F5F5F4', slate: '#E2E8F0' };
+      const chosen = bgMap[mode] ? mode : 'clean';
+      try { localStorage.setItem('gestor_sober_theme', chosen); } catch (e) {}
+      if (mv) mv.style.backgroundColor = bgMap[chosen];
+      if (!silent) showToast('⚙️ Tema sóbrio do Painel Gestor atualizado!');
     }
 
     function applyHeaderStylesObj(hs) {
@@ -3459,6 +3705,9 @@
       document.getElementById('manager-view').classList.add('hidden');
       document.getElementById('store-header')?.classList.remove('hidden');
       document.getElementById('client-view').classList.remove('hidden');
+      if (typeof renderCategoryPills === 'function') renderCategoryPills();
+      if (typeof renderBrandPills === 'function') renderBrandPills();
+      if (typeof filterProducts === 'function') filterProducts();
       if (typeof updateCartBadge === 'function') updateCartBadge();
       if (typeof syncManagerGlobalTopbar === 'function') syncManagerGlobalTopbar();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4986,26 +5235,50 @@
     }
 
     function renderManagerCategories() {
-      const list = document.getElementById('manager-category-list');
-      if (list) {
-        list.innerHTML = categories.filter(c => c !== "Todos").map(c => `
-          <div class="flex items-center justify-between bg-[#E8F8FA] px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#176E7B] gap-1.5">
-            <span>${c}</span>
-            <div class="flex items-center gap-1">
-              <button onclick="editCategoryModal('${escAttr(c)}')" class="text-slate-600 hover:text-slate-900 font-bold" title="Editar">✏️</button>
-              <button onclick="deleteCategory('${escAttr(c)}')" class="text-rose-600 hover:text-rose-800 font-black" title="Excluir">×</button>
-            </div>
-          </div>
-        `).join('');
+      const sel = document.getElementById('manager-category-select');
+      const cntEl = document.getElementById('manager-cat-count');
+      const validCats = categories.filter(c => c !== "Todos");
+      if (cntEl) cntEl.textContent = validCats.length;
+      if (sel) {
+        const prev = sel.value;
+        sel.innerHTML = validCats.length
+          ? validCats.map(c => {
+              const cnt = products.filter(p => p.category === c).length;
+              return `<option value="${escAttr(c)}">${escapeHtml(c)} (${cnt} prod.)</option>`;
+            }).join('')
+          : '<option value="">Nenhuma categoria</option>';
+        if (validCats.includes(prev)) sel.value = prev;
+        updateManagerCategoryInfo();
       }
       const subFilter = document.getElementById('manager-subcat-filter');
       if (subFilter) {
         const prev = subFilter.value;
-        const validCats = categories.filter(c => c !== "Todos");
-        subFilter.innerHTML = validCats.map(c => `<option value="${c}">${c}</option>`).join('');
+        subFilter.innerHTML = validCats.map(c => `<option value="${escAttr(c)}">${escapeHtml(c)}</option>`).join('');
         if (validCats.includes(prev)) subFilter.value = prev;
         renderManagerSubcategories();
       }
+    }
+
+    function updateManagerCategoryInfo() {
+      const sel = document.getElementById('manager-category-select');
+      const info = document.getElementById('manager-category-info');
+      if (!sel || !info) return;
+      const val = sel.value;
+      if (!val) { info.textContent = 'Cadastre uma categoria em ➕ Nova.'; return; }
+      const cnt = products.filter(p => p.category === val).length;
+      info.textContent = `${cnt} produto(s) nesta categoria.`;
+    }
+
+    function editSelectedManagerCategory() {
+      const val = document.getElementById('manager-category-select')?.value;
+      if (!val) return showToast('Selecione uma categoria.');
+      editCategoryModal(val);
+    }
+
+    function deleteSelectedManagerCategory() {
+      const val = document.getElementById('manager-category-select')?.value;
+      if (!val) return showToast('Selecione uma categoria.');
+      deleteCategory(val);
     }
 
     async function toggleBrandClientVisibility(brandName, showToClient) {
@@ -5023,45 +5296,118 @@
     }
 
     function renderManagerBrands() {
-      const list = document.getElementById('manager-brand-list');
-      if (!list) return;
+      const sel = document.getElementById('manager-brand-select');
+      const cntEl = document.getElementById('manager-brand-count');
       const hiddenSet = new Set(getHiddenClientBrands());
-      list.innerHTML = brands.map(b => {
-        const isVisible = !hiddenSet.has(b);
-        return `
-        <div class="flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-bold gap-1.5 border transition ${isVisible ? 'bg-[#FDF2F8] border-[#E94793]/30 text-[#9D174D]' : 'bg-slate-100 border-slate-300 text-slate-400'}">
-          <label class="inline-flex items-center gap-1.5 cursor-pointer select-none" title="${isVisible ? 'Visível no filtro do cliente (desmarque para ocultar)' : 'Oculta para o cliente (marque para exibir)'}">
-            <input type="checkbox" ${isVisible ? 'checked' : ''} onchange="toggleBrandClientVisibility('${escAttr(b)}', this.checked)" class="w-3.5 h-3.5 accent-[#E94793] rounded cursor-pointer">
-            <span>${b}</span>
-            <span class="text-[10px]">${isVisible ? '👁️' : '🙈'}</span>
-          </label>
-          <div class="flex items-center gap-1">
-            <button onclick="editBrandModal('${escAttr(b)}')" class="text-slate-600 hover:text-slate-900 font-bold" title="Editar">✏️</button>
-            <button onclick="deleteBrand('${escAttr(b)}')" class="text-rose-600 hover:text-rose-800 font-black" title="Excluir">×</button>
-          </div>
-        </div>
-      `; }).join('');
+      if (cntEl) cntEl.textContent = brands.length;
+      if (sel) {
+        const prev = sel.value;
+        sel.innerHTML = brands.length
+          ? brands.map(b => {
+              const isVis = !hiddenSet.has(b);
+              const cnt = products.filter(p => p.brand === b && p.active !== false && p.showInCatalog !== false).length;
+              return `<option value="${escAttr(b)}">${isVis ? '👁️' : '🙈'} ${escapeHtml(b)} (${cnt} prod.)</option>`;
+            }).join('')
+          : '<option value="">Nenhuma marca</option>';
+        if (brands.includes(prev)) sel.value = prev;
+        updateManagerBrandStatus();
+      }
+      const previewEl = document.getElementById('manager-vitrine-brands-preview');
+      if (previewEl) {
+        const shown = brands.filter(b => b && normLabelKey(b) !== 'sem marca' && !hiddenSet.has(b) && products.some(p => p.brand === b && p.active !== false && p.showInCatalog !== false));
+        previewEl.innerHTML = shown.length
+          ? shown.map(b => `<span class="inline-block bg-slate-100 border border-slate-300 text-slate-800 px-2 py-0.5 rounded-full text-[10px] font-extrabold">${escapeHtml(b)}</span>`).join('')
+          : '<span class="text-slate-400 italic">Filtro de marcas oculto (nenhuma marca visível com produto ativo)</span>';
+      }
+    }
+
+    function updateManagerBrandStatus() {
+      const sel = document.getElementById('manager-brand-select');
+      const st = document.getElementById('manager-brand-status');
+      const btn = document.getElementById('btn-toggle-selected-brand-vis');
+      if (!sel || !st || !btn) return;
+      const b = sel.value;
+      if (!b) {
+        st.className = 'rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold bg-slate-100 text-slate-500';
+        st.textContent = 'Nenhuma marca selecionada.';
+        btn.disabled = true;
+        return;
+      }
+      btn.disabled = false;
+      const hiddenSet = new Set(getHiddenClientBrands());
+      const isVis = !hiddenSet.has(b);
+      const cnt = products.filter(p => p.brand === b && p.active !== false && p.showInCatalog !== false).length;
+      if (normLabelKey(b) === 'sem marca' || cnt === 0) {
+        st.className = 'rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200';
+        st.textContent = normLabelKey(b) === 'sem marca' ? '⚪ Padrão interno — nunca aparece na vitrine' : '⚪ 0 produtos ativos — oculta automaticamente';
+      } else if (isVis) {
+        st.className = 'rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200';
+        st.textContent = `👁️ Visível na vitrine (${cnt} prod.)`;
+      } else {
+        st.className = 'rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold bg-rose-50 text-rose-800 border border-rose-200';
+        st.textContent = `🙈 Oculta da vitrine (${cnt} prod.)`;
+      }
+      btn.textContent = isVis ? '🙈 Ocultar da Vitrine' : '👁️ Mostrar na Vitrine';
+    }
+
+    function toggleSelectedManagerBrandVis() {
+      const b = document.getElementById('manager-brand-select')?.value;
+      if (!b) return;
+      const isCurrentlyHidden = new Set(getHiddenClientBrands()).has(b);
+      toggleBrandClientVisibility(b, isCurrentlyHidden);
+    }
+
+    function editSelectedManagerBrand() {
+      const b = document.getElementById('manager-brand-select')?.value;
+      if (!b) return showToast('Selecione uma marca.');
+      editBrandModal(b);
+    }
+
+    function deleteSelectedManagerBrand() {
+      const b = document.getElementById('manager-brand-select')?.value;
+      if (!b) return showToast('Selecione uma marca.');
+      deleteBrand(b);
     }
 
     function renderManagerSubcategories() {
-      const list = document.getElementById('manager-subcat-list');
+      const sel = document.getElementById('manager-subcat-select');
       const catSelect = document.getElementById('manager-subcat-filter');
-      if (!list || !catSelect) return;
+      if (!sel || !catSelect) return;
       const cat = catSelect.value;
       const subs = subcategories[cat] || [];
-      if (subs.length === 0) {
-        list.innerHTML = `<span class="text-[11px] text-slate-400">Nenhuma subcategoria.</span>`;
-        return;
-      }
-      list.innerHTML = subs.map(s => `
-        <div class="flex items-center justify-between bg-[#FEFCE8] border border-[#F7D046]/60 px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#855E00] gap-1.5">
-          <span>${s}</span>
-          <div class="flex items-center gap-1">
-            <button onclick="editSubcatModal('${escAttr(cat)}', '${escAttr(s)}')" class="text-slate-600 hover:text-slate-900 font-bold" title="Editar">✏️</button>
-            <button onclick="deleteSubcat('${escAttr(cat)}', '${escAttr(s)}')" class="text-rose-600 hover:text-rose-800 font-black" title="Excluir">×</button>
-          </div>
-        </div>
-      `).join('');
+      const prev = sel.value;
+      sel.innerHTML = subs.length
+        ? subs.map(s => {
+            const cnt = products.filter(p => p.category === cat && p.subcategory === s).length;
+            return `<option value="${escAttr(s)}">${escapeHtml(s)} (${cnt} prod.)</option>`;
+          }).join('')
+        : '<option value="">Nenhuma subcategoria</option>';
+      if (subs.includes(prev)) sel.value = prev;
+      updateManagerSubcatInfo();
+    }
+
+    function updateManagerSubcatInfo() {
+      const cat = document.getElementById('manager-subcat-filter')?.value;
+      const sub = document.getElementById('manager-subcat-select')?.value;
+      const info = document.getElementById('manager-subcat-info');
+      if (!info) return;
+      if (!sub) { info.textContent = 'Nenhuma subcategoria nesta categoria.'; return; }
+      const cnt = products.filter(p => p.category === cat && p.subcategory === sub).length;
+      info.textContent = `${cnt} produto(s) em ${sub}.`;
+    }
+
+    function editSelectedManagerSubcat() {
+      const cat = document.getElementById('manager-subcat-filter')?.value;
+      const sub = document.getElementById('manager-subcat-select')?.value;
+      if (!cat || !sub) return showToast('Selecione uma subcategoria.');
+      editSubcatModal(cat, sub);
+    }
+
+    function deleteSelectedManagerSubcat() {
+      const cat = document.getElementById('manager-subcat-filter')?.value;
+      const sub = document.getElementById('manager-subcat-select')?.value;
+      if (!cat || !sub) return showToast('Selecione uma subcategoria.');
+      deleteSubcat(cat, sub);
     }
 
     function renderManagerWeights() {
@@ -6013,13 +6359,18 @@
       const fCat = document.getElementById('manager-filter-cat')?.value || 'Todos';
       const fSub = document.getElementById('manager-filter-subcat')?.value || 'Todos';
       const fBrand = document.getElementById('manager-filter-brand')?.value || 'Todos';
+      const fSup = document.getElementById('manager-filter-supplier')?.value || 'Todos';
       return products.filter(p => {
-        const matchQ = !q || smartMatchProduct(p, qRaw) || [p.barcode, p.ncm, p.internalCode].some(v => (v || '').toLowerCase().includes(q)) || (p.extraBarcodes || []).some(e => (typeof e === 'string' ? e : (e.code || '')).toLowerCase().includes(q));
+        const supName = (productCostsMap[String(p.id)]?.supplier || '').trim();
+        const matchQ = !q || smartMatchProduct(p, qRaw) || supName.toLowerCase().includes(q) || [p.barcode, p.ncm, p.internalCode].some(v => (v || '').toLowerCase().includes(q)) || (p.extraBarcodes || []).some(e => (typeof e === 'string' ? e : (e.code || '')).toLowerCase().includes(q));
         const matchC = fCat === 'Todos' || p.category === fCat;
         const matchS = fSub === 'Todos' || p.subcategory === fSub;
         const matchB = fBrand === 'Todos' || p.brand === fBrand;
-        let matchSt = true;
-        if (managerStatusFilters.has('in_catalog') && (p.showInCatalog === false || p.active === false)) matchSt = false;
+        const matchSup = fSup === 'Todos' || supName === fSup;
+        let matchSt = matchSup;
+        if (matchSt && managerStatusFilters.has('no_brand') && p.brand && normLabelKey(p.brand) !== 'sem marca') matchSt = false;
+        if (matchSt && managerStatusFilters.has('no_stock') && (p.stockQty === null || p.stockQty === undefined || Number(p.stockQty) > 0)) matchSt = false;
+        if (matchSt && managerStatusFilters.has('in_catalog') && (p.showInCatalog === false || p.active === false)) matchSt = false;
         if (matchSt && managerStatusFilters.has('pdv_only') && p.showInCatalog !== false) matchSt = false;
         if (matchSt && managerStatusFilters.has('no_photo') && (p.image && p.image.trim())) matchSt = false;
         if (matchSt && managerStatusFilters.has('no_barcode') && ((p.barcode && p.barcode.trim()) || (p.extraBarcodes && p.extraBarcodes.length > 0))) matchSt = false;
@@ -6211,6 +6562,96 @@
       showToast(`🔥 ${ids.length} produto(s) colocados na promoção!`);
     }
 
+    function toggleQuickManagerFilter(key) {
+      if (managerStatusFilters.has(key)) managerStatusFilters.delete(key);
+      else managerStatusFilters.add(key);
+      clearManagerSelection();
+      renderManagerProducts();
+      if (typeof renderManagerFilterChips === 'function') renderManagerFilterChips();
+    }
+
+    function syncManagerQuickFilterUI() {
+      const noBrandCnt = products.filter(p => !p.brand || normLabelKey(p.brand) === 'sem marca').length;
+      const noPhotoCnt = products.filter(p => !(p.image && p.image.trim())).length;
+      const noStockCnt = products.filter(p => p.stockQty !== null && p.stockQty !== undefined && Number(p.stockQty) <= 0).length;
+      const e1 = document.getElementById('mgr-cnt-nobrand'); if (e1) e1.textContent = noBrandCnt;
+      const e2 = document.getElementById('mgr-cnt-nophoto'); if (e2) e2.textContent = noPhotoCnt;
+      const e3 = document.getElementById('mgr-cnt-nostock'); if (e3) e3.textContent = noStockCnt;
+      document.getElementById('mgr-qf-nobrand')?.classList.toggle('btn-pill-active', managerStatusFilters.has('no_brand'));
+      document.getElementById('mgr-qf-nophoto')?.classList.toggle('btn-pill-active', managerStatusFilters.has('no_photo'));
+      document.getElementById('mgr-qf-nostock')?.classList.toggle('btn-pill-active', managerStatusFilters.has('no_stock'));
+
+      const supSel = document.getElementById('manager-filter-supplier');
+      if (supSel) {
+        const prev = supSel.value || 'Todos';
+        const sups = [...new Set(Object.values(productCostsMap || {}).map(c => String(c.supplier || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        const opts = ['<option value="Todos">🏭 Todos Fornecedores</option>'].concat(sups.map(s => `<option value="${escAttr(s)}">🏭 ${escapeHtml(s)}</option>`));
+        supSel.innerHTML = opts.join('');
+        supSel.value = sups.includes(prev) ? prev : 'Todos';
+      }
+      renderBulkFieldValue();
+    }
+
+    function renderBulkFieldValue() {
+      const type = document.getElementById('bulk-field-type')?.value || 'brand';
+      const wrap = document.getElementById('bulk-field-value-wrap');
+      if (!wrap) return;
+      if (type === 'brand') {
+        wrap.innerHTML = `<select id="bulk-field-value" class="bg-white border border-cyan-300 rounded-xl px-2 py-1 text-[11px] font-extrabold text-slate-800 cursor-pointer">${brands.map(b => `<option value="${escAttr(b)}">${escapeHtml(b)}</option>`).join('')}</select>`;
+      } else if (type === 'category') {
+        const validCats = categories.filter(c => c !== 'Todos');
+        wrap.innerHTML = `<select id="bulk-field-value" class="bg-white border border-cyan-300 rounded-xl px-2 py-1 text-[11px] font-extrabold text-slate-800 cursor-pointer">${validCats.map(c => `<option value="${escAttr(c)}">${escapeHtml(c)}</option>`).join('')}</select>`;
+      } else {
+        wrap.innerHTML = `<input id="bulk-field-value" type="text" placeholder="Ex: Copalimentos" class="bg-white border border-cyan-300 rounded-xl px-2.5 py-1 text-[11px] font-bold text-slate-800 w-36 focus:outline-none" />`;
+      }
+    }
+
+    async function applyBulkFieldUpdate() {
+      const ids = Array.from(managerSelectedIds);
+      if (ids.length === 0 || !sb) return;
+      const type = document.getElementById('bulk-field-type')?.value || 'brand';
+      const val = String(document.getElementById('bulk-field-value')?.value || '').trim();
+      if (!val) { showToast('⚠️ Selecione ou digite o valor para aplicar.'); return; }
+
+      if (type === 'brand') {
+        const { error } = await sb.from('products').update({ brand: val }).in('id', ids);
+        if (error) { showToast('⚠️ Erro ao atualizar marcas em lote.'); return; }
+        products.forEach(p => { if (managerSelectedIds.has(p.id)) p.brand = val; });
+        renderManagerBrands();
+        renderBrandPills();
+        showToast(`🏷️ Marca "${val}" aplicada em ${ids.length} produto(s)!`);
+      } else if (type === 'category') {
+        const { error } = await sb.from('products').update({ category: val }).in('id', ids);
+        if (error) { showToast('⚠️ Erro ao atualizar categorias em lote.'); return; }
+        products.forEach(p => { if (managerSelectedIds.has(p.id)) p.category = val; });
+        renderManagerCategories();
+        renderCategoryPills();
+        showToast(`📂 Categoria "${val}" aplicada em ${ids.length} produto(s)!`);
+      } else if (type === 'supplier') {
+        const rows = ids.map(pid => {
+          const cur = productCostsMap[String(pid)] || {};
+          return {
+            product_id: pid,
+            store_id: currentStoreId,
+            cost_price: cur.costPrice || 0,
+            tax_pct: cur.taxPct != null ? cur.taxPct : 6,
+            card_fee_pct: cur.cardFeePct != null ? cur.cardFeePct : 3,
+            supplier: val
+          };
+        });
+        const { error } = await sb.from('product_costs').upsert(rows, { onConflict: 'product_id' });
+        if (error) { showToast('⚠️ Erro ao salvar fornecedor em lote.'); return; }
+        ids.forEach(pid => {
+          const cur = productCostsMap[String(pid)] || { costPrice: 0, taxPct: 6, cardFeePct: 3 };
+          productCostsMap[String(pid)] = { ...cur, supplier: val };
+        });
+        showToast(`🏭 Fornecedor "${val}" aplicado em ${ids.length} produto(s)!`);
+      }
+      clearManagerSelection();
+      filterProducts();
+      renderManagerProducts();
+    }
+
     function bulkToggleManagerActive(makeActive) {
       const ids = Array.from(managerSelectedIds);
       if (ids.length === 0 || !sb) return;
@@ -6237,6 +6678,7 @@
       const countLabel = document.getElementById('manager-product-count');
       if (!list || !countLabel) return;
 
+      if (typeof syncManagerQuickFilterUI === 'function') syncManagerQuickFilterUI();
       const filtered = getFilteredManagerProducts();
       updateManagerBulkBar(filtered);
 
@@ -6465,6 +6907,8 @@
       }
 
       document.getElementById('edit-product-modal').classList.remove('hidden');
+      const _emb = document.getElementById('edit-product-modal-body');
+      if (_emb) _emb.scrollTop = 0;
     }
 
     function closeEditProductModal() {
