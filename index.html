@@ -328,7 +328,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v65</span></h2>
+          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v66</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -1835,23 +1835,23 @@
                 <span class="text-[11px] font-bold text-amber-900">⏸️ Importar todos já pausados (revisar antes)</span>
               </label>
               <label class="flex items-center gap-2 bg-cyan-50 border border-cyan-200 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
-                <input type="checkbox" id="bulk-granel-pdv-only" checked onchange="parseBulkInput()" class="w-4 h-4 accent-cyan-600 rounded">
+                <input type="checkbox" id="bulk-granel-pdv-only" checked onchange="parseBulkPreview()" class="w-4 h-4 accent-cyan-600 rounded">
                 <span class="text-[11px] font-bold text-cyan-950">🖥️ Granel (KG) entra como "Só PDV"</span>
               </label>
               <label class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
-                <input type="checkbox" id="bulk-saurus-translate" checked onchange="parseBulkInput()" class="w-4 h-4 accent-slate-700 rounded">
+                <input type="checkbox" id="bulk-saurus-translate" checked onchange="parseBulkPreview()" class="w-4 h-4 accent-slate-700 rounded">
                 <span class="text-[11px] font-bold text-slate-700">🔄 Saurus: ALIMENTOS → Rações (e inverter Cat/Sub)</span>
               </label>
               <label class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
-                <input type="checkbox" id="bulk-zero-neg-stock" checked onchange="parseBulkInput()" class="w-4 h-4 accent-slate-700 rounded">
+                <input type="checkbox" id="bulk-zero-neg-stock" checked onchange="parseBulkPreview()" class="w-4 h-4 accent-slate-700 rounded">
                 <span class="text-[11px] font-bold text-slate-700">🧹 Zerar estoques negativos</span>
               </label>
               <div class="flex items-center justify-between gap-2 bg-purple-50 border border-purple-200 rounded-xl px-2.5 py-1.5">
                 <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-                  <input type="checkbox" id="bulk-calc-child-cost" checked onchange="parseBulkInput()" class="w-4 h-4 accent-purple-600 rounded">
+                  <input type="checkbox" id="bulk-calc-child-cost" checked onchange="parseBulkPreview()" class="w-4 h-4 accent-purple-600 rounded">
                   <span class="text-[11px] font-bold text-purple-900">⚖️ Custo Granel = Pai ÷ kg</span>
                 </label>
-                <select id="bulk-granel-loss-pct" onchange="parseBulkInput()" class="bg-white border border-purple-300 rounded-lg px-1.5 py-0.5 text-[10px] font-black text-purple-900 cursor-pointer" title="Percentual de quebra/embalagem do granel">
+                <select id="bulk-granel-loss-pct" onchange="parseBulkPreview()" class="bg-white border border-purple-300 rounded-lg px-1.5 py-0.5 text-[10px] font-black text-purple-900 cursor-pointer" title="Percentual de quebra/embalagem do granel">
                   <option value="0">0% quebra</option>
                   <option value="3" selected>+3% quebra</option>
                   <option value="5">+5% quebra</option>
