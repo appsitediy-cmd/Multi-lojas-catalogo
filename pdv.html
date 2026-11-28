@@ -607,9 +607,12 @@
           </div>
 
           <!-- Linha 2: Marca/Fornecedor + Categoria + Subcategoria + Cód. EAN/Interno + Descrição -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-2 border-t border-slate-200/80">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 pt-2 border-t border-slate-200/80">
+            <select id="repo-supplier" onchange="renderRepoTable()" class="bg-slate-900 text-white border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-black">
+              <option value="">🏭 Todos Fornecedores</option>
+            </select>
             <select id="repo-brand" onchange="renderRepoTable()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
-              <option value="">🏷️ Todas as Marcas / Fornecedores</option>
+              <option value="">🏷️ Todas as Marcas</option>
             </select>
             <select id="repo-category" onchange="onRepoCategoryChange()" class="bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700">
               <option value="">📂 Todas as Categorias</option>
@@ -1076,7 +1079,7 @@
   <script>
     const SUPABASE_URL = 'https://pimqhnjyahykpewbzpum.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Zrf-FIwgM87vZTbN8ybmcA_UUTAi2eQ';
-    const SUPER_ADMIN_EMAILS = ['leonardomoura@gmail.com'];
+    const SUPER_ADMIN_EMAILS = ['leonardomouras@gmail.com'];
     const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1352,8 +1355,17 @@
             brand: String(p.brand || '').trim(),
             category: String(p.category || '').trim(),
             subcategory: String(p.subcategory || '').trim(),
+            supplier: '',
             image: p.image_url || ''
           }));
+          try {
+            const { data: costRows } = await sb.from('product_costs').select('product_id,supplier').eq('store_id', currentStore.id);
+            if (Array.isArray(costRows)) {
+              const supMap = {};
+              costRows.forEach(r => { if (r.supplier) supMap[String(r.product_id)] = String(r.supplier).trim(); });
+              catalog.forEach(p => { if (supMap[String(p.id)]) p.supplier = supMap[String(p.id)]; });
+            }
+          } catch (eSup) {}
           try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(catalog)); } catch (e) {}
         }
       } catch (e) {
@@ -2826,8 +2838,15 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       const prevBrand = brandSel.value;
       const prevCat = catSel.value;
 
-      const brands = [...new Set(catalog.map(p => (p.brand || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-      brandSel.innerHTML = '<option value="">🏷️ Todas as Marcas / Fornecedores</option>' +
+      const supSel = document.getElementById('repo-supplier');
+      if (supSel) {
+        const prevSup = supSel.value;
+        const sups = [...new Set(catalog.map(p => (p.supplier || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        supSel.innerHTML = '<option value="">🏭 Todos Fornecedores</option>' + sups.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+        if (sups.includes(prevSup)) supSel.value = prevSup;
+      }
+      const brands = [...new Set(catalog.map(p => (p.brand || '').trim()).filter(b => b && b.toLowerCase() !== 'sem marca'))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      brandSel.innerHTML = '<option value="">🏷️ Todas as Marcas</option>' +
         brands.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
       if (brands.includes(prevBrand)) brandSel.value = prevBrand;
 
@@ -2868,7 +2887,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
     }
 
     function resetRepoFilters() {
-      const ids = ['repo-brand', 'repo-category', 'repo-subcategory', 'repo-code', 'repo-search'];
+      const ids = ['repo-supplier', 'repo-brand', 'repo-category', 'repo-subcategory', 'repo-code', 'repo-search'];
       ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       const flt = document.getElementById('repo-filter');
       if (flt) flt.value = 'low';
@@ -2953,12 +2972,14 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       const rawDesc = (document.getElementById('repo-search')?.value || '').trim();
       const rawCode = (document.getElementById('repo-code')?.value || '').trim();
       const codeNorm = rawCode.toLowerCase();
+      const supVal = document.getElementById('repo-supplier')?.value || '';
       const brandVal = document.getElementById('repo-brand')?.value || '';
       const catVal = document.getElementById('repo-category')?.value || '';
       const subVal = document.getElementById('repo-subcategory')?.value || '';
       const flt = document.getElementById('repo-filter')?.value || 'low';
 
       const list = catalog.filter(p => {
+        if (supVal && (p.supplier || '').trim() !== supVal) return false;
         if (brandVal && (p.brand || '').trim() !== brandVal) return false;
         if (catVal && (p.category || '').trim() !== catVal) return false;
         if (subVal && (p.subcategory || '').trim() !== subVal) return false;
@@ -3003,7 +3024,8 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
         const metaParts = [];
         if (p.plu) metaParts.push(`PLU ${escapeHtml(p.plu)}`);
         if (p.ean) metaParts.push(`EAN ${escapeHtml(p.ean)}`);
-        if (p.brand) metaParts.push(escapeHtml(p.brand));
+        if (p.supplier) metaParts.push('🏭 ' + escapeHtml(p.supplier));
+        if (p.brand && p.brand.toLowerCase() !== 'sem marca') metaParts.push(escapeHtml(p.brand));
         if (p.category) metaParts.push(p.subcategory ? `${escapeHtml(p.category)} › ${escapeHtml(p.subcategory)}` : escapeHtml(p.category));
         return `
           <tr class="hover:bg-slate-50">
@@ -3056,10 +3078,11 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
         if (p) lines.push(`• ${q} ${p.unit} — ${p.name}`);
       });
       if (!lines.length) { showToast('⚠️ Preencha ao menos 1 quantidade antes de copiar.'); return; }
+      const supPicked = document.getElementById('repo-supplier')?.value || '';
       const brandPicked = document.getElementById('repo-brand')?.value || '';
       const dStart = formatShortBrDate(document.getElementById('repo-date-start')?.value || '');
       const dEnd = formatShortBrDate(document.getElementById('repo-date-end')?.value || '');
-      const headerMeta = [brandPicked ? `🏷️ Marca/Fornecedor: *${brandPicked}*` : '', (dStart && dEnd) ? `📅 Base de vendas: ${dStart} a ${dEnd}` : ''].filter(Boolean).join('\n');
+      const headerMeta = [supPicked ? `🏭 Fornecedor: *${supPicked}*` : '', brandPicked ? `🏷️ Marca: *${brandPicked}*` : '', (dStart && dEnd) ? `📅 Base de vendas: ${dStart} a ${dEnd}` : ''].filter(Boolean).join('\n');
       const txt = `📦 *Pedido de Reposição — ${currentStore?.name || storeSlug}*${headerMeta ? '\n' + headerMeta : ''}\n\n${lines.join('\n')}`;
       navigator.clipboard?.writeText(txt);
       showToast(`📋 Lista com ${lines.length} produto(s) copiada para o WhatsApp!`);
@@ -4104,7 +4127,7 @@ Deseja imprimir o comprovante térmico para entregar ao cliente?`)) {
       bar.classList.remove('hidden');
       const sel = document.getElementById('global-store-switcher');
       if (!sel || !sb) return;
-      const isSuper = String(currentUser.email || '').toLowerCase() === 'leonardomoura@gmail.com';
+      const isSuper = String(currentUser.email || '').toLowerCase() === 'leonardomouras@gmail.com';
       const mods = currentStore?.modules || {};
       const hasDeliv = isSuper || (typeof mods.deliveries === 'boolean' ? mods.deliveries : Boolean(mods.pdv === true));
       document.querySelectorAll('[onclick*="openMotoboyModal"], [onclick*="openDeliveryCheckoutModal"]').forEach(el => el.classList.toggle('hidden', !hasDeliv));

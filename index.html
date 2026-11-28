@@ -877,6 +877,10 @@
                   <div id="new-out-margin" class="text-[11px] font-black text-emerald-300">R$ 0,00</div>
                 </div>
               </div>
+              <div class="pt-1">
+                <label class="block text-[9px] text-slate-300 font-bold mb-0.5">🏭 Fornecedor / Distribuidor (Privado — só você vê)</label>
+                <input id="new-supplier" type="text" placeholder="Ex.: Distribuidora PetSul (opcional)" class="w-full bg-white text-slate-950 rounded-lg px-2 py-1 text-xs font-bold">
+              </div>
             </div>
 
             <!-- Múltiplos EANs -->
@@ -1373,6 +1377,10 @@
                   <div class="text-[9px] text-emerald-200">Lucro / Margem</div>
                   <div id="edit-out-margin" class="text-[11px] font-black text-emerald-300">R$ 0,00</div>
                 </div>
+              </div>
+              <div class="pt-1">
+                <label class="block text-[9px] text-slate-300 font-bold mb-0.5">🏭 Fornecedor / Distribuidor (Privado — só você vê)</label>
+                <input id="edit-supplier" type="text" placeholder="Ex.: Distribuidora PetSul (opcional)" class="w-full bg-white text-slate-950 rounded-lg px-2 py-1 text-xs font-bold">
               </div>
             </div>
 
@@ -2477,7 +2485,7 @@
       }
     }
 
-    const SUPER_ADMIN_EMAILS = ['leonardomoura@gmail.com'];
+    const SUPER_ADMIN_EMAILS = ['leonardomouras@gmail.com'];
     let currentStorePlan = 'vitrine';
     let currentStoreModules = { catalog: true, pdv: false, grooming: false, ai_invoice: false };
 
@@ -3799,7 +3807,7 @@
         const matchPromo = (!onlyPromo || isProductPromoActive(p)) && (!onlyFlashSaleFilter || !!getFlashItemForProduct(p));
         return matchCat && matchSub && matchPromo;
       });
-      const presentBrands = new Set(matching.map(p => p.brand).filter(b => b && !hiddenSet.has(b)));
+      const presentBrands = new Set(matching.map(p => String(p.brand || '').trim()).filter(b => b && normLabelKey(b) !== 'sem marca' && !hiddenSet.has(b)));
       const available = brands.filter(b => presentBrands.has(b) && !hiddenSet.has(b));
       presentBrands.forEach(b => { if (!available.includes(b) && !hiddenSet.has(b)) available.push(b); });
       if (currentBrand !== "Todos" && !available.includes(currentBrand)) {
@@ -5348,13 +5356,14 @@
       productCostsMap = {};
       if (!sb || !currentStoreId || !currentUser) return;
       try {
-        const { data, error } = await sb.from('product_costs').select('product_id,cost_price,tax_pct,card_fee_pct').eq('store_id', currentStoreId);
+        const { data, error } = await sb.from('product_costs').select('product_id,cost_price,tax_pct,card_fee_pct,supplier').eq('store_id', currentStoreId);
         if (!error && Array.isArray(data)) {
           data.forEach(c => {
             productCostsMap[String(c.product_id)] = {
               costPrice: parseFloat(c.cost_price) || 0,
               taxPct: c.tax_pct != null ? parseFloat(c.tax_pct) : 6,
-              cardFeePct: c.card_fee_pct != null ? parseFloat(c.card_fee_pct) : 3
+              cardFeePct: c.card_fee_pct != null ? parseFloat(c.card_fee_pct) : 3,
+              supplier: String(c.supplier || '').trim()
             };
           });
         }
@@ -5366,7 +5375,8 @@
       const costPrice = parsePriceBR(document.getElementById(`${prefix}-cost-price`)?.value || '') || 0;
       const taxPct = parseFloat(document.getElementById(`${prefix}-tax-pct`)?.value || '6') || 0;
       const cardFeePct = parseFloat(document.getElementById(`${prefix}-fee-pct`)?.value || '3') || 0;
-      if (costPrice <= 0 && !productCostsMap[String(productId)]) return;
+      const supplier = String(document.getElementById(`${prefix}-supplier`)?.value || '').trim();
+      if (costPrice <= 0 && !supplier && !productCostsMap[String(productId)]) return;
       try {
         const { error } = await sb.from('product_costs').upsert({
           product_id: productId,
@@ -5374,10 +5384,11 @@
           cost_price: costPrice,
           tax_pct: taxPct,
           card_fee_pct: cardFeePct,
+          supplier,
           updated_at: new Date().toISOString()
         }, { onConflict: 'product_id' });
         if (!error) {
-          productCostsMap[String(productId)] = { costPrice, taxPct, cardFeePct };
+          productCostsMap[String(productId)] = { costPrice, taxPct, cardFeePct, supplier };
         }
       } catch (e) {}
     }
@@ -5713,7 +5724,7 @@
 
 
     function resetNewStage2Fields() {
-      ['new-internal-code','new-cost-price','new-conv-factor','new-min-stock','new-wholesale-group','new-cfop','new-csosn','new-expiry-date','new-extra-ean-code','new-extra-ean-tag'].forEach(id => {
+      ['new-internal-code','new-cost-price','new-supplier','new-conv-factor','new-min-stock','new-wholesale-group','new-cfop','new-csosn','new-expiry-date','new-extra-ean-code','new-extra-ean-tag'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
       if (document.getElementById('new-unit-type')) document.getElementById('new-unit-type').value = 'UN';
@@ -6373,6 +6384,7 @@
       renderDraftExtraEans('edit');
       const _cObj = productCostsMap[String(p.id)];
       if (document.getElementById('edit-cost-price')) document.getElementById('edit-cost-price').value = (_cObj && _cObj.costPrice > 0) ? formatPriceBR(_cObj.costPrice) : '';
+      if (document.getElementById('edit-supplier')) document.getElementById('edit-supplier').value = (_cObj && _cObj.supplier) ? _cObj.supplier : '';
       if (document.getElementById('edit-tax-pct')) document.getElementById('edit-tax-pct').value = _cObj ? _cObj.taxPct : 6;
       if (document.getElementById('edit-fee-pct')) document.getElementById('edit-fee-pct').value = _cObj ? _cObj.cardFeePct : 3;
       if (document.getElementById('edit-adv-picker')) document.getElementById('edit-adv-picker').value = 'none';
@@ -9399,7 +9411,7 @@
     async function syncManagerGlobalTopbar() {
       const bar = document.getElementById('manager-global-topbar');
       if (!bar) return;
-      const isSuperAdmin = !!(currentUser && String(currentUser.email || '').toLowerCase() === 'leonardomoura@gmail.com');
+      const isSuperAdmin = !!(currentUser && String(currentUser.email || '').toLowerCase() === 'leonardomouras@gmail.com');
       const isStoreOwner = !!(currentUser && currentStoreOwnerId && currentUser.id === currentStoreOwnerId);
       const canSeeBar = !!(currentUser && (isStoreOwner || isSuperAdmin));
       bar.classList.toggle('hidden', !canSeeBar);
