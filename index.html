@@ -328,7 +328,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v61</span></h2>
+          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v62</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -1199,6 +1199,7 @@
             <button type="button" id="mgr-qf-nobrand" onclick="toggleQuickManagerFilter('no_brand')" class="btn-pill-white px-2.5 py-1 text-[10px]">⚠️ Sem Marca (<span id="mgr-cnt-nobrand">0</span>)</button>
             <button type="button" id="mgr-qf-nophoto" onclick="toggleQuickManagerFilter('no_photo')" class="btn-pill-white px-2.5 py-1 text-[10px]">🖼️ Sem Foto (<span id="mgr-cnt-nophoto">0</span>)</button>
             <button type="button" id="mgr-qf-nostock" onclick="toggleQuickManagerFilter('no_stock')" class="btn-pill-white px-2.5 py-1 text-[10px]">📦 Estoque 0 (<span id="mgr-cnt-nostock">0</span>)</button>
+            <button type="button" id="mgr-qf-pdvonly" onclick="toggleQuickManagerFilter('pdv_only')" class="btn-pill-white px-2.5 py-1 text-[10px]">🖥️ Só PDV (<span id="mgr-cnt-pdvonly">0</span>)</button>
           </div>
           <div id="manager-active-filter-chips" class="flex flex-wrap gap-1"></div>
         </div>
@@ -1230,11 +1231,14 @@
               <button type="button" onclick="bulkDisableManagerPromo()" class="btn-pill-white px-3 py-1.5 text-[11px]">
                 ✕ Tirar Promo (<span id="manager-bulk-count">0</span>)
               </button>
-              <button type="button" onclick="bulkToggleManagerActive(false)" class="btn-pill-white px-3 py-1.5 text-[11px]">
-                ⏸️ Pausar
+              <button type="button" onclick="bulkSetManagerChannelMode('both')" class="btn-pill-white px-3 py-1.5 text-[11px]">
+                🛍️ Vitrine + PDV
               </button>
-              <button type="button" onclick="bulkToggleManagerActive(true)" class="btn-pill-white px-3 py-1.5 text-[11px]">
-                🟢 Ativar
+              <button type="button" onclick="bulkSetManagerChannelMode('pdv')" class="btn-pill-white px-3 py-1.5 text-[11px]">
+                🖥️ Só PDV
+              </button>
+              <button type="button" onclick="bulkToggleManagerActive(false)" class="btn-pill-white px-3 py-1.5 text-[11px]">
+                ⏸️ Pausar Geral
               </button>
             </div>
           </div>
@@ -1824,6 +1828,29 @@
                 <input type="checkbox" id="bulk-pause-all" class="w-4 h-4 accent-amber-600 rounded">
                 <span class="text-[11px] font-bold text-amber-900">⏸️ Importar todos já pausados (revisar antes)</span>
               </label>
+              <label class="flex items-center gap-2 bg-cyan-50 border border-cyan-200 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="bulk-granel-pdv-only" checked onchange="parseBulkInput()" class="w-4 h-4 accent-cyan-600 rounded">
+                <span class="text-[11px] font-bold text-cyan-950">🖥️ Granel (KG) entra como "Só PDV"</span>
+              </label>
+              <label class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="bulk-saurus-translate" checked onchange="parseBulkInput()" class="w-4 h-4 accent-slate-700 rounded">
+                <span class="text-[11px] font-bold text-slate-700">🔄 Saurus: ALIMENTOS → Rações (e inverter Cat/Sub)</span>
+              </label>
+              <label class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 cursor-pointer select-none">
+                <input type="checkbox" id="bulk-zero-neg-stock" checked onchange="parseBulkInput()" class="w-4 h-4 accent-slate-700 rounded">
+                <span class="text-[11px] font-bold text-slate-700">🧹 Zerar estoques negativos</span>
+              </label>
+              <div class="flex items-center justify-between gap-2 bg-purple-50 border border-purple-200 rounded-xl px-2.5 py-1.5">
+                <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                  <input type="checkbox" id="bulk-calc-child-cost" checked onchange="parseBulkInput()" class="w-4 h-4 accent-purple-600 rounded">
+                  <span class="text-[11px] font-bold text-purple-900">⚖️ Custo Granel = Pai ÷ kg</span>
+                </label>
+                <select id="bulk-granel-loss-pct" onchange="parseBulkInput()" class="bg-white border border-purple-300 rounded-lg px-1.5 py-0.5 text-[10px] font-black text-purple-900 cursor-pointer" title="Percentual de quebra/embalagem do granel">
+                  <option value="0">0% quebra</option>
+                  <option value="3" selected>+3% quebra</option>
+                  <option value="5">+5% quebra</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -6718,10 +6745,13 @@
       const noStockCnt = products.filter(p => p.stockQty !== null && p.stockQty !== undefined && Number(p.stockQty) <= 0).length;
       const e1 = document.getElementById('mgr-cnt-nobrand'); if (e1) e1.textContent = noBrandCnt;
       const e2 = document.getElementById('mgr-cnt-nophoto'); if (e2) e2.textContent = noPhotoCnt;
+      const pdvOnlyCnt = products.filter(p => p.active !== false && p.showInCatalog === false).length;
       const e3 = document.getElementById('mgr-cnt-nostock'); if (e3) e3.textContent = noStockCnt;
+      const e4 = document.getElementById('mgr-cnt-pdvonly'); if (e4) e4.textContent = pdvOnlyCnt;
       document.getElementById('mgr-qf-nobrand')?.classList.toggle('btn-pill-active', managerStatusFilters.has('no_brand'));
       document.getElementById('mgr-qf-nophoto')?.classList.toggle('btn-pill-active', managerStatusFilters.has('no_photo'));
       document.getElementById('mgr-qf-nostock')?.classList.toggle('btn-pill-active', managerStatusFilters.has('no_stock'));
+      document.getElementById('mgr-qf-pdvonly')?.classList.toggle('btn-pill-active', managerStatusFilters.has('pdv_only'));
 
       const supSel = document.getElementById('manager-filter-supplier');
       if (supSel) {
@@ -6792,6 +6822,39 @@
       clearManagerSelection();
       filterProducts();
       renderManagerProducts();
+    }
+
+    async function setProductChannelMode(productId, mode) {
+      const p = products.find(x => String(x.id) === String(productId));
+      if (!p || !sb) return;
+      const nextActive = mode !== 'paused';
+      const nextShow = mode === 'both';
+      const { error } = await sb.from('products').update({ active: nextActive, show_in_catalog: nextShow }).eq('id', p.id);
+      if (error) { showToast('⚠️ Erro ao atualizar canal do produto.'); renderManagerProducts(); return; }
+      p.active = nextActive;
+      p.showInCatalog = nextShow;
+      renderBrandPills();
+      filterProducts();
+      renderManagerProducts();
+      const lbl = mode === 'both' ? '🛍️ Vitrine + PDV' : (mode === 'pdv' ? '🖥️ Só PDV (oculto na vitrine)' : '⏸️ Pausado Geral');
+      showToast(`${p.name}: ${lbl}`);
+    }
+
+    async function bulkSetManagerChannelMode(mode) {
+      const ids = Array.from(managerSelectedIds);
+      if (ids.length === 0 || !sb) return;
+      const nextActive = mode !== 'paused';
+      const nextShow = mode === 'both';
+      const { error } = await sb.from('products').update({ active: nextActive, show_in_catalog: nextShow }).in('id', ids);
+      if (error) { showToast('⚠️ Erro ao atualizar canal em lote.'); return; }
+      products.forEach(p => {
+        if (managerSelectedIds.has(p.id)) { p.active = nextActive; p.showInCatalog = nextShow; }
+      });
+      clearManagerSelection();
+      renderBrandPills();
+      filterProducts();
+      renderManagerProducts();
+      showToast(mode === 'both' ? `🛍️ ${ids.length} item(ns) liberados na Vitrine + PDV!` : `🖥️ ${ids.length} item(ns) movidos para Só PDV!`);
     }
 
     function bulkToggleManagerActive(makeActive) {
@@ -6875,11 +6938,15 @@
               </div>
             </div>
           ` : ''}
-          <div class="grid grid-cols-4 gap-1.5 pt-1.5 border-t border-slate-100">
-            <button onclick="toggleProductActive(${p.id})" class="py-1.5 px-1 rounded-xl text-[11px] font-extrabold transition ${isActive ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800' : 'bg-slate-300 hover:bg-slate-400 text-slate-700'}" title="${isActive ? 'Pausar produto' : 'Reativar produto'}">${isActive ? '✅ Ativo' : '⏸️ Pausado'}</button>
-            <button onclick="toggleProductPromo(${p.id})" class="py-1.5 px-1 rounded-xl text-xs font-bold transition ${isPromoOrSched ? 'bg-brand-accent text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}" title="Ligar/Desligar Promoção">🔥</button>
-            <button onclick="openEditProduct(${p.id})" class="bg-[#FEFCE8] hover:bg-[#FEF08A] text-[#855E00] py-1.5 px-1 rounded-xl text-[11px] font-bold transition" title="Editar Completo">📂 Editar</button>
-            <button onclick="deleteProduct(${p.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 py-1.5 px-1 rounded-xl text-xs font-bold transition" title="Excluir">🗑️</button>
+          <div class="flex items-center gap-1.5 pt-1.5 border-t border-slate-100">
+            <select onchange="setProductChannelMode(${p.id}, this.value)" class="flex-1 min-w-0 bg-slate-50 border border-slate-300 rounded-full px-2.5 py-1.5 text-[10px] font-extrabold text-slate-800 cursor-pointer focus:outline-none" title="Escolher onde o produto aparece">
+              <option value="both" ${isActive && p.showInCatalog !== false ? 'selected' : ''}>🛍️ Vitrine + PDV</option>
+              <option value="pdv" ${isActive && p.showInCatalog === false ? 'selected' : ''}>🖥️ Só PDV</option>
+              <option value="paused" ${!isActive ? 'selected' : ''}>⏸️ Pausado</option>
+            </select>
+            <button onclick="toggleProductPromo(${p.id})" class="btn-pill-white px-2.5 py-1.5 text-xs shrink-0 ${isPromoOrSched ? 'border-red-400 bg-red-50' : ''}" title="Ligar/Desligar Promoção">🔥</button>
+            <button onclick="openEditProduct(${p.id})" class="btn-pill-white px-2.5 py-1.5 text-[11px] shrink-0" title="Editar Completo">✏️ Editar</button>
+            <button onclick="deleteProduct(${p.id})" class="btn-pill-white btn-pill-danger px-2.5 py-1.5 text-xs shrink-0 py-1.5 px-1 rounded-xl text-xs font-bold transition" title="Excluir">🗑️</button>
           </div>
         </div>
       `; }).join('');
@@ -8288,10 +8355,10 @@
       if (/^(procodncm|ncm|codncm)$/.test(k)) return 'ncm';
       if (/^(prodescproduto|descproduto|descricao|produto|nome|item|desc)$/.test(k)) return 'name';
       if (/^(provprod|vprod|preco|precovenda|valor|valorvenda|vlr|price|venda)$/.test(k)) return 'price';
-      if (/^(custo|precocusto|precodecusto|vlrcusto|valorcusto|custounit|cost|costprice)$/.test(k)) return 'cost_price';
+      if (/^(custo|precocusto|precodecusto|vlrcusto|valorcusto|custounit|cost|costprice|provcompra|vcustoprod|provcusto)$/.test(k)) return 'cost_price';
       if (/^(qsaldo|saldo|estoque|qtd|quantidade|qtde|stock)$/.test(k)) return 'stock';
       if (/^(estoquemin|estoqueminimo|minstock|qtdmin|minimo)$/.test(k)) return 'min_stock';
-      if (/^(un|und|unid|unidade|unittype|medida)$/.test(k)) return 'unit_type';
+      if (/^(un|und|unid|unidade|unittype|medida|prodescmedida)$/.test(k)) return 'unit_type';
       if (/^(cfop)$/.test(k)) return 'cfop';
       if (/^(csosn|cst)$/.test(k)) return 'csosn';
       if (/^(validade|datavalidade|vencimento|expirydate)$/.test(k)) return 'expiry_date';
@@ -8299,9 +8366,11 @@
       if (/^(qtdatacado|wholesaleqty|qtdeatacado)$/.test(k)) return 'wholesale_qty';
       if (/^(precoatacado|wholesaleprice|valoratacado)$/.test(k)) return 'wholesale_price';
       if (/^(vitrine|showincatalog|exibirvitrine|catalogo)$/.test(k)) return 'show_in_catalog';
-      if (/^(categoria|cat)$/.test(k)) return 'category';
-      if (/^(marca|fabricante|fornecedor|brand)$/.test(k)) return 'brand';
-      if (/^(prodescregproduto|regime|icms)$/.test(k)) return 'ignore';
+      if (/^(categoria|cat|prodesccategoria)$/.test(k)) return 'category';
+      if (/^(subcategoria|subcat|prodescsubcategoria)$/.test(k)) return 'subcategory';
+      if (/^(marca|fabricante|brand|prodescmarca)$/.test(k)) return 'brand';
+      if (/^(fornecedor|supplier|distribuidor)$/.test(k)) return 'supplier';
+      if (/^(prodescregproduto|regime|icms|prostatus|protpitem|sysdinsert|sysdupdate)$/.test(k)) return 'ignore';
       return null;
     }
 
@@ -8309,7 +8378,7 @@
       const s = String(val || '').replace(/R\$/gi, '').replace(/\s+/g, '').trim();
       if (!s) return null;
       const cleaned = s.includes(',') ? s.replace(/\./g, '').replace(',', '.') : s;
-      if (!/^\d+(\.\d+)?$/.test(cleaned)) return null;
+      if (!/^-?\d+(\.\d+)?$/.test(cleaned)) return null;
       const n = parseFloat(cleaned);
       return isNaN(n) ? null : n;
     }
@@ -8421,6 +8490,9 @@
         let wholesalePrice = null;
         let showInCatalog = true;
         let cat = defCat;
+        let sub = defSub;
+        let rowRawCat = '';
+        let rowRawSub = '';
         let brand = defBrand;
         let weight = "Sem peso/medida";
 
@@ -8440,20 +8512,30 @@
             if (!val || role === 'ignore') return;
             if (role === 'internal_code') internalCode = String(val).trim().slice(0, 32);
             else if (role === 'barcode') {
-              const listE = splitBarcodesList(val);
-              if (listE.length) {
-                if (!barcode) barcode = listE[0];
-                listE.slice(1).forEach(x => { if (x !== barcode && !extraBarcodes.includes(x)) extraBarcodes.push(x); });
+              const rawB = String(val || '').trim();
+              if (!/sem\s*c[oó]digo/i.test(rawB)) {
+                const listE = splitBarcodesList(rawB).filter(x => x.length >= 8 && x.length <= 14);
+                if (listE.length) {
+                  if (!barcode) barcode = listE[0];
+                  listE.slice(1).forEach(x => { if (x !== barcode && !extraBarcodes.includes(x)) extraBarcodes.push(x); });
+                } else if (!internalCode && /^\d{1,7}$/.test(rawB)) {
+                  internalCode = rawB;
+                }
               }
             } else if (role === 'extra_barcodes') {
               splitBarcodesList(val).forEach(x => { if (x !== barcode && !extraBarcodes.includes(x)) extraBarcodes.push(x); });
             } else if (role === 'ncm') ncm = normalizeBarcodeKey(val);
             else if (role === 'cfop') cfop = String(val).replace(/\D/g, '').slice(0, 4);
             else if (role === 'csosn') csosn = String(val).replace(/\D/g, '').slice(0, 4);
-            else if (role === 'unit_type') unitType = normalizeBulkUnit(val);
+            else if (role === 'unit_type') {
+              const uRaw = String(val || '').trim().toUpperCase();
+              if (uRaw.includes('QUILO') || uRaw === 'KG') unitType = 'KG';
+              else if (uRaw.includes('PACOTE') || uRaw.includes('UNID')) unitType = 'UN';
+              else unitType = normalizeBulkUnit(val);
+            }
             else if (role === 'name') name = val;
             else if (role === 'price') { const n = parseNumberLoose(val); if (n !== null) price = n; }
-            else if (role === 'cost_price') { const n = parseNumberLoose(val); if (n !== null) costPrice = n; }
+            else if (role === 'cost_price') { const n = parseNumberLoose(val); if (n !== null && (n > 0 || costPrice === null)) costPrice = n; }
             else if (role === 'stock') { const n = parseNumberLoose(val); if (n !== null) stockQty = n; }
             else if (role === 'min_stock') { const n = parseNumberLoose(val); if (n !== null) minStock = n; }
             else if (role === 'expiry_date') {
@@ -8467,8 +8549,16 @@
             else if (role === 'show_in_catalog') {
               const low = String(val).toLowerCase().trim();
               if (/^(nao|não|n|0|false|pdv|sopdv|só pdv)$/.test(low)) showInCatalog = false;
-            } else if (role === 'category' && categories.includes(val) && val !== "Todos") cat = val;
-            else if (role === 'brand' && brands.includes(val)) brand = val;
+            } else if (role === 'category') {
+              rowRawCat = String(val).trim();
+            } else if (role === 'subcategory') {
+              rowRawSub = String(val).trim();
+            } else if (role === 'brand') {
+              const bClean = String(val).trim();
+              const matchB = brands.find(x => normLabelKey(x) === normLabelKey(bClean));
+              if (matchB) brand = matchB;
+              else if (bClean && normLabelKey(bClean) !== 'sem marca') brand = bClean.charAt(0).toUpperCase() + bClean.slice(1).toLowerCase();
+            }
           });
         } else {
           const numericCandidates = [];
@@ -8510,6 +8600,26 @@
         const foundWeight = weights.find(w => w !== "Sem peso/medida" && name.toLowerCase().includes(w.toLowerCase()));
         if (foundWeight) weight = foundWeight;
         if (unitType === 'UN' && /\b(GRANEL|AVULSO)\b/i.test(name)) unitType = 'KG';
+        const isGranelRow = (unitType === 'KG' || /\b(GRANEL|AVULSO|FRACIONADO)\b/i.test(name));
+        if (document.getElementById('bulk-granel-pdv-only')?.checked && isGranelRow) {
+          showInCatalog = false;
+        }
+        if (document.getElementById('bulk-zero-neg-stock')?.checked && stockQty !== null && stockQty < 0) {
+          stockQty = 0;
+        }
+        if (rowRawCat || rowRawSub) {
+          const doTrans = !!document.getElementById('bulk-saurus-translate')?.checked;
+          const tryMatchCat = (raw) => categories.find(c => c !== 'Todos' && normLabelKey(c).includes(normLabelKey(raw))) || '';
+          if (doTrans && normLabelKey(rowRawCat) === 'alimentos') {
+            const matchedSubAsCat = rowRawSub ? tryMatchCat(rowRawSub) : '';
+            if (matchedSubAsCat) cat = matchedSubAsCat;
+            sub = 'Rações';
+          } else {
+            const mc = rowRawCat ? tryMatchCat(rowRawCat) : '';
+            if (mc) cat = mc;
+            if (rowRawSub) sub = rowRawSub.charAt(0).toUpperCase() + rowRawSub.slice(1).toLowerCase();
+          }
+        }
 
         bulkRows.push({
           checked: true,
@@ -8532,16 +8642,31 @@
           showInCatalog,
           parentLink: null,
           category: cat,
-          subcategory: defSub,
+          subcategory: sub,
           brand,
           weight
         });
       });
 
-      // Sugestão inteligente de Saco Pai para itens Granel/KG
+      // Sugestão inteligente de Saco Pai para itens Granel/KG + Cálculo automático do custo do filho
+      const calcChildCost = !!document.getElementById('bulk-calc-child-cost')?.checked;
+      const lossPct = parseFloat(document.getElementById('bulk-granel-loss-pct')?.value || '0') || 0;
       bulkRows.forEach(r => {
         const sug = suggestBulkParentBag(r, bulkRows);
-        if (sug) r.parentLink = sug;
+        if (sug) {
+          r.parentLink = sug;
+          if (calcChildCost && sug.kg > 0) {
+            let parentCost = null;
+            if (sug.type === 'batch' && bulkRows[sug.batchIdx] && bulkRows[sug.batchIdx].costPrice > 0) {
+              parentCost = bulkRows[sug.batchIdx].costPrice;
+            } else if (sug.type === 'existing' && productCostsMap[String(sug.id)]?.costPrice > 0) {
+              parentCost = productCostsMap[String(sug.id)].costPrice;
+            }
+            if (parentCost && parentCost > 0) {
+              r.costPrice = +((parentCost / sug.kg) * (1 + lossPct / 100)).toFixed(2);
+            }
+          }
+        }
       });
       renderBulkPreview();
     }
