@@ -309,7 +309,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800">Painel Gestor <span id="manager-store-slug-badge" style="background-color: var(--brand-primary-soft); color: var(--brand-primary-dark);" class="text-[11px] font-bold px-2 py-0.5 rounded-lg ml-1"></span><span class="text-[10px] font-extrabold text-slate-400 ml-1.5">v57</span></h2>
+          <h2 class="text-lg font-black text-slate-800">Painel Gestor <span id="manager-store-slug-badge" class="hidden"></span><span class="text-[10px] font-extrabold text-slate-400 ml-1.5">v58</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -4269,10 +4269,12 @@
                 const isMixProd = !!p.wholesaleGroup;
                 const clickHandler = isMixProd ? `openClientMixModal(${p.id})` : `addWholesalePack(${p.id})`;
                 const pillLabel = isMixProd ? (whDone ? '✅ Mix' : (effQty > 0 ? `+${missing} Mix` : 'Escolher')) : pillTxt;
+                const priceBadgeBg = whDone ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white';
+                const unitBadgeBg = whDone ? 'bg-white border border-emerald-400 text-emerald-950' : 'bg-white border border-amber-400 text-amber-950';
                 const subHint = isMixProd
-                  ? `<span class="block text-[9px] font-bold opacity-80">${whDone ? 'Atacado Mix ativo • toque p/ ajustar sabores' : (effQty > 0 ? `Falta${missing > 1 ? 'm' : ''} ${missing} un — toque p/ misturar sabores` : 'Toque p/ escolher sabores e quantidades')}</span>`
-                  : `<span class="font-bold opacity-80">(R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un)</span>`;
-                return `<button type="button" onclick="${clickHandler}" class="w-full text-left ${btnColors} active:scale-95 border-2 rounded-xl px-2.5 py-1.5 text-[10px] font-black mb-2 leading-snug shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5"><span>${isMixProd ? '🎨 Montar Kit Mix:' : '📦 Atacado:'} ${p.wholesaleQty} un por R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')} ${subHint}</span><span class="${pillColors} text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">${pillLabel}</span></button>`;
+                  ? `<span class="block text-[9px] font-bold opacity-80 mt-0.5">${whDone ? 'Atacado Mix ativo • toque p/ ajustar sabores' : (effQty > 0 ? `Falta${missing > 1 ? 'm' : ''} ${missing} un — toque p/ misturar sabores` : 'Toque p/ escolher sabores e quantidades')}</span>`
+                  : `<span class="inline-block ${unitBadgeBg} font-black px-1.5 py-0.5 rounded-md shadow-xs ml-0.5 whitespace-nowrap">R$ ${wholesaleUnit.toFixed(2).replace('.', ',')}/un</span>`;
+                return `<button type="button" onclick="${clickHandler}" class="w-full text-left ${btnColors} active:scale-95 border-2 rounded-xl px-2.5 py-1.5 text-[10px] font-black mb-2 leading-relaxed shadow-sm transition cursor-pointer flex items-center justify-between gap-1.5"><span>${isMixProd ? '🎨 Montar Kit Mix:' : '📦 Atacado:'} ${p.wholesaleQty} un por <span class="inline-block ${priceBadgeBg} font-black px-1.5 py-0.5 rounded-md shadow-xs mx-0.5 whitespace-nowrap">R$ ${p.wholesalePrice.toFixed(2).replace('.', ',')}</span> ${subHint}</span><span class="${pillColors} text-[9px] font-black px-1.5 py-0.5 rounded-md shrink-0">${pillLabel}</span></button>`;
               })() : ''}
               ${hasPickup ? `<div class="bg-emerald-50 border border-emerald-300 rounded-xl px-2.5 py-1 text-[10px] font-black text-emerald-800 mb-2">🏪 Retirando na loja: R$ ${p.pickupPrice.toFixed(2).replace('.', ',')}</div>` : ''}
               ${actionArea}
