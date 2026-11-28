@@ -103,6 +103,25 @@
       background-color: #fff1f2 !important;
       border-color: #fda4af !important;
     }
+    .btn-pill-locked {
+      background-color: #f8fafc !important;
+      color: #64748b !important;
+      border: 1px dashed #cbd5e1 !important;
+      border-radius: 9999px !important;
+      font-weight: 800 !important;
+      transition: all 140ms ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      cursor: pointer;
+    }
+    .btn-pill-locked:hover {
+      background-color: #fffbeb !important;
+      border-color: #f59e0b !important;
+      color: #92400e !important;
+      transform: translateY(-0.5px);
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col select-none">
@@ -116,7 +135,7 @@
       <div class="flex items-center gap-1.5 shrink-0">
         <button type="button" onclick="goToManager()" class="btn-pill-white px-3 py-1 text-xs">⚙️ Gestor</button>
         <button type="button" onclick="closeModal('modal-motoboy'); document.getElementById('main-barcode-input')?.focus();" class="btn-pill-white btn-pill-active px-3 py-1 text-xs">🖥️ PDV</button>
-        <button type="button" onclick="openMotoboyModal()" class="btn-pill-white px-3 py-1 text-xs">🛵 Entregas</button>
+        <button id="pdv-gtb-entregas" type="button" onclick="handlePdvDeliveriesClick()" class="btn-pill-white px-3 py-1 text-xs">🛵 Entregas</button>
         <button type="button" onclick="goToAppClient()" class="btn-pill-white px-3 py-1 text-xs">🛍️ Vitrine</button>
         <button type="button" onclick="logoutFromPdv()" title="Sair do modo Gestor" class="btn-pill-white btn-pill-danger px-3 py-1 text-xs ml-1">🚪 Sair</button>
       </div>
@@ -148,6 +167,10 @@
         <div class="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-3 text-xs font-bold" id="gate-blocked-msg">
           Módulo PDV não está ativado para esta loja.
         </div>
+        <button type="button" onclick="openPdvSupportWhatsApp()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow cursor-pointer">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16.04 2.003C8.32 2.003 2.04 8.283 2.04 16c0 2.47.65 4.88 1.88 7.01L2 30l7.19-1.88A13.94 13.94 0 0 0 16.04 30C23.76 30 30 23.72 30 16S23.76 2.003 16.04 2.003zm0 25.63c-2.17 0-4.3-.58-6.16-1.69l-.44-.26-4.27 1.12 1.14-4.16-.29-.46a11.58 11.58 0 0 1-1.78-6.18c0-6.4 5.21-11.61 11.62-11.61 6.4 0 11.61 5.21 11.61 11.61 0 6.41-5.21 11.63-11.43 11.63zm6.37-8.71c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.36-.2.23-.41.26-.76.09-.35-.17-1.47-.54-2.8-1.73-1.04-.93-1.74-2.07-1.94-2.42-.2-.35-.02-.54.15-.71.16-.16.35-.41.52-.61.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.58-.28-.68-.57-.58-.78-.59h-.67c-.23 0-.61.09-.93.44-.32.35-1.22 1.19-1.22 2.9 0 1.71 1.25 3.36 1.42 3.59.17.23 2.46 3.76 5.96 5.27.83.36 1.48.57 1.99.73.84.27 1.6.23 2.2.14.67-.1 2.06-.84 2.35-1.65.29-.81.29-1.51.2-1.65-.09-.15-.32-.23-.67-.41z"/></svg>
+          <span>Falar com o Suporte</span>
+        </button>
         <button onclick="goToAppClient()" class="w-full py-2.5 rounded-xl bg-slate-900 text-white font-black text-xs cursor-pointer">Voltar para a Vitrine</button>
       </div>
     </div>
@@ -1260,7 +1283,7 @@
       } else if (q.length > 0) {
         el.innerHTML = `🟡 <strong>Online (${q.length} pendente${q.length > 1 ? 's' : ''})</strong>`;
       } else {
-        el.innerHTML = `🟢 <strong>Online (Sincronizado)</strong> <span class="opacity-70 ml-1">· v60</span>`;
+        el.innerHTML = `🟢 <strong>Online (Sincronizado)</strong> <span class="opacity-70 ml-1">· v61</span>`;
       }
     }
 
@@ -1955,11 +1978,83 @@
       showToast('🎉 Sabores do Atacado Mix atualizados no caixa!');
     }
 
+    const PDV_SUPPORT_WA = '5511980327831';
+    let pendingPdvLockReason = '';
+
+    function openPdvSupportWhatsApp(customText) {
+      const loja = (currentStore && currentStore.name) ? currentStore.name : (storeSlug || 'Minha Loja');
+      const msg = customText || `Olá! Sou da loja ${loja} e preciso falar com o suporte sobre o acesso ao PDV.`;
+      window.open(`https://wa.me/${PDV_SUPPORT_WA}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+    }
+
+    function hasPdvDeliveryModule() {
+      const m = (currentStore && currentStore.modules) || {};
+      return typeof m.deliveries === 'boolean' ? m.deliveries : (m.pdv === true);
+    }
+
+    function syncPdvTopbarLocks() {
+      const btn = document.getElementById('pdv-gtb-entregas');
+      if (!btn) return;
+      const ok = hasPdvDeliveryModule();
+      btn.className = (ok ? 'btn-pill-white' : 'btn-pill-locked') + ' px-3 py-1 text-xs';
+      btn.textContent = ok ? '🛵 Entregas' : '🔒 Entregas';
+    }
+
+    function handlePdvDeliveriesClick() {
+      if (!hasPdvDeliveryModule()) {
+        const loja = (currentStore && currentStore.name) ? currentStore.name : (storeSlug || 'Minha Loja');
+        if (confirm('🔒 O módulo Entregas / Motoboy está disponível para upgrade (Plano Gestão Total). Deseja falar no WhatsApp para ativar?')) {
+          openPdvSupportWhatsApp(`Olá! Sou da loja ${loja} e quero fazer upgrade para ativar o módulo "Entregas / Motoboy".`);
+        }
+        return;
+      }
+      openMotoboyModal();
+    }
+
+    function checkPendingPdvLock() {
+      if (pendingPdvLockReason && (!cupom || cupom.length === 0)) {
+        const reason = pendingPdvLockReason;
+        pendingPdvLockReason = '';
+        showGateBlocked(reason);
+      }
+    }
+
+    async function pollPdvPermissionsLive() {
+      if (!sb || !storeSlug || !currentStore) return;
+      try {
+        const { data, error } = await sb.from('stores').select('active,plan,modules').eq('slug', storeSlug).maybeSingle();
+        if (error || !data) return;
+        currentStore.active = data.active;
+        currentStore.plan = data.plan;
+        currentStore.modules = data.modules || {};
+        syncPdvTopbarLocks();
+        const isLocked = (data.active === false) || !(currentStore.modules.pdv === true);
+        if (isLocked) {
+          const reason = data.active === false
+            ? 'Esta loja foi pausada pelo administrador. Fale com o suporte para reativar.'
+            : 'O módulo PDV foi desativado para esta loja. Fale com o suporte para reativar.';
+          if (cupom && cupom.length > 0) {
+            if (!pendingPdvLockReason) {
+              pendingPdvLockReason = reason;
+              showToast('⚠️ Módulo PDV pausado — o caixa será bloqueado após finalizar esta venda.');
+            }
+          } else {
+            showGateBlocked(reason);
+          }
+        } else {
+          pendingPdvLockReason = '';
+        }
+      } catch (e) {}
+    }
+    setInterval(pollPdvPermissionsLive, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) pollPdvPermissionsLive(); });
+
     function cancelCupom() {
       cupom = []; discountAmount = 0; extraAmount = 0; currentPayments = []; activeAppOrderId = null;
       document.getElementById('top-client-name').textContent = 'Consumidor';
       renderCupom();
       showToast('🗑️ Venda cancelada — Caixa Livre.');
+      checkPendingPdvLock();
     }
 
     // PEDIDOS DO APP
@@ -2028,7 +2123,8 @@
 
     // PAGAMENTO + SALVAMENTO REAL NO SUPABASE (COM FILA OFFLINE)
     function openPaymentScreen() {
-      if (!cupom.length) { showToast('⚠️ Passe pelo menos 1 produto antes de receber.'); return; }
+      if (!cupom.length) {
+        if (typeof checkPendingPdvLock === 'function') checkPendingPdvLock(); showToast('⚠️ Passe pelo menos 1 produto antes de receber.'); return; }
       currentPayments = [];
       renderPaymentState();
       openModal('modal-payment');

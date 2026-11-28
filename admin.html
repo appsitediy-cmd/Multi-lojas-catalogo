@@ -327,9 +327,9 @@
               </div>
               <div class="flex flex-wrap items-center gap-1.5">
                 <span class="text-[11px] font-bold text-slate-400">Atalhos:</span>
-                <button onclick="applyPreset('${s.id}', 'vitrine')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-black cursor-pointer">Só Vitrine</button>
-                <button onclick="applyPreset('${s.id}', 'pdv_basico')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-[11px] font-black cursor-pointer">Vitrine + PDV</button>
-                <button onclick="applyPreset('${s.id}', 'tudo')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-black cursor-pointer">🚀 Ligar Tudo</button>
+                <button onclick="applyPreset('${s.id}', 'essencial')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-black cursor-pointer">🛍️ Essencial</button>
+                <button onclick="applyPreset('${s.id}', 'balcao_pro')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-[11px] font-black cursor-pointer">🖥️ Balcão Pro ⭐</button>
+                <button onclick="applyPreset('${s.id}', 'gestao_total')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-black cursor-pointer">🚀 Gestão Total</button>
               </div>
             </div>
 
@@ -376,18 +376,22 @@
       const store = allStores.find(s => s.id === storeId);
       if (!store) return;
       let mods = {};
-      let plan = store.plan || 'completo';
-      if (preset === 'vitrine') {
-        plan = 'vitrine';
-        mods = { catalog: true, pdv: false, deliveries: false, replenishment: false, stock_entry: false, analytics: true, flash_sale: true, wholesale_mix: true };
-      } else if (preset === 'pdv_basico') {
-        plan = 'pro';
-        mods = { catalog: true, pdv: true, deliveries: true, replenishment: false, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true };
+      let plan = 'gestao_total';
+      let label = 'Gestão Total';
+      if (preset === 'essencial' || preset === 'vitrine') {
+        plan = 'essencial';
+        label = 'Essencial';
+        mods = { catalog: true, pdv: false, deliveries: false, replenishment: false, stock_entry: false, analytics: false, flash_sale: false, wholesale_mix: false };
+      } else if (preset === 'balcao_pro' || preset === 'pdv_basico') {
+        plan = 'balcao_pro';
+        label = 'Balcão Pro';
+        mods = { catalog: true, pdv: true, deliveries: false, replenishment: false, stock_entry: false, analytics: true, flash_sale: true, wholesale_mix: true };
       } else {
-        plan = 'completo';
+        plan = 'gestao_total';
+        label = 'Gestão Total';
         mods = { catalog: true, pdv: true, deliveries: true, replenishment: true, stock_entry: true, analytics: true, flash_sale: true, wholesale_mix: true };
       }
-      await saveStoreUpdate(storeId, { plan, modules: mods }, `✅ Preset aplicado em ${store.name}!`);
+      await saveStoreUpdate(storeId, { plan, modules: mods }, `✅ Plano ${label} aplicado em ${store.name}!`);
     }
 
     async function toggleStoreActive(storeId) {

@@ -81,6 +81,25 @@
       background-color: #fff1f2 !important;
       border-color: #fda4af !important;
     }
+    .btn-pill-locked {
+      background-color: #f8fafc !important;
+      color: #64748b !important;
+      border: 1px dashed #cbd5e1 !important;
+      border-radius: 9999px !important;
+      font-weight: 800 !important;
+      transition: all 140ms ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      cursor: pointer;
+    }
+    .btn-pill-locked:hover {
+      background-color: #fffbeb !important;
+      border-color: #f59e0b !important;
+      color: #92400e !important;
+      transform: translateY(-0.5px);
+    }
   </style>
   <script>
     (function() {
@@ -133,8 +152,8 @@
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
         <button id="gtb-btn-gestor" type="button" onclick="openManagerLoginModal()" class="btn-pill-white px-3 py-1 text-xs">⚙️ Gestor</button>
-        <button id="gtb-btn-pdv" type="button" onclick="window.location.href='pdv.html' + '?loja=' + encodeURIComponent(storeSlug)" class="btn-pill-white px-3 py-1 text-xs">🖥️ PDV</button>
-        <button id="gtb-btn-entregas" type="button" onclick="window.location.href='pdv.html' + '?loja=' + encodeURIComponent(storeSlug) + '&open=motoboy'" class="btn-pill-white px-3 py-1 text-xs">🛵 Entregas</button>
+        <button id="gtb-btn-pdv" type="button" onclick="openPdvModule()" class="btn-pill-white px-3 py-1 text-xs">🖥️ PDV</button>
+        <button id="gtb-btn-entregas" type="button" onclick="openDeliveriesModule()" class="btn-pill-white px-3 py-1 text-xs">🛵 Entregas</button>
         <button id="gtb-btn-vitrine" type="button" onclick="switchToClient()" class="btn-pill-white px-3 py-1 text-xs">🛍️ Vitrine</button>
         <button type="button" onclick="logoutManager()" title="Sair do modo Gestor" class="btn-pill-white btn-pill-danger px-3 py-1 text-xs ml-1">🚪 Sair</button>
       </div>
@@ -309,7 +328,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800">Painel Gestor <span id="manager-store-slug-badge" class="hidden"></span><span class="text-[10px] font-extrabold text-slate-400 ml-1.5">v60</span></h2>
+          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v61</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -325,11 +344,14 @@
           <button id="btn-open-entry-module" onclick="openPdvSubmodule('entry')" class="hidden btn-pill-white px-3.5 py-2 text-xs" title="Entrada de Mercadoria / Nota (só Gestor)">
             📥 Entrada Nota
           </button>
-          <button id="btn-open-flash-modal" onclick="openFlashSaleModal()" class="btn-pill-white px-3.5 py-2 text-xs">
+          <button id="btn-open-flash-modal" onclick="handleFlashModuleClick()" class="btn-pill-white px-3.5 py-2 text-xs">
             ⚡ Relâmpago <span id="mgr-flash-badge" class="hidden bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded-full text-[9px] font-black">ON</span>
           </button>
-          <button onclick="openAnalyticsModal()" class="btn-pill-white px-3.5 py-2 text-xs">
+          <button id="btn-open-analytics-modal" onclick="handleAnalyticsModuleClick()" class="btn-pill-white px-3.5 py-2 text-xs">
             📊 Acessos
+          </button>
+          <button type="button" onclick="openSaasSupportWhatsApp()" class="btn-pill-white px-3.5 py-2 text-xs" title="Falar com o Suporte no WhatsApp">
+            <span class="text-emerald-600 inline-flex items-center"><svg class="w-4 h-4 shrink-0" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16.04 2.003C8.32 2.003 2.04 8.283 2.04 16c0 2.47.65 4.88 1.88 7.01L2 30l7.19-1.88A13.94 13.94 0 0 0 16.04 30C23.76 30 30 23.72 30 16S23.76 2.003 16.04 2.003zm0 25.63c-2.17 0-4.3-.58-6.16-1.69l-.44-.26-4.27 1.12 1.14-4.16-.29-.46a11.58 11.58 0 0 1-1.78-6.18c0-6.4 5.21-11.61 11.62-11.61 6.4 0 11.61 5.21 11.61 11.61 0 6.41-5.21 11.63-11.43 11.63zm6.37-8.71c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.36-.2.23-.41.26-.76.09-.35-.17-1.47-.54-2.8-1.73-1.04-.93-1.74-2.07-1.94-2.42-.2-.35-.02-.54.15-.71.16-.16.35-.41.52-.61.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.58-.28-.68-.57-.58-.78-.59h-.67c-.23 0-.61.09-.93.44-.32.35-1.22 1.19-1.22 2.9 0 1.71 1.25 3.36 1.42 3.59.17.23 2.46 3.76 5.96 5.27.83.36 1.48.57 1.99.73.84.27 1.6.23 2.2.14.67-.1 2.06-.84 2.35-1.65.29-.81.29-1.51.2-1.65-.09-.15-.32-.23-.67-.41z"/></svg></span> Suporte
           </button>
           <button onclick="openCustomersModal()" class="btn-pill-white px-3.5 py-2 text-xs">
             👥 Clientes (<span id="manager-customers-count">0</span>)
@@ -2624,34 +2646,154 @@
       return !!(currentUser && currentUser.email && SUPER_ADMIN_EMAILS.includes(String(currentUser.email).toLowerCase().trim()));
     }
 
-    function updateModuleButtonsVisibility() {
+    const SAAS_SUPPORT_WA = '5511980327831';
+    const SAAS_UPGRADE_CATALOG = {
+      pdv: {
+        icon: '🖥️', title: 'Frente de Caixa (PDV Integrado)',
+        desc: 'Venda no balcão em segundos com o estoque 100% sincronizado com a sua Vitrine Online.',
+        benefits: ['✅ Leitor de código de barras (EAN), Granel por Valor e N1 Diversos', '✅ Atacado e Atacado Mix direto na linha do cupom', '✅ Fechamento de caixa completo (F12) e impressão térmica']
+      },
+      deliveries: {
+        icon: '🛵', title: 'Painel de Entregas & Motoboy',
+        desc: 'Organize todas as entregas do App, WhatsApp e Balcão em uma fila única com controle de acerto.',
+        benefits: ['✅ Alerta automático para Horário Marcado e Entregas Urgentes', '✅ Saída em lote com aviso automático no WhatsApp do cliente', '✅ Controle de pendências de acerto do motoboy no fechamento']
+      },
+      replenishment: {
+        icon: '📦', title: 'Reposição Inteligente de Estoque',
+        desc: 'Saiba exatamente o que comprar dos fornecedores com base nas vendas reais dos últimos dias.',
+        benefits: ['✅ Filtros por período (7d/15d/30d), Marca, Fornecedor e Categoria', '✅ Sugestão automática de pedido de compra', '✅ Transferência rápida entre filiais']
+      },
+      stock_entry: {
+        icon: '📥', title: 'Entrada de Mercadoria / Nota',
+        desc: 'Dê entrada nas notas dos fornecedores atualizando estoque, custo e fornecedor em segundos.',
+        benefits: ['✅ Leitura rápida por código de barras na chegada do pedido', '✅ Atualização de custo real e margem de lucro', '✅ Histórico completo de entradas']
+      },
+      flash_sale: {
+        icon: '⚡', title: 'Oferta Relâmpago com Relógio',
+        desc: 'Crie campanhas com contagem regressiva na vitrine para girar estoque parado e vender mais.',
+        benefits: ['✅ Relógio regressivo ao vivo no topo da vitrine', '✅ Botão "Divulgar no WhatsApp" pronto para grupos e status', '✅ Volta ao preço normal automaticamente ao zerar']
+      },
+      analytics: {
+        icon: '📊', title: 'Painel de Acessos & Inteligência',
+        desc: 'Veja quantos clientes visitam sua vitrine por dia e quais produtos geram mais interesse.',
+        benefits: ['✅ Visitantes únicos diários e horários de pico', '✅ Ranking dos produtos mais clicados', '✅ Medição real de campanhas de Instagram e WhatsApp']
+      }
+    };
+
+    function formatSaasPlanLabel(rawPlan) {
+      const p = String(rawPlan || '').toLowerCase().trim();
+      if (['gestao_total', 'completo', 'master', 'enterprise', 'total'].includes(p)) return '🚀 Plano Gestão Total';
+      if (['balcao_pro', 'pro', 'pdv', 'plus', 'balcao'].includes(p)) return '🖥️ Plano Balcão Pro';
+      return '🛍️ Plano Essencial';
+    }
+
+    function openSaasSupportWhatsApp(customNeed) {
+      const loja = (storeConfig && storeConfig.name) ? storeConfig.name : (storeSlug || 'Minha Loja');
+      const plano = formatSaasPlanLabel(currentStorePlan);
+      const text = customNeed
+        ? `Olá! Sou da loja ${loja} (${plano}) e preciso de ajuda para ${customNeed}.`
+        : `Olá! Sou da loja ${loja} (${plano}) e preciso de suporte no Painel Gestor.`;
+      window.open(`https://wa.me/${SAAS_SUPPORT_WA}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    }
+
+    function openSaasUpgradeModal(modKey) {
+      const info = SAAS_UPGRADE_CATALOG[modKey] || SAAS_UPGRADE_CATALOG.pdv;
+      const loja = (storeConfig && storeConfig.name) ? storeConfig.name : (storeSlug || 'Minha Loja');
+      const plano = formatSaasPlanLabel(currentStorePlan);
+      document.getElementById('saas-up-icon').textContent = info.icon;
+      document.getElementById('saas-up-title').textContent = info.title;
+      document.getElementById('saas-up-desc').textContent = info.desc;
+      document.getElementById('saas-up-benefits').innerHTML = info.benefits.map(b => `<div>${b}</div>`).join('');
+      const msg = `Olá! Sou da loja ${loja} (atualmente no ${plano}) e quero fazer upgrade para ativar o módulo "${info.title}".`;
+      document.getElementById('saas-up-wa-link').href = `https://wa.me/${SAAS_SUPPORT_WA}?text=${encodeURIComponent(msg)}`;
+      document.getElementById('saas-upgrade-modal')?.classList.remove('hidden');
+    }
+
+    function closeSaasUpgradeModal() {
+      document.getElementById('saas-upgrade-modal')?.classList.add('hidden');
+    }
+
+    function getModuleAllowed(key) {
       const mods = currentStoreModules || {};
       const hasPdv = !!(mods.pdv === true);
-      const hasRepo = typeof mods.replenishment === 'boolean' ? mods.replenishment : hasPdv;
-      const hasEntry = typeof mods.stock_entry === 'boolean' ? mods.stock_entry : hasPdv;
-      document.getElementById('btn-open-pdv-module')?.classList.toggle('hidden', !hasPdv);
-      document.getElementById('btn-open-repo-module')?.classList.toggle('hidden', !hasRepo);
-      document.getElementById('btn-open-entry-module')?.classList.toggle('hidden', !hasEntry);
+      if (key === 'pdv') return hasPdv;
+      if (key === 'deliveries') return typeof mods.deliveries === 'boolean' ? mods.deliveries : hasPdv;
+      if (key === 'replenishment') return typeof mods.replenishment === 'boolean' ? mods.replenishment : hasPdv;
+      if (key === 'stock_entry') return typeof mods.stock_entry === 'boolean' ? mods.stock_entry : hasPdv;
+      if (key === 'flash_sale') return mods.flash_sale !== false;
+      if (key === 'analytics') return mods.analytics !== false;
+      return true;
+    }
+
+    function styleModuleButton(id, unlocked, emoji, label, isTopbar) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('hidden');
+      const pad = isTopbar ? 'px-3 py-1 text-xs' : 'px-3.5 py-2 text-xs';
+      el.className = (unlocked ? 'btn-pill-white ' : 'btn-pill-locked ') + pad;
+      if (id === 'btn-open-flash-modal') {
+        el.innerHTML = (unlocked ? '⚡ Relâmpago ' : '🔒 Relâmpago ') + '<span id="mgr-flash-badge" class="hidden bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded-full text-[9px] font-black">ON</span>';
+      } else {
+        el.textContent = unlocked ? `${emoji} ${label}` : `🔒 ${label}`;
+      }
+      el.title = unlocked ? label : `Módulo ${label} disponível para upgrade`;
+    }
+
+    function updateModuleButtonsVisibility() {
+      const planEl = document.getElementById('manager-plan-badge');
+      if (planEl) planEl.textContent = formatSaasPlanLabel(currentStorePlan);
+
+      styleModuleButton('btn-open-pdv-module', getModuleAllowed('pdv'), '🖥️', 'PDV', false);
+      styleModuleButton('btn-open-repo-module', getModuleAllowed('replenishment'), '📦', 'Reposição', false);
+      styleModuleButton('btn-open-entry-module', getModuleAllowed('stock_entry'), '📥', 'Entrada Nota', false);
+      styleModuleButton('btn-open-flash-modal', getModuleAllowed('flash_sale'), '⚡', 'Relâmpago', false);
+      styleModuleButton('btn-open-analytics-modal', getModuleAllowed('analytics'), '📊', 'Acessos', false);
+
       if (typeof syncManagerGlobalTopbar === 'function') syncManagerGlobalTopbar();
       const saBtn = document.getElementById('btn-open-superadmin-modal');
       if (saBtn) saBtn.classList.toggle('hidden', !isSuperAdminUser());
     }
 
     function openPdvModule() {
-      if (!currentStoreModules || currentStoreModules.pdv !== true) {
-        showToast('🔒 Módulo PDV não está ativado para esta loja.');
-        return;
-      }
+      if (!getModuleAllowed('pdv')) { openSaasUpgradeModal('pdv'); return; }
       window.location.href = `pdv.html?loja=${encodeURIComponent(storeSlug)}`;
     }
 
+    function openDeliveriesModule() {
+      if (!getModuleAllowed('deliveries')) { openSaasUpgradeModal('deliveries'); return; }
+      window.location.href = `pdv.html?loja=${encodeURIComponent(storeSlug)}&open=motoboy`;
+    }
+
     function openPdvSubmodule(mode) {
-      if (!currentStoreModules || currentStoreModules.pdv !== true) {
-        showToast('🔒 Módulo PDV não está ativado para esta loja.');
-        return;
-      }
+      const modKey = mode === 'repo' ? 'replenishment' : (mode === 'entry' ? 'stock_entry' : 'pdv');
+      if (!getModuleAllowed(modKey) || !getModuleAllowed('pdv')) { openSaasUpgradeModal(modKey); return; }
       window.location.href = `pdv.html?loja=${encodeURIComponent(storeSlug)}&open=${encodeURIComponent(mode)}`;
     }
+
+    function handleFlashModuleClick() {
+      if (!getModuleAllowed('flash_sale')) { openSaasUpgradeModal('flash_sale'); return; }
+      openFlashSaleModal();
+    }
+
+    function handleAnalyticsModuleClick() {
+      if (!getModuleAllowed('analytics')) { openSaasUpgradeModal('analytics'); return; }
+      openAnalyticsModal();
+    }
+
+    async function pollStorePermissionsLive() {
+      if (!sb || !storeSlug || !currentUser) return;
+      try {
+        const { data, error } = await sb.from('stores').select('active,plan,modules').eq('slug', storeSlug).maybeSingle();
+        if (error || !data) return;
+        currentStorePlan = data.plan || currentStorePlan;
+        if (data.modules && typeof data.modules === 'object') currentStoreModules = data.modules;
+        updateModuleButtonsVisibility();
+        const inManager = !document.getElementById('manager-view')?.classList.contains('hidden');
+        document.getElementById('saas-suspended-overlay')?.classList.toggle('hidden', !(data.active === false && inManager));
+      } catch (e) {}
+    }
+    setInterval(pollStorePermissionsLive, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) pollStorePermissionsLive(); });
 
     function computeSaaSPlanName(m) {
       if (m.pdv && m.grooming && m.ai_invoice) return 'master';
@@ -9905,11 +10047,8 @@
       bar.classList.toggle('hidden', !canSeeBar);
       if (!canSeeBar) return;
 
-      const mods = currentStoreModules || {};
-      const hasPdv = !!(mods.pdv === true);
-      const hasDeliv = typeof mods.deliveries === 'boolean' ? mods.deliveries : hasPdv;
-      document.getElementById('gtb-btn-pdv')?.classList.toggle('hidden', !hasPdv);
-      document.getElementById('gtb-btn-entregas')?.classList.toggle('hidden', !hasDeliv);
+      styleModuleButton('gtb-btn-pdv', getModuleAllowed('pdv'), '🖥️', 'PDV', true);
+      styleModuleButton('gtb-btn-entregas', getModuleAllowed('deliveries'), '🛵', 'Entregas', true);
 
       const inManager = !document.getElementById('manager-view')?.classList.contains('hidden');
       const bGest = document.getElementById('gtb-btn-gestor');
@@ -10249,5 +10388,45 @@
     </div>
   </div>
 
+
+  <!-- MODAL DE UPGRADE SAAS (v61) -->
+  <div id="saas-upgrade-modal" class="hidden fixed inset-0 z-[80] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+      <div class="bg-slate-950 text-white px-5 py-4 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="saas-up-icon" class="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 text-xl flex items-center justify-center shrink-0 shadow">🖥️</span>
+          <div class="min-w-0">
+            <span class="block text-[10px] font-black uppercase text-amber-300 tracking-wide">🔒 Módulo disponível para Upgrade</span>
+            <h3 id="saas-up-title" class="text-sm font-black truncate">Frente de Caixa (PDV)</h3>
+          </div>
+        </div>
+        <button type="button" onclick="closeSaasUpgradeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-black text-xs shrink-0 cursor-pointer">✕</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p id="saas-up-desc" class="text-xs font-semibold text-slate-600 leading-relaxed"></p>
+        <div id="saas-up-benefits" class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2 text-xs font-bold text-slate-800"></div>
+        <a id="saas-up-wa-link" href="#" target="_blank" rel="noopener noreferrer" class="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-md transition">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16.04 2.003C8.32 2.003 2.04 8.283 2.04 16c0 2.47.65 4.88 1.88 7.01L2 30l7.19-1.88A13.94 13.94 0 0 0 16.04 30C23.76 30 30 23.72 30 16S23.76 2.003 16.04 2.003zm0 25.63c-2.17 0-4.3-.58-6.16-1.69l-.44-.26-4.27 1.12 1.14-4.16-.29-.46a11.58 11.58 0 0 1-1.78-6.18c0-6.4 5.21-11.61 11.62-11.61 6.4 0 11.61 5.21 11.61 11.61 0 6.41-5.21 11.63-11.43 11.63zm6.37-8.71c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.36-.2.23-.41.26-.76.09-.35-.17-1.47-.54-2.8-1.73-1.04-.93-1.74-2.07-1.94-2.42-.2-.35-.02-.54.15-.71.16-.16.35-.41.52-.61.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.58-.28-.68-.57-.58-.78-.59h-.67c-.23 0-.61.09-.93.44-.32.35-1.22 1.19-1.22 2.9 0 1.71 1.25 3.36 1.42 3.59.17.23 2.46 3.76 5.96 5.27.83.36 1.48.57 1.99.73.84.27 1.6.23 2.2.14.67-.1 2.06-.84 2.35-1.65.29-.81.29-1.51.2-1.65-.09-.15-.32-.23-.67-.41z"/></svg>
+          <span>Falar no WhatsApp para Ativar</span>
+        </a>
+        <p class="text-[10px] text-center font-bold text-slate-400">Atendimento rápido pelo WhatsApp do Suporte Comercial</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUEIO AO VIVO (LOJA PAUSADA) -->
+  <div id="saas-suspended-overlay" class="hidden fixed inset-0 z-[90] bg-slate-950/92 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-100 text-rose-600 text-3xl flex items-center justify-center">🔒</div>
+      <div class="space-y-1">
+        <h3 class="text-base font-black text-slate-900">Acesso da Loja Pausado</h3>
+        <p class="text-xs font-semibold text-slate-600 leading-relaxed">O acesso do Painel Gestor desta loja foi pausado. Fale com o suporte pelo WhatsApp para reativar na hora.</p>
+      </div>
+      <button type="button" onclick="openSaasSupportWhatsApp('reativar o acesso da minha loja')" class="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow cursor-pointer">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16.04 2.003C8.32 2.003 2.04 8.283 2.04 16c0 2.47.65 4.88 1.88 7.01L2 30l7.19-1.88A13.94 13.94 0 0 0 16.04 30C23.76 30 30 23.72 30 16S23.76 2.003 16.04 2.003zm0 25.63c-2.17 0-4.3-.58-6.16-1.69l-.44-.26-4.27 1.12 1.14-4.16-.29-.46a11.58 11.58 0 0 1-1.78-6.18c0-6.4 5.21-11.61 11.62-11.61 6.4 0 11.61 5.21 11.61 11.61 0 6.41-5.21 11.63-11.43 11.63zm6.37-8.71c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.36-.2.23-.41.26-.76.09-.35-.17-1.47-.54-2.8-1.73-1.04-.93-1.74-2.07-1.94-2.42-.2-.35-.02-.54.15-.71.16-.16.35-.41.52-.61.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.58-.28-.68-.57-.58-.78-.59h-.67c-.23 0-.61.09-.93.44-.32.35-1.22 1.19-1.22 2.9 0 1.71 1.25 3.36 1.42 3.59.17.23 2.46 3.76 5.96 5.27.83.36 1.48.57 1.99.73.84.27 1.6.23 2.2.14.67-.1 2.06-.84 2.35-1.65.29-.81.29-1.51.2-1.65-.09-.15-.32-.23-.67-.41z"/></svg>
+        <span>Falar com o Suporte</span>
+      </button>
+    </div>
+  </div>
 </body>
 </html>
