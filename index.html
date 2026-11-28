@@ -328,7 +328,7 @@
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 mb-6">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v62</span></h2>
+          <h2 class="text-lg font-black text-slate-800 flex flex-wrap items-center gap-1.5"><span>Painel Gestor</span><span id="manager-store-slug-badge" class="hidden"></span><span id="manager-plan-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-extrabold">🛍️ Plano Essencial</span><span class="text-[10px] font-extrabold text-slate-400">v64</span></h2>
           <p id="manager-user-email" class="text-xs text-slate-500">Gerencie sua loja na nuvem em tempo real</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -636,7 +636,13 @@
             <span class="text-[11px] font-bold text-emerald-950 leading-snug">📦 Pausar automaticamente na vitrine quando o estoque zerar (0) e reativar ao dar entrada <span class="font-normal text-emerald-800">(respeita pausas manuais e ignora itens sem estoque preenchido)</span></span>
           </label>
         </div>
-        <button onclick="saveStoreConfig()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs shadow transition">Salvar Dados da Loja</button>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+          <label class="inline-flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 cursor-pointer select-none">
+            <input type="checkbox" id="config-sync-all-branches" checked class="w-4 h-4 accent-slate-800 rounded cursor-pointer">
+            <span class="text-[11px] font-extrabold text-slate-700">🏢 Sincronizar logo e cores em todas as minhas filiais</span>
+          </label>
+          <button onclick="saveStoreConfig()" class="btn-pill-white px-5 py-2 text-xs shadow-sm">💾 Salvar Dados da Loja</button>
+        </div>
         </div>
       </div>
 
@@ -3734,11 +3740,30 @@
       storeConfig.logo = customLogo || getDefaultStoreLogo();
       const ok = await saveStoreMetaToCloud();
       if (ok) {
+        let syncedCount = 0;
+        const syncBranches = !!document.getElementById('config-sync-all-branches')?.checked;
+        if (syncBranches && sb && currentStoreOwnerId) {
+          try {
+            const { data: syncedRows, error: syncErr } = await sb
+              .from('stores')
+              .update({
+                logo: storeConfig.logo,
+                logo_zoom: storeConfig.logoZoom || 100,
+                primary_color: storeConfig.primaryColor,
+                accent_color: storeConfig.accentColor,
+                header_styles: storeConfig.headerStyles
+              })
+              .eq('owner_id', currentStoreOwnerId)
+              .neq('id', currentStoreId)
+              .select('id');
+            if (!syncErr && Array.isArray(syncedRows)) syncedCount = syncedRows.length;
+          } catch (e) {}
+        }
         renderStoreConfig();
         renderCategoryPills();
         renderBrandPills();
         filterProducts();
-        showToast("✅ Dados da loja salvos na nuvem!");
+        showToast(syncedCount > 0 ? `✅ Salvo! Logo e cores sincronizados em +${syncedCount} filial(is).` : "✅ Dados da loja salvos na nuvem!");
       }
     }
 
@@ -3836,8 +3861,13 @@
         hydrateStoreState(created);
         document.getElementById('unconfigured-banner').classList.add('hidden');
         showToast(`🎉 Loja "?loja=${storeSlug}" criada na nuvem!`);
-      } else if (currentStoreOwnerId !== currentUser.id) {
-        showToast("⚠️ Esta loja pertence a outra conta de gestor.");
+      } else if (currentStoreOwnerId !== currentUser.id && !isSuperAdminUser()) {
+        // Permite trocar de conta sem ficar preso no celular!
+        try { if (sb) await sb.auth.signOut(); } catch (e) {}
+        currentUser = null;
+        document.getElementById('manager-login-modal')?.classList.remove('hidden');
+        document.getElementById('login-email')?.focus();
+        showToast("🔑 Sessão de outra loja encerrada. Entre com a conta desta loja.");
         return;
       }
 
@@ -5897,11 +5927,16 @@
       return String(str || '').replace(/\D/g, '').trim();
     }
 
-    function findDuplicateProduct(name, barcode, excludeId = null) {
+    function findDuplicateProduct(name, barcode, excludeId = null, internalCode = '') {
       const bKey = normalizeBarcodeKey(barcode);
       if (bKey) {
         const byCode = products.find(p => p.id !== excludeId && normalizeBarcodeKey(p.barcode) === bKey);
         if (byCode) return { match: byCode, reason: 'barcode' };
+      }
+      const pluKey = String(internalCode || '').trim().toLowerCase();
+      if (pluKey) {
+        const byPlu = products.find(p => p.id !== excludeId && String(p.internalCode || '').trim().toLowerCase() === pluKey);
+        if (byPlu) return { match: byPlu, reason: 'plu' };
       }
       const nKey = normalizeProductNameKey(name);
       if (nKey) {
@@ -5909,6 +5944,60 @@
         if (byName) return { match: byName, reason: 'name' };
       }
       return null;
+    }
+
+    function findSimilarExistingProduct(name) {
+      const stop = new Set(['racao', 'para', 'caes', 'gatos', 'adulto', 'adultos', 'filhote', 'filhotes', 'mini', 'pequenas', 'racas', 'de', 'da', 'do', 'com', 'kg', 'un']);
+      const toks = normalizeProductNameKey(name).split(' ').filter(t => t.length >= 3 && !stop.has(t));
+      if (toks.length < 2) return null;
+      let best = null, bestRatio = 0;
+      for (const p of products) {
+        const pToks = new Set(normalizeProductNameKey(p.name).split(' ').filter(t => t.length >= 3 && !stop.has(t)));
+        if (!pToks.size) continue;
+        const hits = toks.filter(t => pToks.has(t)).length;
+        const ratio = hits / Math.max(toks.length, pToks.size);
+        if (hits >= 2 && ratio >= 0.65 && ratio > bestRatio) {
+          bestRatio = ratio;
+          best = p;
+        }
+      }
+      return best;
+    }
+
+    function getBulkParentCandidates(row) {
+      const list = [];
+      products.forEach(p => {
+        const kg = extractKgFromProductName(p.name);
+        if (kg && kg >= 2 && !/\b(GRANEL|AVULSO|FRACIONADO)\b/i.test(p.name)) {
+          list.push({ val: `existing:${p.id}`, type: 'existing', id: p.id, name: p.name, kg });
+        }
+      });
+      bulkRows.forEach((o, idx) => {
+        if (o === row) return;
+        const kg = extractKgFromProductName(o.name);
+        if (kg && kg >= 2 && !/\b(GRANEL|AVULSO|FRACIONADO)\b/i.test(o.name)) {
+          list.push({ val: `batch:${idx}`, type: 'batch', batchIdx: idx, name: o.name, kg });
+        }
+      });
+      return list;
+    }
+
+    function setBulkRowParent(rowIdx, selVal) {
+      const r = bulkRows[rowIdx];
+      if (!r) return;
+      if (!selVal) { r.parentLink = null; renderBulkPreview(); return; }
+      const cands = getBulkParentCandidates(r);
+      const chosen = cands.find(c => c.val === selVal);
+      if (!chosen) return;
+      r.parentLink = chosen;
+      if (document.getElementById('bulk-calc-child-cost')?.checked && chosen.kg > 0) {
+        const lossPct = parseFloat(document.getElementById('bulk-granel-loss-pct')?.value || '0') || 0;
+        let pCost = null;
+        if (chosen.type === 'batch' && bulkRows[chosen.batchIdx]?.costPrice > 0) pCost = bulkRows[chosen.batchIdx].costPrice;
+        else if (chosen.type === 'existing' && productCostsMap[String(chosen.id)]?.costPrice > 0) pCost = productCostsMap[String(chosen.id)].costPrice;
+        if (pCost) r.costPrice = +((pCost / chosen.kg) * (1 + lossPct / 100)).toFixed(2);
+      }
+      renderBulkPreview();
     }
 
     async function loadProductCostsFromCloud() {
@@ -8699,9 +8788,10 @@
       let newCount = 0;
       let dupCount = 0;
       bulkRows.forEach(r => {
-        const dup = findDuplicateProduct(r.name, r.barcode);
+        const dup = findDuplicateProduct(r.name, r.barcode, null, r.internalCode);
         r._dupId = dup ? dup.match.id : null;
         r._dupReason = dup ? dup.reason : null;
+        r._similarMatch = !dup ? findSimilarExistingProduct(r.name) : null;
         if (dup) dupCount++; else newCount++;
       });
       const activeCount = bulkRows.filter(r => r.checked && !(dupMode === 'skip' && r._dupId)).length;
@@ -8722,8 +8812,14 @@
         if (r.stockQty !== null && r.stockQty !== undefined) metaParts.push(`Est: ${r.stockQty}`);
         if (r.wholesaleGroup) metaParts.push(`🎨 Mix: ${escapeHtml(r.wholesaleGroup)}`);
         if (r.showInCatalog === false) metaParts.push(`🖥️ Só PDV`);
-        const parentBar = r.parentLink
-          ? `<div class="flex items-center justify-between gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-1 text-[10px] font-bold text-indigo-900"><span>🔗 Vínculo Granel → Saco Pai: <strong>${escapeHtml(r.parentLink.name)}</strong> (÷ ${r.parentLink.kg})</span><button type="button" onclick="bulkRows[${i}].parentLink = null; renderBulkPreview();" class="text-indigo-500 hover:text-rose-600 font-black px-1">✕</button></div>`
+        const similarWarn = r._similarMatch
+          ? `<div class="bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 text-[10px] font-extrabold text-amber-900">⚠️ Parecido com já cadastrado: <strong>${escapeHtml(r._similarMatch.name)}</strong> — desmarque acima se for o mesmo produto!</div>`
+          : '';
+        const isGranelPrev = r.unitType === 'KG' || /\b(GRANEL|AVULSO|FRACIONADO)\b/i.test(r.name);
+        const pCands = isGranelPrev ? getBulkParentCandidates(r) : [];
+        const curParentVal = r.parentLink ? (r.parentLink.type === 'batch' ? `batch:${r.parentLink.batchIdx}` : `existing:${r.parentLink.id}`) : '';
+        const parentBar = (isGranelPrev && pCands.length)
+          ? `<div class="flex flex-wrap items-center justify-between gap-1.5 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-1 text-[10px] font-bold text-indigo-900"><span>🔗 Saco Pai (Granel):</span><select onchange="setBulkRowParent(${i}, this.value)" class="flex-1 min-w-[160px] bg-white border border-indigo-300 rounded px-1.5 py-0.5 text-[10px] font-extrabold text-indigo-950 cursor-pointer"><option value="">Sem vínculo</option>${pCands.map(c => `<option value="${c.val}" ${c.val === curParentVal ? 'selected' : ''}>${escapeHtml(c.name)} (÷ ${c.kg}kg)</option>`).join('')}</select></div>`
           : '';
         return `
         <div class="border rounded-xl p-2 space-y-1.5 text-[11px] ${skipped ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-slate-50 border-slate-200'}">
@@ -8746,6 +8842,7 @@
               ${brands.map(b => `<option value="${b}" ${b === r.brand ? 'selected' : ''}>${b}</option>`).join('')}
             </select>
           </div>
+          ${similarWarn}
           ${parentBar}
         </div>
       `; }).join('');
